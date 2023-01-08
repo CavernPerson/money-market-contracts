@@ -8,7 +8,8 @@ use std::str::FromStr;
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
     from_binary, from_slice, to_binary, Addr, Api, CanonicalAddr, Coin, ContractResult, Decimal,
-    OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult, Uint128, WasmQuery,Decimal256, Uint256
+    Decimal256, OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult,
+    Uint128, Uint256, WasmQuery,
 };
 use cosmwasm_storage::to_length_prefixed;
 use std::collections::HashMap;
@@ -213,7 +214,7 @@ impl WasmMockQuerier {
                             oracle_contract: "".to_string(),
                             market_contract: "".to_string(),
                             liquidation_contract: "".to_string(),
-                            collector_contract: "".to_string(),
+                            borrow_reserves_bucket_contract: "".to_string(),
                             threshold_deposit_rate: Decimal256::one(),
                             target_deposit_rate: Decimal256::from_ratio(
                                 Uint256::one(),

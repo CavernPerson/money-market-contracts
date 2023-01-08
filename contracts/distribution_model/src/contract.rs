@@ -2,7 +2,9 @@ use crate::error::ContractError;
 use crate::state::{read_config, store_config, Config};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,Decimal256};
+use cosmwasm_std::{
+    to_binary, Addr, Binary, Decimal256, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+};
 
 use moneymarket::common::optional_addr_validate;
 use moneymarket::distribution_model::{

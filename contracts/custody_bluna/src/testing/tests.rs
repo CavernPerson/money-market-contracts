@@ -1,7 +1,7 @@
 use cosmwasm_std::SubMsgResult;
 use cosmwasm_std::{
     attr, from_binary, to_binary, Api, Attribute, BankMsg, Coin, CosmosMsg, Decimal, Reply,
-    Response, SubMsg, SubMsgResponse, Uint128, WasmMsg,Uint256
+    Response, SubMsg, SubMsgResponse, Uint128, Uint256, WasmMsg,
 };
 
 use crate::contract::{
@@ -423,7 +423,10 @@ fn lock_collateral() {
     };
     let res2 = execute(deps.as_mut(), mock_env(), info2, msg2).unwrap_err();
 
-    assert_eq!(res2, ContractError::LockAmountExceedsSpendable(100u128.into()));
+    assert_eq!(
+        res2,
+        ContractError::LockAmountExceedsSpendable(100u128.into())
+    );
 
     let info = mock_info("overseer", &[]);
     let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();

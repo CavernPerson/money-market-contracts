@@ -1,11 +1,11 @@
-use std::str::FromStr;
 use crate::contract::{execute, instantiate, query};
 use crate::error::ContractError;
-use cosmwasm_std::{from_binary, Decimal256};
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+use cosmwasm_std::{from_binary, Decimal256};
 use moneymarket::distribution_model::{
     BorrowerIncentivesRateResponse, ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg,
 };
+use std::str::FromStr;
 
 #[test]
 fn proper_initialization() {

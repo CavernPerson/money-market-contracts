@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{CanonicalAddr, Order, StdError, StdResult, Storage, Decimal256};
+use cosmwasm_std::{CanonicalAddr, Decimal256, Order, StdError, StdResult, Storage};
 use cosmwasm_storage::{singleton, singleton_read, Bucket, ReadonlyBucket};
 
 use moneymarket::oracle::PricesResponseElem;

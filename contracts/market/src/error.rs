@@ -1,4 +1,4 @@
-use cosmwasm_std::{OverflowError, StdError, WasmMsg, Uint128, ConversionOverflowError};
+use cosmwasm_std::{ConversionOverflowError, OverflowError, StdError, Uint128, WasmMsg};
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]

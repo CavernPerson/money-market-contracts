@@ -1,7 +1,7 @@
 use crate::contract::{execute, instantiate, query};
 use crate::error::ContractError;
-use cosmwasm_std::{from_binary, Uint256, Decimal256};
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+use cosmwasm_std::{from_binary, Decimal256, Uint256};
 use moneymarket::interest_model::{
     BorrowRateResponse, ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg,
 };
@@ -31,7 +31,7 @@ fn proper_initialization() {
 
     let query_msg = QueryMsg::BorrowRate {
         market_balance: Uint256::from(1000000u128),
-        total_liabilities: Decimal256::from_ratio(500000u128,1u128),
+        total_liabilities: Decimal256::from_ratio(500000u128, 1u128),
         total_reserves: Decimal256::from_ratio(100000u128, 1u128),
     };
     let res = query(deps.as_ref(), mock_env(), query_msg).unwrap();

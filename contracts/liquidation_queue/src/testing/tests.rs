@@ -3,7 +3,8 @@ use crate::testing::mock_querier::mock_dependencies;
 
 use cosmwasm_std::testing::{mock_env, mock_info};
 use cosmwasm_std::{
-    attr, from_binary, to_binary, BankMsg, Coin, CosmosMsg, Decimal, StdError, SubMsg, Uint128,Decimal256, Uint256
+    attr, from_binary, to_binary, BankMsg, Coin, CosmosMsg, Decimal, Decimal256, StdError, SubMsg,
+    Uint128, Uint256,
 };
 use cw20::Cw20ReceiveMsg;
 use moneymarket::liquidation_queue::{

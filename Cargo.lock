@@ -498,6 +498,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "moneymarket-borrow-incentives-bucket"
+version = "0.0.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "moneymarket",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "moneymarket-custody-base"
 version = "0.0.0"
 dependencies = [

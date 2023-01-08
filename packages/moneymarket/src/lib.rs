@@ -1,4 +1,5 @@
 pub mod astroport_router;
+pub mod bucket;
 pub mod common;
 pub mod custody;
 pub mod distribution_model;

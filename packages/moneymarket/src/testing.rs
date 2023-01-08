@@ -3,7 +3,7 @@ use crate::oracle::PriceResponse;
 use crate::querier::{query_price, TimeConstraints};
 use crate::tokens::{Tokens, TokensHuman, TokensMath, TokensToRaw};
 
-use cosmwasm_std::{Addr, Api, CanonicalAddr, StdError, Decimal256, Uint256};
+use cosmwasm_std::{Addr, Api, CanonicalAddr, Decimal256, StdError, Uint256};
 
 #[test]
 fn oracle_price_querier() {
@@ -11,7 +11,11 @@ fn oracle_price_querier() {
 
     deps.querier.with_oracle_price(&[(
         &("terra123123".to_string(), "uusd".to_string()),
-        &(Decimal256::from_ratio(Uint256::from(131u128), Uint256::from(2u128)), 123, 321),
+        &(
+            Decimal256::from_ratio(Uint256::from(131u128), Uint256::from(2u128)),
+            123,
+            321,
+        ),
     )]);
 
     let oracle_price = query_price(

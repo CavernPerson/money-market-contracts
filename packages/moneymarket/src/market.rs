@@ -41,6 +41,8 @@ pub enum ExecuteMsg {
         distribution_model: String,
         /// Collector contract to send all the reserve
         collector_contract: String,
+        /// Bucket to save borrow reserves
+        borrow_reserves_bucket_contract: String,
         /// Faucet contract to drip ANC token to users
         distributor_contract: String,
     },
@@ -71,7 +73,6 @@ pub enum ExecuteMsg {
         target_deposit_rate: Decimal256,
         threshold_deposit_rate: Decimal256,
         distributed_interest: Uint256,
-        borrow_incentives_amount: Decimal256,
     },
 
     ////////////////////
@@ -150,7 +151,7 @@ pub struct StateResponse {
     pub reserves_rate_used_for_borrowers: Decimal256,
     pub prev_aterra_supply: Uint256,
     pub prev_exchange_rate: Decimal256,
-    pub prev_borrower_incentives: Decimal256,
+    pub prev_borrower_incentives: Uint256,
 }
 
 // We define a custom struct for each query response

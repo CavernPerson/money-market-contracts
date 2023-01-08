@@ -15,8 +15,8 @@ pub struct InstantiateMsg {
     pub market_contract: String,
     /// Liquidation model contract address to compute liquidation amount
     pub liquidation_contract: String,
-    /// Collector contract address which is purchasing ANC token
-    pub collector_contract: String,
+    /// Bucket contract address which saves the borrower incentives
+    pub borrow_reserves_bucket_contract: String,
     /// The base denomination used when fetching oracle price,
     /// reward distribution, and borrow
     pub stable_denom: String,
@@ -109,7 +109,6 @@ pub enum ExecuteMsg {
     UpdateEpochState {
         interest_buffer: Uint256,
         distributed_interest: Uint256,
-        borrow_incentives_amount: Decimal256,
     },
 
     ////////////////////
@@ -163,7 +162,7 @@ pub struct ConfigResponse {
     pub oracle_contract: String,
     pub market_contract: String,
     pub liquidation_contract: String,
-    pub collector_contract: String,
+    pub borrow_reserves_bucket_contract: String,
     pub threshold_deposit_rate: Decimal256,
     pub target_deposit_rate: Decimal256,
     pub buffer_distribution_factor: Decimal256,

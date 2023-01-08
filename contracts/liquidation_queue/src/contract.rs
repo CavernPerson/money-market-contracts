@@ -13,7 +13,8 @@ use crate::state::{
 };
 
 use cosmwasm_std::{
-    from_binary, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,Decimal256, Uint256
+    from_binary, to_binary, Binary, Decimal256, Deps, DepsMut, Env, MessageInfo, Response,
+    StdError, StdResult, Uint256,
 };
 use cw20::Cw20ReceiveMsg;
 use moneymarket::liquidation_queue::{Cw20HookMsg, ExecuteMsg, InstantiateMsg, QueryMsg};

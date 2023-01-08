@@ -4,7 +4,7 @@ use crate::state::{
     read_bid, read_bid_pool, read_bid_pools, read_bids_by_user, read_collateral_info, read_config,
     read_total_bids, Bid, BidPool, CollateralInfo, Config,
 };
-use cosmwasm_std::{CanonicalAddr, Deps, StdResult, Uint128, Decimal256, Uint256};
+use cosmwasm_std::{CanonicalAddr, Decimal256, Deps, StdResult, Uint128, Uint256};
 use moneymarket::liquidation_queue::{
     BidPoolResponse, BidPoolsResponse, BidResponse, BidsResponse, CollateralInfoResponse,
     ConfigResponse, LiquidationAmountResponse,
@@ -74,8 +74,7 @@ pub fn query_liquidation_amount(
         let collateral_info = read_collateral_info(deps.storage, &collateral_token_raw)?;
 
         // calculate borrow amount and limit portion
-        let position_portion =
-            Decimal256::from_ratio(weight, total_weight);
+        let position_portion = Decimal256::from_ratio(weight, total_weight);
         let collateral_borrow_amount = borrow_amount * position_portion;
         let collateral_borrow_limit = borrow_limit * position_portion;
 
@@ -97,7 +96,8 @@ pub fn query_liquidation_amount(
             let prev_g_x = g_x;
 
             let discounted_price = price * (Decimal256::one() - premium_rate) * base_fee_deductor;
-            x += Decimal256::from_ratio(slot_available_bids, 1u128) / discounted_price * Uint256::one();
+            x += Decimal256::from_ratio(slot_available_bids, 1u128) / discounted_price
+                * Uint256::one();
 
             let safe_borrow = safe_ratio * collateral_borrow_limit;
             let f_x = ((safe_ratio * max_ltv * price) * x) + collateral_borrow_amount - safe_borrow;
@@ -111,7 +111,9 @@ pub fn query_liquidation_amount(
                     * (((Decimal256::one() - premium_rate) * base_fee_deductor)
                         - (safe_ratio * max_ltv));
 
-                let liquidation_amount: Uint256 = (Decimal256::from_ratio(nominator, 1u128) / denominator) * Uint256::one() + Uint256::one(); // round up
+                let liquidation_amount: Uint256 =
+                    (Decimal256::from_ratio(nominator, 1u128) / denominator) * Uint256::one()
+                        + Uint256::one(); // round up
 
                 result.push((
                     collateral.0.to_string(),
@@ -160,7 +162,9 @@ fn compute_collateral_weights(
         .max_ltv;
 
         let collateral_value = collateral.1 * *price;
-        let weigth = Decimal256::from_ratio(collateral_value.min(collateral_available_bids), 1u128) / max_ltv * Uint256::one();
+        let weigth = Decimal256::from_ratio(collateral_value.min(collateral_available_bids), 1u128)
+            / max_ltv
+            * Uint256::one();
 
         total_weight += weigth;
         collaterals_value += collateral_value;

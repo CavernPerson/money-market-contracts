@@ -1,4 +1,6 @@
-use cosmwasm_std::{attr, from_binary, to_binary, Api, Coin, CosmosMsg, SubMsg, Uint128, WasmMsg, Uint256};
+use cosmwasm_std::{
+    attr, from_binary, to_binary, Api, Coin, CosmosMsg, SubMsg, Uint128, Uint256, WasmMsg,
+};
 
 use crate::contract::{execute, instantiate, query};
 use crate::error::ContractError;
@@ -414,7 +416,10 @@ fn lock_collateral() {
     };
     let res2 = execute(deps.as_mut(), mock_env(), info2, msg2).unwrap_err();
 
-    assert_eq!(res2, ContractError::LockAmountExceedsSpendable(Uint128::from(100u128)));
+    assert_eq!(
+        res2,
+        ContractError::LockAmountExceedsSpendable(Uint128::from(100u128))
+    );
 
     let info = mock_info("overseer", &[]);
     let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();

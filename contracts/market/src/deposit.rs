@@ -1,8 +1,8 @@
-use std::convert::TryInto;
 use cosmwasm_std::{
-    attr, to_binary, Addr, BankMsg, Coin, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Response,
-    StdResult, Uint128, WasmMsg, Decimal256, Uint256
+    attr, to_binary, Addr, BankMsg, Coin, CosmosMsg, Decimal256, Deps, DepsMut, Env, MessageInfo,
+    Response, StdResult, Uint128, Uint256, WasmMsg,
 };
+use std::convert::TryInto;
 
 use crate::borrow::compute_interest;
 use crate::error::ContractError;
@@ -40,13 +40,14 @@ pub fn deposit_stable(
         env.block.height,
         Some(deposit_amount),
         // Here we can't take into account the past to preject the future, Incentives could stop instantly
-        Some(Decimal256::zero()),
+        Some(Uint256::zero()),
     )?;
 
     // Load anchor token exchange rate with updated state
     let exchange_rate =
         compute_exchange_rate(deps.as_ref(), &config, &state, Some(deposit_amount))?;
-    let mint_amount = Decimal256::from_ratio(deposit_amount,1u128) / exchange_rate * Uint256::one();
+    let mint_amount =
+        Decimal256::from_ratio(deposit_amount, 1u128) / exchange_rate * Uint256::one();
 
     state.prev_aterra_supply += mint_amount;
     store_state(deps.storage, &state)?;
@@ -84,7 +85,7 @@ pub fn redeem_stable(
         env.block.height,
         None,
         // Here we can't take into account the past to preject the future, Incentives could stop instantly
-        Some(Decimal256::zero()),
+        Some(Uint256::zero()),
     )?;
 
     // Load anchor token exchange rate with updated state
@@ -170,6 +171,7 @@ pub fn compute_exchange_rate_raw(
 
     // (aterra / stable_denom)
     // exchange_rate = (balance + total_liabilities - total_reserves) / aterra_supply
-    (Decimal256::from_ratio(contract_balance, 1u128) + state.total_liabilities - state.total_reserves)
+    (Decimal256::from_ratio(contract_balance, 1u128) + state.total_liabilities
+        - state.total_reserves)
         / aterra_supply
 }

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{
     to_binary, Addr, AllBalanceResponse, BalanceResponse, BankQuery, Coin, Deps, QueryRequest,
-    StdError, StdResult, Uint128, WasmQuery,Uint256
+    StdError, StdResult, Uint128, Uint256, WasmQuery,
 };
 use cw20::{Cw20QueryMsg, TokenInfoResponse};
 

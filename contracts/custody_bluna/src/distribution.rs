@@ -1,10 +1,9 @@
-
-use std::convert::TryInto;
 use crate::swap::create_swap_msg;
 use cosmwasm_std::{
     attr, to_binary, Addr, BankMsg, Coin, CosmosMsg, Deps, DepsMut, Env, MessageInfo, QueryRequest,
-    ReplyOn, Response, StdResult, SubMsg, Uint128, WasmMsg, WasmQuery, Uint256
+    ReplyOn, Response, StdResult, SubMsg, Uint128, Uint256, WasmMsg, WasmQuery,
 };
+use std::convert::TryInto;
 
 use crate::contract::{CLAIM_REWARDS_OPERATION, SWAP_TO_STABLE_OPERATION};
 use crate::error::ContractError;

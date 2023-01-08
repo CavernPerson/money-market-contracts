@@ -1,4 +1,6 @@
-use cosmwasm_std::{to_binary, Addr, Deps, QueryRequest, StdResult, WasmQuery, Uint256, Decimal256};
+use cosmwasm_std::{
+    to_binary, Addr, Decimal256, Deps, QueryRequest, StdResult, Uint256, WasmQuery,
+};
 
 use moneymarket::liquidation_queue::{LiquidationAmountResponse, QueryMsg as LiquidationQueryMsg};
 use moneymarket::market::{

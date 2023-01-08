@@ -2,7 +2,7 @@ use crate::deposit::compute_exchange_rate;
 use crate::state::{Config, State};
 use crate::testing::mock_querier::mock_dependencies;
 use cosmwasm_std::testing::{mock_env, MOCK_CONTRACT_ADDR};
-use cosmwasm_std::{Api, Coin, Uint128, Uint256, Decimal256};
+use cosmwasm_std::{Api, Coin, Decimal256, Uint128, Uint256};
 use std::str::FromStr;
 
 #[test]
@@ -22,6 +22,7 @@ fn proper_compute_exchange_rate() {
         distributor_contract: deps.api.addr_canonicalize("distributor").unwrap(),
         collector_contract: deps.api.addr_canonicalize("collector").unwrap(),
         overseer_contract: deps.api.addr_canonicalize("overseer").unwrap(),
+        borrow_reserves_bucket_contract: deps.api.addr_canonicalize("overseer").unwrap(),
         stable_denom: "uusd".to_string(),
         max_borrow_factor: Decimal256::one(),
         max_borrow_subsidy_rate: Decimal256::zero(),
@@ -32,8 +33,8 @@ fn proper_compute_exchange_rate() {
     )]);
 
     let mock_state = State {
-        total_liabilities: Decimal256::from_ratio(50000u128,1u128),
-        total_reserves: Decimal256::from_ratio(550000u128,1u128),
+        total_liabilities: Decimal256::from_ratio(50000u128, 1u128),
+        total_reserves: Decimal256::from_ratio(550000u128, 1u128),
         last_interest_updated: env.block.height,
         last_reward_updated: env.block.height,
         global_interest_index: Decimal256::one(),
@@ -41,7 +42,7 @@ fn proper_compute_exchange_rate() {
         reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
         prev_aterra_supply: Uint256::zero(),
         prev_exchange_rate: Decimal256::one(),
-        prev_borrower_incentives: Decimal256::zero(),
+        prev_borrower_incentives: Uint256::zero(),
     };
     let mock_deposit_amount = Some(Uint256::from(1000000u128));
 

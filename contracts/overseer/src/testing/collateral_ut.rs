@@ -3,7 +3,7 @@ use crate::contract::{execute, instantiate};
 use crate::testing::mock_querier::mock_dependencies;
 
 use cosmwasm_std::testing::{mock_env, mock_info};
-use cosmwasm_std::{Api, Uint256, Decimal256};
+use cosmwasm_std::{Api, Decimal256, Uint256};
 
 use moneymarket::overseer::{ExecuteMsg, InstantiateMsg};
 use moneymarket::tokens::{Token, Tokens};
@@ -21,7 +21,7 @@ fn proper_compute_borrow_limit() {
         oracle_contract: "oracle".to_string(),
         market_contract: "market".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "collector".to_string(),
         stable_denom: "uusd".to_string(),
         epoch_period: 86400u64,
         threshold_deposit_rate: Decimal256::permille(3),

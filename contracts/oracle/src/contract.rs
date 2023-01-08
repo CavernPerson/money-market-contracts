@@ -5,7 +5,9 @@ use crate::state::{
 };
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{attr, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,Decimal256};
+use cosmwasm_std::{
+    attr, to_binary, Binary, Decimal256, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+};
 use moneymarket::oracle::{
     ConfigResponse, ExecuteMsg, FeederResponse, InstantiateMsg, PriceResponse, PricesResponse,
     PricesResponseElem, QueryMsg,

@@ -1,8 +1,8 @@
-use std::convert::TryInto;
 use cosmwasm_std::{
-    attr, to_binary, Addr, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult, SubMsg,
-    WasmMsg, Uint256, Decimal256
+    attr, to_binary, Addr, CosmosMsg, Decimal256, Deps, DepsMut, Env, MessageInfo, Response,
+    StdResult, SubMsg, Uint256, WasmMsg,
 };
+use std::convert::TryInto;
 
 use crate::error::ContractError;
 use crate::querier::{query_borrower_info, query_liquidation_amount};

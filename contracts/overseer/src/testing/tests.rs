@@ -9,7 +9,7 @@ use crate::testing::mock_querier::mock_dependencies;
 use cosmwasm_std::testing::{mock_env, mock_info, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
     attr, from_binary, to_binary, Addr, Api, BankMsg, CanonicalAddr, Coin, CosmosMsg, Decimal,
-    DepsMut, SubMsg, Uint128, WasmMsg, Decimal256, Uint256
+    Decimal256, DepsMut, SubMsg, Uint128, Uint256, WasmMsg,
 };
 use moneymarket::custody::ExecuteMsg as CustodyExecuteMsg;
 use moneymarket::market::ExecuteMsg as MarketExecuteMsg;
@@ -29,7 +29,7 @@ fn proper_initialization() {
         oracle_contract: "oracle".to_string(),
         market_contract: "market".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "collector".to_string(),
         stable_denom: "uusd".to_string(),
         epoch_period: 86400u64,
         threshold_deposit_rate: Decimal256::permille(3),
@@ -58,7 +58,7 @@ fn proper_initialization() {
             oracle_contract: "oracle".to_string(),
             market_contract: "market".to_string(),
             liquidation_contract: "liquidation".to_string(),
-            collector_contract: "collector".to_string(),
+            borrow_reserves_bucket_contract: "collector".to_string(),
             stable_denom: "uusd".to_string(),
             epoch_period: 86400u64,
             threshold_deposit_rate: Decimal256::permille(3),
@@ -98,7 +98,7 @@ fn update_config() {
         oracle_contract: "oracle".to_string(),
         market_contract: "market".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "collector".to_string(),
         stable_denom: "uusd".to_string(),
         epoch_period: 86400u64,
         threshold_deposit_rate: Decimal256::permille(3),
@@ -223,7 +223,7 @@ fn whitelist() {
         oracle_contract: "oracle".to_string(),
         market_contract: "market".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "collector".to_string(),
         stable_denom: "uusd".to_string(),
         epoch_period: 86400u64,
         threshold_deposit_rate: Decimal256::permille(3),
@@ -374,7 +374,7 @@ fn execute_epoch_operations() {
         oracle_contract: "oracle".to_string(),
         market_contract: "market".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "collector".to_string(),
         stable_denom: "uusd".to_string(),
         epoch_period: 86400u64,
         threshold_deposit_rate: Decimal256::from_ratio(1u64, 1000000u64),
@@ -483,7 +483,6 @@ fn execute_epoch_operations() {
                 msg: to_binary(&ExecuteMsg::UpdateEpochState {
                     interest_buffer: Uint256::from(10_000_000_000u128),
                     distributed_interest: Uint256::zero(),
-                    borrow_incentives_amount: Decimal256::zero()
                 })
                 .unwrap(),
             }))
@@ -571,7 +570,6 @@ fn execute_epoch_operations() {
                 msg: to_binary(&ExecuteMsg::UpdateEpochState {
                     interest_buffer: Uint256::from(9999946320u128),
                     distributed_interest: Uint256::from(53680u128), // No tax fee
-                    borrow_incentives_amount: Decimal256::zero()
                 })
                 .unwrap(),
             }))
@@ -603,7 +601,7 @@ fn update_epoch_state() {
         oracle_contract: "oracle".to_string(),
         market_contract: "market".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "collector".to_string(),
         stable_denom: "uusd".to_string(),
         epoch_period: 86400u64,
         threshold_deposit_rate: Decimal256::from_ratio(1u64, 1000000u64),
@@ -646,7 +644,6 @@ fn update_epoch_state() {
     let msg = ExecuteMsg::UpdateEpochState {
         interest_buffer: Uint256::from(10000000000u128),
         distributed_interest: Uint256::from(1000000u128),
-        borrow_incentives_amount: Decimal256::zero(),
     };
     let res = execute(deps.as_mut(), mock_env(), info, msg.clone());
     match res {
@@ -679,7 +676,6 @@ fn update_epoch_state() {
                 target_deposit_rate: Decimal256::permille(5),
                 threshold_deposit_rate: Decimal256::from_ratio(1u64, 1000000u64),
                 distributed_interest: Uint256::from(1000000u128),
-                borrow_incentives_amount: Decimal256::zero()
             })
             .unwrap(),
         }))]
@@ -717,7 +713,6 @@ fn update_epoch_state() {
                 target_deposit_rate: Decimal256::from_str("0.000001006442178229").unwrap(),
                 threshold_deposit_rate: Decimal256::from_str("0.000001006442178229").unwrap(),
                 distributed_interest: Uint256::from(1000000u128),
-                borrow_incentives_amount: Decimal256::zero(),
             })
             .unwrap(),
         }))]
@@ -765,7 +760,7 @@ fn lock_collateral() {
         oracle_contract: "oracle".to_string(),
         market_contract: "market".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "collector".to_string(),
         stable_denom: "uusd".to_string(),
         epoch_period: 86400u64,
         threshold_deposit_rate: Decimal256::permille(3),
@@ -924,7 +919,7 @@ fn unlock_collateral() {
         oracle_contract: "oracle".to_string(),
         market_contract: "market".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "collector".to_string(),
         stable_denom: "uusd".to_string(),
         epoch_period: 86400u64,
         threshold_deposit_rate: Decimal256::permille(3),
@@ -1139,7 +1134,7 @@ fn liquidate_collateral() {
         oracle_contract: "oracle".to_string(),
         market_contract: "market".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "collector".to_string(),
         stable_denom: "uusd".to_string(),
         epoch_period: 86400u64,
         threshold_deposit_rate: Decimal256::permille(3),
@@ -1311,7 +1306,7 @@ fn dynamic_rate_model() {
         oracle_contract: "oracle".to_string(),
         market_contract: "market".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "collector".to_string(),
         stable_denom: "uusd".to_string(),
         epoch_period: 86400u64,
         threshold_deposit_rate: Decimal256::from_ratio(1u64, 1000000u64),
@@ -1354,7 +1349,6 @@ fn dynamic_rate_model() {
     let msg = ExecuteMsg::UpdateEpochState {
         interest_buffer: Uint256::from(10000000000u128),
         distributed_interest: Uint256::from(1000000u128),
-        borrow_incentives_amount: Decimal256::zero(),
     };
     let res = execute(deps.as_mut(), mock_env(), info, msg.clone());
     match res {
@@ -1387,7 +1381,6 @@ fn dynamic_rate_model() {
                 target_deposit_rate: Decimal256::permille(5),
                 threshold_deposit_rate: Decimal256::from_ratio(1u64, 1000000u64),
                 distributed_interest: Uint256::from(1000000u128),
-                borrow_incentives_amount: Decimal256::zero()
             })
             .unwrap(),
         }))]
@@ -1426,7 +1419,6 @@ fn dynamic_rate_model() {
                 target_deposit_rate: Decimal256::from_str("0.000001001073696371").unwrap(),
                 threshold_deposit_rate: Decimal256::from_str("0.000001001073696371").unwrap(),
                 distributed_interest: Uint256::from(1000000u128),
-                borrow_incentives_amount: Decimal256::zero()
             })
             .unwrap(),
         }))]
@@ -1559,7 +1551,7 @@ fn validate_deposit_rates(deps: DepsMut, rate: Decimal256) {
             oracle_contract: "oracle".to_string(),
             market_contract: "market".to_string(),
             liquidation_contract: "liquidation".to_string(),
-            collector_contract: "collector".to_string(),
+            borrow_reserves_bucket_contract: "collector".to_string(),
             stable_denom: "uusd".to_string(),
             epoch_period: 86400u64,
             threshold_deposit_rate: rate,

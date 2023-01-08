@@ -5,7 +5,9 @@ use crate::contract::{execute, instantiate, query};
 use crate::testing::mock_querier::mock_dependencies;
 
 use cosmwasm_std::testing::{mock_env, mock_info, MockApi};
-use cosmwasm_std::{from_binary, to_binary, Coin, Decimal, MemoryStorage, OwnedDeps, Uint128, Decimal256, Uint256};
+use cosmwasm_std::{
+    from_binary, to_binary, Coin, Decimal, Decimal256, MemoryStorage, OwnedDeps, Uint128, Uint256,
+};
 use cw20::Cw20ReceiveMsg;
 use moneymarket::liquidation_queue::{
     BidsResponse, Cw20HookMsg, ExecuteMsg, InstantiateMsg, QueryMsg,
@@ -232,8 +234,8 @@ fn simulate_bids_with_2_liq_amounts(
     println!("total liquidated: {}", total_liquidated);
     assert!(total_claimed < total_liquidated);
 
-    let error: Decimal256 = Decimal256::one()
-        - Decimal256::from_ratio(total_claimed,total_liquidated);
+    let error: Decimal256 =
+        Decimal256::one() - Decimal256::from_ratio(total_claimed, total_liquidated);
     println!("error: {}", error);
     assert!(error < Decimal256::from_str(TOLERANCE).unwrap());
 }

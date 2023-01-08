@@ -1,13 +1,13 @@
-use std::convert::TryInto;
 use crate::error::ContractError;
 use crate::state::{
     read_borrower_info, read_borrowers, read_config, remove_borrower_info, store_borrower_info,
     BorrowerInfo, Config,
 };
+use std::convert::TryInto;
 
 use cosmwasm_std::{
     attr, to_binary, Addr, CanonicalAddr, CosmosMsg, Deps, DepsMut, MessageInfo, Response,
-    StdResult, WasmMsg, Uint256
+    StdResult, Uint256, WasmMsg,
 };
 use cw20::Cw20ExecuteMsg;
 use moneymarket::custody::{BorrowerResponse, BorrowersResponse};

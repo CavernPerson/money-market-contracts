@@ -5,8 +5,8 @@ use std::marker::PhantomData;
 
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
-    from_binary, from_slice, to_binary, Coin, ContractResult, Decimal, OwnedDeps, Querier,
-    QuerierResult, QueryRequest, SystemError, SystemResult, Uint128, WasmQuery, Uint256, Decimal256
+    from_binary, from_slice, to_binary, Coin, ContractResult, Decimal, Decimal256, OwnedDeps,
+    Querier, QuerierResult, QueryRequest, SystemError, SystemResult, Uint128, Uint256, WasmQuery,
 };
 use std::collections::HashMap;
 
@@ -202,7 +202,7 @@ impl WasmMockQuerier {
                                     reserves_rate_used_for_borrowers: Decimal256::zero(),
                                     prev_aterra_supply: Uint256::zero(),
                                     prev_exchange_rate: Decimal256::zero(),
-                                    prev_borrower_incentives: Decimal256::zero(),
+                                    prev_borrower_incentives: Uint256::zero(),
                                 })))
                             }
                             None => SystemResult::Err(SystemError::InvalidRequest {

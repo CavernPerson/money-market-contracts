@@ -7,8 +7,8 @@ use cosmwasm_std::SubMsgResult;
 
 use cosmwasm_std::testing::{mock_env, mock_info, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
-    attr, from_binary, to_binary, Addr, BankMsg, Coin, CosmosMsg, Decimal, Reply, SubMsg,
-    SubMsgResponse, Uint128, WasmMsg, Uint256, Decimal256
+    attr, from_binary, to_binary, Addr, BankMsg, Coin, CosmosMsg, Decimal, Decimal256, Reply,
+    SubMsg, SubMsgResponse, Uint128, Uint256, WasmMsg,
 };
 use cw20::{Cw20Coin, Cw20ExecuteMsg, Cw20ReceiveMsg, MinterResponse};
 use cw20_base::msg::{InstantiateMarketingInfo, InstantiateMsg as TokenInstantiateMsg};
@@ -102,6 +102,7 @@ fn proper_initialization() {
         interest_model: "interest".to_string(),
         distribution_model: "distribution".to_string(),
         collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
     let info = mock_info("addr0000", &[]);
@@ -113,6 +114,7 @@ fn proper_initialization() {
         interest_model: "interest".to_string(),
         distribution_model: "distribution".to_string(),
         collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
     let info = mock_info("addr0000", &[]);
@@ -193,6 +195,7 @@ fn update_config() {
         interest_model: "interest".to_string(),
         distribution_model: "distribution".to_string(),
         collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
     let info = mock_info("addr0000", &[]);
@@ -299,6 +302,7 @@ fn deposit_stable_huge_amount() {
         interest_model: "interest".to_string(),
         distribution_model: "distribution".to_string(),
         collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
     let info = mock_info("addr0000", &[]);
@@ -456,6 +460,7 @@ fn deposit_stable() {
         interest_model: "interest".to_string(),
         distribution_model: "distribution".to_string(),
         collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
     let info = mock_info("addr0000", &[]);
@@ -535,7 +540,7 @@ fn deposit_stable() {
             reserves_rate_used_for_borrowers: Decimal256::zero(),
             prev_aterra_supply: Uint256::from(1000000u64),
             prev_exchange_rate: Decimal256::one(),
-            prev_borrower_incentives: Decimal256::zero()
+            prev_borrower_incentives: Uint256::zero()
         }
     );
 
@@ -566,8 +571,8 @@ fn deposit_stable() {
     store_state(
         deps.as_mut().storage,
         &State {
-            total_liabilities: Decimal256::from_ratio(50000u128,1u128),
-            total_reserves: Decimal256::from_ratio(550000u128,1u128),
+            total_liabilities: Decimal256::from_ratio(50000u128, 1u128),
+            total_reserves: Decimal256::from_ratio(550000u128, 1u128),
             last_interest_updated: mock_env().block.height,
             last_reward_updated: mock_env().block.height,
             global_interest_index: Decimal256::one(),
@@ -575,7 +580,7 @@ fn deposit_stable() {
             reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
             prev_aterra_supply: Uint256::zero(),
             prev_exchange_rate: Decimal256::from_ratio(1u64, 2u64),
-            prev_borrower_incentives: Decimal256::zero(),
+            prev_borrower_incentives: Uint256::zero(),
         },
     )
     .unwrap();
@@ -617,8 +622,8 @@ fn deposit_stable() {
     store_state(
         deps.as_mut().storage,
         &State {
-            total_liabilities: Decimal256::from_ratio(50000u128,1u128),
-            total_reserves: Decimal256::from_ratio(550000u128,1u128),
+            total_liabilities: Decimal256::from_ratio(50000u128, 1u128),
+            total_reserves: Decimal256::from_ratio(550000u128, 1u128),
             last_interest_updated: env.block.height,
             last_reward_updated: env.block.height,
             global_interest_index: Decimal256::one(),
@@ -626,7 +631,7 @@ fn deposit_stable() {
             reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
             prev_aterra_supply: Uint256::zero(),
             prev_exchange_rate: Decimal256::from_ratio(1u64, 2u64),
-            prev_borrower_incentives: Decimal256::zero(),
+            prev_borrower_incentives: Uint256::zero(),
         },
     )
     .unwrap();
@@ -645,16 +650,16 @@ fn deposit_stable() {
     assert_eq!(
         read_state(deps.as_ref().storage).unwrap(),
         State {
-            global_interest_index: Decimal256::from_ratio(2u128,1u128),
+            global_interest_index: Decimal256::from_ratio(2u128, 1u128),
             global_reward_index: Decimal256::from_str("0").unwrap(),
-            total_liabilities: Decimal256::from_ratio(100000u128,1u128),
-            total_reserves: Decimal256::from_ratio(550000u128,1u128),
+            total_liabilities: Decimal256::from_ratio(100000u128, 1u128),
+            total_reserves: Decimal256::from_ratio(550000u128, 1u128),
             last_interest_updated: env.block.height,
             last_reward_updated: env.block.height,
             reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
             prev_aterra_supply: Uint256::from(INITIAL_DEPOSIT_AMOUNT + 1818181),
             prev_exchange_rate: Decimal256::from_ratio(55u64, 100u64),
-            prev_borrower_incentives: Decimal256::zero(),
+            prev_borrower_incentives: Uint256::zero(),
         }
     );
 }
@@ -704,6 +709,7 @@ fn redeem_stable() {
         interest_model: "interest".to_string(),
         distribution_model: "distribution".to_string(),
         collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
     let info = mock_info("addr0000", &[]);
@@ -780,8 +786,8 @@ fn redeem_stable() {
     store_state(
         deps.as_mut().storage,
         &State {
-            total_liabilities: Decimal256::from_ratio(500000u128,1u128),
-            total_reserves: Decimal256::from_ratio(100000u128,1u128),
+            total_liabilities: Decimal256::from_ratio(500000u128, 1u128),
+            total_reserves: Decimal256::from_ratio(100000u128, 1u128),
             last_interest_updated: mock_env().block.height,
             last_reward_updated: mock_env().block.height,
             global_interest_index: Decimal256::one(),
@@ -789,7 +795,7 @@ fn redeem_stable() {
             reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
             prev_aterra_supply: Uint256::from(2000000u64),
             prev_exchange_rate: Decimal256::one(),
-            prev_borrower_incentives: Decimal256::zero(),
+            prev_borrower_incentives: Uint256::zero(),
         },
     )
     .unwrap();
@@ -889,6 +895,7 @@ fn borrow_stable() {
         interest_model: "interest".to_string(),
         distribution_model: "distribution".to_string(),
         collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
     let mut env = mock_env();
@@ -903,7 +910,7 @@ fn borrow_stable() {
     store_state(
         deps.as_mut().storage,
         &State {
-            total_liabilities: Decimal256::from_ratio(1000000u128,1u128),
+            total_liabilities: Decimal256::from_ratio(1000000u128, 1u128),
             total_reserves: Decimal256::zero(),
             last_interest_updated: env.block.height,
             last_reward_updated: env.block.height,
@@ -912,7 +919,7 @@ fn borrow_stable() {
             reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
             prev_aterra_supply: Uint256::zero(),
             prev_exchange_rate: Decimal256::one(),
-            prev_borrower_incentives: Decimal256::zero(),
+            prev_borrower_incentives: Uint256::zero(),
         },
     )
     .unwrap();
@@ -965,16 +972,16 @@ fn borrow_stable() {
         )
         .unwrap(),
         State {
-            total_liabilities: Decimal256::from_ratio(2500000u128,1u128),
+            total_liabilities: Decimal256::from_ratio(2500000u128, 1u128),
             total_reserves: Decimal256::zero(),
             last_interest_updated: env.block.height,
             last_reward_updated: env.block.height,
-            global_interest_index: Decimal256::from_ratio(2u128,1u128),
+            global_interest_index: Decimal256::from_ratio(2u128, 1u128),
             global_reward_index: Decimal256::from_str("0").unwrap(),
             reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
             prev_aterra_supply: Uint256::zero(),
             prev_exchange_rate: Decimal256::one(),
-            prev_borrower_incentives: Decimal256::zero(),
+            prev_borrower_incentives: Uint256::zero(),
         }
     );
 
@@ -992,8 +999,8 @@ fn borrow_stable() {
         )
         .unwrap(),
         State {
-            total_liabilities: Decimal256::from_ratio(2525000u128,1u128),
-            total_reserves: Decimal256::from_ratio(0u128,1u128),
+            total_liabilities: Decimal256::from_ratio(2525000u128, 1u128),
+            total_reserves: Decimal256::from_ratio(0u128, 1u128),
             last_interest_updated: env.block.height + 1u64,
             last_reward_updated: env.block.height + 1u64,
             global_interest_index: Decimal256::from_str("2.02").unwrap(),
@@ -1001,7 +1008,7 @@ fn borrow_stable() {
             reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
             prev_aterra_supply: Uint256::zero(),
             prev_exchange_rate: Decimal256::one(),
-            prev_borrower_incentives: Decimal256::zero(),
+            prev_borrower_incentives: Uint256::zero(),
         }
     );
 
@@ -1020,7 +1027,7 @@ fn borrow_stable() {
         liability,
         BorrowerInfoResponse {
             borrower: "addr0000".to_string(),
-            interest_index: Decimal256::from_ratio(2u128,1u128),
+            interest_index: Decimal256::from_ratio(2u128, 1u128),
             reward_index: Decimal256::from_str("0").unwrap(),
             loan_amount: Uint256::from(500000u64),
             pending_rewards: Decimal256::zero(),
@@ -1042,7 +1049,7 @@ fn borrow_stable() {
         borrower_info,
         BorrowerInfoResponse {
             borrower: "addr0000".to_string(),
-            interest_index: Decimal256::from_ratio(2u128,1u128),
+            interest_index: Decimal256::from_ratio(2u128, 1u128),
             reward_index: Decimal256::from_str("0").unwrap(),
             loan_amount: Uint256::from(500000u64),
             pending_rewards: Decimal256::zero(),
@@ -1066,7 +1073,7 @@ fn borrow_stable() {
         borrower_info,
         BorrowerInfoResponse {
             borrower: "addr0000".to_string(),
-            interest_index: Decimal256::from_ratio(4u128,1u128),
+            interest_index: Decimal256::from_ratio(4u128, 1u128),
             reward_index: Decimal256::from_str("0").unwrap(),
             loan_amount: Uint256::from(1000000u64),
             pending_rewards: Decimal256::zero(),
@@ -1134,6 +1141,7 @@ fn assert_max_borrow_factor() {
         interest_model: "interest".to_string(),
         distribution_model: "distribution".to_string(),
         collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
     let info = mock_info("addr0000", &[]);
@@ -1156,7 +1164,7 @@ fn assert_max_borrow_factor() {
             reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
             prev_aterra_supply: Uint256::zero(),
             prev_exchange_rate: Decimal256::one(),
-            prev_borrower_incentives: Decimal256::zero(),
+            prev_borrower_incentives: Uint256::zero(),
         },
     )
     .unwrap();
@@ -1246,6 +1254,7 @@ fn repay_stable() {
         interest_model: "interest".to_string(),
         distribution_model: "distribution".to_string(),
         collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
     let mut env = mock_env();
@@ -1260,7 +1269,7 @@ fn repay_stable() {
     store_state(
         deps.as_mut().storage,
         &State {
-            total_liabilities: Decimal256::from_ratio(1000000u128,1u128),
+            total_liabilities: Decimal256::from_ratio(1000000u128, 1u128),
             total_reserves: Decimal256::zero(),
             last_interest_updated: env.block.height,
             last_reward_updated: env.block.height,
@@ -1269,7 +1278,7 @@ fn repay_stable() {
             reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
             prev_aterra_supply: Uint256::zero(),
             prev_exchange_rate: Decimal256::one(),
-            prev_borrower_incentives: Decimal256::zero(),
+            prev_borrower_incentives: Uint256::zero(),
         },
     )
     .unwrap();
@@ -1337,7 +1346,7 @@ fn repay_stable() {
     assert_eq!(res_loan, Uint256::from(400000u128));
     assert_eq!(
         read_state(deps.as_ref().storage).unwrap().total_liabilities,
-        Decimal256::from_ratio(2400000u128,1u128)
+        Decimal256::from_ratio(2400000u128, 1u128)
     );
 
     info.funds = vec![Coin {
@@ -1363,7 +1372,7 @@ fn repay_stable() {
     assert_eq!(res_loan, Uint256::zero());
     assert_eq!(
         read_state(deps.as_ref().storage).unwrap().total_liabilities,
-        Decimal256::from_ratio(2000000u128,1u128)
+        Decimal256::from_ratio(2000000u128, 1u128)
     );
 
     assert_eq!(
@@ -1427,6 +1436,7 @@ fn repay_stable_from_liquidation() {
         interest_model: "interest".to_string(),
         distribution_model: "distribution".to_string(),
         collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
     let mut env = mock_env();
@@ -1441,7 +1451,7 @@ fn repay_stable_from_liquidation() {
     store_state(
         deps.as_mut().storage,
         &State {
-            total_liabilities: Decimal256::from_ratio(1000000u128,1u128),
+            total_liabilities: Decimal256::from_ratio(1000000u128, 1u128),
             total_reserves: Decimal256::zero(),
             last_interest_updated: env.block.height,
             last_reward_updated: env.block.height,
@@ -1450,7 +1460,7 @@ fn repay_stable_from_liquidation() {
             reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
             prev_aterra_supply: Uint256::zero(),
             prev_exchange_rate: Decimal256::one(),
-            prev_borrower_incentives: Decimal256::zero(),
+            prev_borrower_incentives: Uint256::zero(),
         },
     )
     .unwrap();
@@ -1728,6 +1738,7 @@ fn execute_epoch_operations() {
         interest_model: "interest".to_string(),
         distribution_model: "distribution".to_string(),
         collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
     let mut env = mock_env();
@@ -1742,8 +1753,8 @@ fn execute_epoch_operations() {
     store_state(
         deps.as_mut().storage,
         &State {
-            total_liabilities: Decimal256::from_ratio(1000000u128,1u128),
-            total_reserves: Decimal256::from_ratio(3000u128,1u128),
+            total_liabilities: Decimal256::from_ratio(1000000u128, 1u128),
+            total_reserves: Decimal256::from_ratio(3000u128, 1u128),
             last_interest_updated: env.block.height,
             last_reward_updated: env.block.height,
             global_interest_index: Decimal256::one(),
@@ -1751,7 +1762,7 @@ fn execute_epoch_operations() {
             reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
             prev_aterra_supply: Uint256::zero(),
             prev_exchange_rate: Decimal256::one(),
-            prev_borrower_incentives: Decimal256::zero(),
+            prev_borrower_incentives: Uint256::zero(),
         },
     )
     .unwrap();
@@ -1764,7 +1775,6 @@ fn execute_epoch_operations() {
         target_deposit_rate: Decimal256::one(),
         threshold_deposit_rate: Decimal256::one(),
         distributed_interest: Uint256::zero(),
-        borrow_incentives_amount: Decimal256::zero(),
     };
 
     // only overseer can execute this
@@ -1791,16 +1801,16 @@ fn execute_epoch_operations() {
     assert_eq!(
         state,
         State {
-            total_liabilities: Decimal256::from_ratio(2000000u128,1u128),
+            total_liabilities: Decimal256::from_ratio(2000000u128, 1u128),
             total_reserves: Decimal256::zero(),
             last_interest_updated: env.block.height,
             last_reward_updated: env.block.height,
-            global_interest_index: Decimal256::from_ratio(2u64,1u128),
+            global_interest_index: Decimal256::from_ratio(2u64, 1u128),
             global_reward_index: Decimal256::from_str("0").unwrap(),
             reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
             prev_aterra_supply: Uint256::zero(),
             prev_exchange_rate: Decimal256::one(),
-            prev_borrower_incentives: Decimal256::zero(),
+            prev_borrower_incentives: Uint256::zero(),
         }
     );
 
@@ -1819,8 +1829,8 @@ fn execute_epoch_operations() {
     store_state(
         deps.as_mut().storage,
         &State {
-            total_liabilities: Decimal256::from_ratio(1000000u128,1u128),
-            total_reserves: Decimal256::from_ratio(3000u128,1u128),
+            total_liabilities: Decimal256::from_ratio(1000000u128, 1u128),
+            total_reserves: Decimal256::from_ratio(3000u128, 1u128),
             last_interest_updated: env.block.height,
             last_reward_updated: env.block.height,
             global_interest_index: Decimal256::one(),
@@ -1828,7 +1838,7 @@ fn execute_epoch_operations() {
             reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
             prev_aterra_supply: Uint256::zero(),
             prev_exchange_rate: Decimal256::one(),
-            prev_borrower_incentives: Decimal256::zero(),
+            prev_borrower_incentives: Uint256::zero(),
         },
     )
     .unwrap();
@@ -1841,7 +1851,6 @@ fn execute_epoch_operations() {
         target_deposit_rate: Decimal256::one(),
         threshold_deposit_rate: Decimal256::one(),
         distributed_interest: Uint256::zero(),
-        borrow_incentives_amount: Decimal256::zero(),
     };
 
     let res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
@@ -1851,16 +1860,16 @@ fn execute_epoch_operations() {
     assert_eq!(
         state,
         State {
-            total_liabilities: Decimal256::from_ratio(2000000u128,1u128),
-            total_reserves: Decimal256::from_ratio(3000u128,1u128),
+            total_liabilities: Decimal256::from_ratio(2000000u128, 1u128),
+            total_reserves: Decimal256::from_ratio(3000u128, 1u128),
             last_interest_updated: env.block.height,
             last_reward_updated: env.block.height,
-            global_interest_index: Decimal256::from_ratio(2u64,1u128),
+            global_interest_index: Decimal256::from_ratio(2u64, 1u128),
             global_reward_index: Decimal256::from_str("0").unwrap(),
             reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
             prev_aterra_supply: Uint256::zero(),
             prev_exchange_rate: Decimal256::one(),
-            prev_borrower_incentives: Decimal256::zero(),
+            prev_borrower_incentives: Uint256::zero(),
         }
     );
 }

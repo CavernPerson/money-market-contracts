@@ -1,5 +1,5 @@
 use crate::state::Bid;
-use cosmwasm_std::{Env, StdError, StdResult,Decimal256, Uint256};
+use cosmwasm_std::{Decimal256, Env, StdError, StdResult, Uint256};
 
 const MAX_SLOT_CAP: u8 = 30u8;
 
@@ -62,8 +62,9 @@ pub fn assert_fees(fees: Decimal256) -> StdResult<()> {
 }
 
 pub fn assert_max_slot_premium(max_slot: u8, premium_rate_per_slot: Decimal256) -> StdResult<()> {
-    let max_slot_premium =
-        premium_rate_per_slot * Decimal256::from_atomics(max_slot as u128, 0).map_err(|_| StdError::generic_err("Error when parsing a value to u128"))?;
+    let max_slot_premium = premium_rate_per_slot
+        * Decimal256::from_atomics(max_slot as u128, 0)
+            .map_err(|_| StdError::generic_err("Error when parsing a value to u128"))?;
     if max_slot_premium >= Decimal256::one() {
         return Err(StdError::generic_err("Max slot premium rate exceeds limit"));
     }

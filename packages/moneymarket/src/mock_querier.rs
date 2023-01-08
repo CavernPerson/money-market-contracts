@@ -1,8 +1,8 @@
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::Empty;
 use cosmwasm_std::{
-    from_binary, from_slice, to_binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult,
-    QueryRequest, SystemError, SystemResult, WasmQuery,Decimal256
+    from_binary, from_slice, to_binary, Coin, ContractResult, Decimal256, OwnedDeps, Querier,
+    QuerierResult, QueryRequest, SystemError, SystemResult, WasmQuery,
 };
 use std::collections::HashMap;
 use std::marker::PhantomData;

@@ -1,7 +1,9 @@
 use crate::contract::{execute, instantiate, query};
 use crate::testing::mock_querier::mock_dependencies;
 use cosmwasm_std::testing::{mock_env, mock_info};
-use cosmwasm_std::{from_binary, to_binary, BankMsg, Coin, CosmosMsg, Decimal, SubMsg, Uint128, Decimal256, Uint256};
+use cosmwasm_std::{
+    from_binary, to_binary, BankMsg, Coin, CosmosMsg, Decimal, Decimal256, SubMsg, Uint128, Uint256,
+};
 use cw20::Cw20ReceiveMsg;
 use moneymarket::liquidation_queue::{
     Cw20HookMsg, ExecuteMsg, InstantiateMsg, LiquidationAmountResponse, QueryMsg,

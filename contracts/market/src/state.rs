@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{CanonicalAddr, Deps, Order, StdResult, Storage, Uint256, Decimal256};
+use cosmwasm_std::{CanonicalAddr, Decimal256, Deps, Order, StdResult, Storage, Uint256};
 use cosmwasm_storage::{bucket, bucket_read, ReadonlyBucket, ReadonlySingleton, Singleton};
 
 use moneymarket::market::BorrowerInfoResponse;
@@ -21,6 +21,7 @@ pub struct Config {
     pub overseer_contract: CanonicalAddr,
     pub collector_contract: CanonicalAddr,
     pub distributor_contract: CanonicalAddr,
+    pub borrow_reserves_bucket_contract: CanonicalAddr,
     pub stable_denom: String,
     pub max_borrow_factor: Decimal256,
     pub max_borrow_subsidy_rate: Decimal256,
@@ -38,7 +39,7 @@ pub struct State {
     pub prev_aterra_supply: Uint256,
     pub prev_exchange_rate: Decimal256,
 
-    pub prev_borrower_incentives: Decimal256,
+    pub prev_borrower_incentives: Uint256,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

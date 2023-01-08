@@ -1,4 +1,3 @@
-use std::convert::TryInto;
 use crate::asserts::{assert_activate_status, assert_withdraw_amount};
 use crate::querier::query_collateral_whitelist_info;
 use crate::state::{
@@ -7,12 +6,13 @@ use crate::state::{
     store_bid_pool, store_epoch_scale_sum, store_total_bids, Bid, BidPool, CollateralInfo, Config,
 };
 use cosmwasm_std::{
-    attr, to_binary, BankMsg, CanonicalAddr, Coin, CosmosMsg, DepsMut, Env, MessageInfo, Response,
-    StdError, StdResult, Storage, Uint128, WasmMsg,Decimal256, Uint256
+    attr, to_binary, BankMsg, CanonicalAddr, Coin, CosmosMsg, Decimal256, DepsMut, Env,
+    MessageInfo, Response, StdError, StdResult, Storage, Uint128, Uint256, WasmMsg,
 };
 use cw20::Cw20ExecuteMsg;
 use moneymarket::oracle::PriceResponse;
 use moneymarket::querier::{query_price, TimeConstraints};
+use std::convert::TryInto;
 
 /// Stable asset is submitted to create a bid record. If available bids for the collateral is under
 /// the threshold, the bid is activated. Bids are not used for liquidations until activated
@@ -543,7 +543,8 @@ fn execute_pool_liquidation(
 
     if pool_required_stable > bid_pool.total_bid_amount {
         pool_required_stable = bid_pool.total_bid_amount;
-        pool_collateral_to_liquidate = Decimal256::from_ratio(pool_required_stable, 1u128) / premium_price * Uint256::one();
+        pool_collateral_to_liquidate =
+            Decimal256::from_ratio(pool_required_stable, 1u128) / premium_price * Uint256::one();
     } else {
         *filled = true;
     }
@@ -613,8 +614,8 @@ pub(crate) fn calculate_remaining_bid(
         Decimal256::from_ratio(bid.amount, 1u128) * bid_pool.product_snapshot / bid.product_snapshot
     } else if scale_diff == Uint128::from(1u128) {
         // product has been scaled
-        let scaled_remaining_bid =
-            Decimal256::from_ratio(bid.amount, 1u128) / bid.product_snapshot * bid_pool.product_snapshot;
+        let scaled_remaining_bid = Decimal256::from_ratio(bid.amount, 1u128) / bid.product_snapshot
+            * bid_pool.product_snapshot;
 
         scaled_remaining_bid / Uint256::from(1_000_000_000u64)
     } else {
@@ -650,9 +651,7 @@ pub(crate) fn calculate_liquidated_collateral(
         bid.epoch_snapshot,
         bid.scale_snapshot + Uint128::from(1u128),
     ) {
-      
         (second_scale_sum_snapshot - reference_sum_snapshot) / Uint256::from(1_000_000_000u64)
-        
     } else {
         Decimal256::zero()
     };
@@ -677,9 +676,8 @@ fn claim_col_residue(bid_pool: &mut BidPool) -> Uint256 {
 }
 
 fn claim_bid_residue(bid_pool: &mut BidPool) -> Uint256 {
-
     let claimable = bid_pool.residue_bid * Uint256::one();
-    
+
     if !claimable.is_zero() {
         bid_pool.residue_bid -= Decimal256::from_ratio(claimable, 1u128);
     }

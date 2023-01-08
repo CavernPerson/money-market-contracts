@@ -1,11 +1,10 @@
-#[cfg(not(feature = "library"))]
-use std::convert::TryInto;
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    attr, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Env, MessageInfo,
-    Response, StdResult, Uint128, WasmMsg, Uint256, Decimal256
+    attr, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal256, Deps, DepsMut, Env,
+    MessageInfo, Response, StdResult, Uint128, Uint256, WasmMsg,
 };
 use std::cmp::{max, min};
+use std::convert::TryInto;
 
 use crate::collateral::{
     liquidate_collateral, lock_collateral, query_all_collaterals, query_borrow_limit,
@@ -47,7 +46,9 @@ pub fn instantiate(
             oracle_contract: deps.api.addr_canonicalize(&msg.oracle_contract)?,
             market_contract: deps.api.addr_canonicalize(&msg.market_contract)?,
             liquidation_contract: deps.api.addr_canonicalize(&msg.liquidation_contract)?,
-            collector_contract: deps.api.addr_canonicalize(&msg.collector_contract)?,
+            borrow_reserves_bucket_contract: deps
+                .api
+                .addr_canonicalize(&msg.borrow_reserves_bucket_contract)?,
             stable_denom: msg.stable_denom,
             epoch_period: msg.epoch_period,
             threshold_deposit_rate: msg.threshold_deposit_rate,
@@ -205,15 +206,7 @@ pub fn execute(
         ExecuteMsg::UpdateEpochState {
             interest_buffer,
             distributed_interest,
-            borrow_incentives_amount,
-        } => update_epoch_state(
-            deps,
-            env,
-            info,
-            interest_buffer,
-            distributed_interest,
-            borrow_incentives_amount,
-        ),
+        } => update_epoch_state(deps, env, info, interest_buffer, distributed_interest),
         ExecuteMsg::LockCollateral { collaterals } => lock_collateral(deps, info, collaterals),
         ExecuteMsg::UnlockCollateral { collaterals } => {
             unlock_collateral(deps, env, info, collaterals)
@@ -253,17 +246,15 @@ pub fn update_config(
     }
 
     if let Some(owner_addr) = owner_addr {
-        config.owner_addr = deps.api.addr_canonicalize(&owner_addr.to_string())?;
+        config.owner_addr = deps.api.addr_canonicalize(owner_addr.as_ref())?;
     }
 
     if let Some(oracle_contract) = oracle_contract {
-        config.oracle_contract = deps.api.addr_canonicalize(&oracle_contract.to_string())?;
+        config.oracle_contract = deps.api.addr_canonicalize(oracle_contract.as_ref())?;
     }
 
     if let Some(liquidation_contract) = liquidation_contract {
-        config.liquidation_contract = deps
-            .api
-            .addr_canonicalize(&liquidation_contract.to_string())?;
+        config.liquidation_contract = deps.api.addr_canonicalize(liquidation_contract.as_ref())?;
     }
 
     if let Some(threshold_deposit_rate) = threshold_deposit_rate {
@@ -410,7 +401,7 @@ fn update_deposit_rate(deps: DepsMut, env: Env) -> StdResult<()> {
         let blocks_per_year = Decimal256::from_ratio(Uint256::from(BLOCKS_PER_YEAR), 1u128);
         let current_rate = config.threshold_deposit_rate * blocks_per_year;
 
-        let yield_reserve = Decimal256::from_ratio(interest_buffer,1u128);
+        let yield_reserve = Decimal256::from_ratio(interest_buffer, 1u128);
         let mut yr_went_up = yield_reserve > dynrate_state.prev_yield_reserve;
 
         // amount yield reserve changed in notional terms
@@ -500,7 +491,7 @@ pub fn execute_epoch_operations(deps: DepsMut, env: Env) -> Result<Response, Con
     // deposit_rate = (effective_deposit_rate - 1) / blocks
     let effective_deposit_rate = epoch_state.exchange_rate / state.prev_exchange_rate;
     let deposit_rate =
-        (effective_deposit_rate - Decimal256::one()) / Decimal256::from_ratio(blocks,1u128);
+        (effective_deposit_rate - Decimal256::one()) / Decimal256::from_ratio(blocks, 1u128);
 
     let mut messages: Vec<CosmosMsg> = vec![];
     let mut interest_buffer = query_balance(
@@ -513,6 +504,19 @@ pub fn execute_epoch_operations(deps: DepsMut, env: Env) -> Result<Response, Con
     // We compute this value now, and make the borrowers pay less interest in the market contract
     let accrued_buffer = interest_buffer - state.prev_interest_buffer;
     let borrow_incentives_amount = accrued_buffer * epoch_state.reserves_rate_used_for_borrowers;
+
+    if !borrow_incentives_amount.is_zero() {
+        messages.push(CosmosMsg::Bank(BankMsg::Send {
+            to_address: deps
+                .api
+                .addr_humanize(&config.borrow_reserves_bucket_contract)?
+                .to_string(),
+            amount: vec![Coin {
+                denom: config.stable_denom.clone(),
+                amount: borrow_incentives_amount.try_into()?,
+            }],
+        }));
+    }
 
     // Deduct anc_purchase_amount from the interest_buffer
     interest_buffer -= borrow_incentives_amount;
@@ -564,7 +568,6 @@ pub fn execute_epoch_operations(deps: DepsMut, env: Env) -> Result<Response, Con
         msg: to_binary(&ExecuteMsg::UpdateEpochState {
             interest_buffer,
             distributed_interest,
-            borrow_incentives_amount: Decimal256::from_ratio(borrow_incentives_amount, 1u128),
         })?,
     }));
 
@@ -585,7 +588,6 @@ pub fn update_epoch_state(
     // pass interest_buffer from execute_epoch_operations
     interest_buffer: Uint256,
     distributed_interest: Uint256,
-    borrow_incentives_amount: Decimal256,
 ) -> Result<Response, ContractError> {
     let config: Config = read_config(deps.storage)?;
     let overseer_epoch_state: EpochState = read_epoch_state(deps.storage)?;
@@ -630,7 +632,6 @@ pub fn update_epoch_state(
         target_deposit_rate: config.target_deposit_rate,
         threshold_deposit_rate: config.threshold_deposit_rate,
         distributed_interest,
-        borrow_incentives_amount,
         // This is a variable saying that the overseer is ready to subsidise the borrow rate by this amount
     })?;
 
@@ -722,9 +723,9 @@ pub fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
             .api
             .addr_humanize(&config.liquidation_contract)?
             .to_string(),
-        collector_contract: deps
+        borrow_reserves_bucket_contract: deps
             .api
-            .addr_humanize(&config.collector_contract)?
+            .addr_humanize(&config.borrow_reserves_bucket_contract)?
             .to_string(),
         stable_denom: config.stable_denom,
         epoch_period: config.epoch_period,

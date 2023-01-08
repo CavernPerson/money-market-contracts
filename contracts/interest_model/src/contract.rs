@@ -3,7 +3,10 @@ use crate::state::{read_config, store_config, Config};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 
-use cosmwasm_std::{to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint256, Decimal256};
+use cosmwasm_std::{
+    to_binary, Addr, Binary, Decimal256, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+    Uint256,
+};
 use moneymarket::common::optional_addr_validate;
 use moneymarket::interest_model::{
     BorrowRateResponse, ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg,

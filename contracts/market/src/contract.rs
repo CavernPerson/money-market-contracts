@@ -1,6 +1,7 @@
+use cosmwasm_std::entry_point;
+use serde::Serialize;
 #[cfg(not(feature = "library"))]
 use std::convert::TryInto;
-use cosmwasm_std::entry_point;
 
 use crate::borrow::{
     borrow_stable, compute_interest, compute_interest_raw, query_borrower_info,
@@ -15,8 +16,9 @@ use crate::response::MsgInstantiateContractResponse;
 use crate::state::{read_config, read_state, store_config, store_state, Config, State};
 
 use cosmwasm_std::{
-    attr, from_binary, to_binary, Addr, BankMsg, Binary, CanonicalAddr, Coin, CosmosMsg, Deps,
-    DepsMut, Env, MessageInfo, Reply, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg, Uint256, Decimal256
+    attr, from_binary, to_binary, Addr, BankMsg, Binary, CanonicalAddr, Coin, CosmosMsg,
+    Decimal256, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdError, StdResult, SubMsg,
+    Uint128, Uint256, WasmMsg,
 };
 use cw20::{Cw20Coin, Cw20ReceiveMsg, MinterResponse};
 use cw20_base::msg::{InstantiateMarketingInfo, InstantiateMsg as TokenInstantiateMsg};
@@ -64,6 +66,7 @@ pub fn instantiate(
             distribution_model: CanonicalAddr::from(vec![]),
             collector_contract: CanonicalAddr::from(vec![]),
             distributor_contract: CanonicalAddr::from(vec![]),
+            borrow_reserves_bucket_contract: CanonicalAddr::from(vec![]),
             stable_denom: msg.stable_denom.clone(),
             max_borrow_factor: msg.max_borrow_factor,
             max_borrow_subsidy_rate: msg.max_borrow_subsidy_rate,
@@ -82,7 +85,7 @@ pub fn instantiate(
             reserves_rate_used_for_borrowers: Decimal256::zero(),
             prev_aterra_supply: Uint256::zero(),
             prev_exchange_rate: Decimal256::one(),
-            prev_borrower_incentives: Decimal256::zero(),
+            prev_borrower_incentives: Uint256::zero(),
         },
     )?;
 
@@ -135,6 +138,7 @@ pub fn execute(
             interest_model,
             distribution_model,
             collector_contract,
+            borrow_reserves_bucket_contract,
             distributor_contract,
         } => {
             let api = deps.api;
@@ -144,6 +148,7 @@ pub fn execute(
                 api.addr_validate(&interest_model)?,
                 api.addr_validate(&distribution_model)?,
                 api.addr_validate(&collector_contract)?,
+                api.addr_validate(&borrow_reserves_bucket_contract)?,
                 api.addr_validate(&distributor_contract)?,
             )
         }
@@ -171,7 +176,6 @@ pub fn execute(
             target_deposit_rate,
             threshold_deposit_rate,
             distributed_interest,
-            borrow_incentives_amount,
         } => execute_epoch_operations(
             deps,
             env,
@@ -180,7 +184,6 @@ pub fn execute(
             target_deposit_rate,
             threshold_deposit_rate,
             distributed_interest,
-            borrow_incentives_amount,
         ),
         ExecuteMsg::DepositStable {} => deposit_stable(deps, env, info),
         ExecuteMsg::BorrowStable { borrow_amount, to } => {
@@ -207,7 +210,7 @@ pub fn execute(
                 prev_balance,
             )
         }
-        ExecuteMsg::ClaimRewards { .. } => Err(ContractError::Unauthorized {  })
+        ExecuteMsg::ClaimRewards { .. } => Err(ContractError::Unauthorized {}),
     }
 }
 
@@ -273,6 +276,7 @@ pub fn register_contracts(
     interest_model: Addr,
     distribution_model: Addr,
     collector_contract: Addr,
+    borrow_reserves_bucket_contract: Addr,
     distributor_contract: Addr,
 ) -> Result<Response, ContractError> {
     let mut config: Config = read_config(deps.storage)?;
@@ -280,6 +284,7 @@ pub fn register_contracts(
         || config.interest_model != CanonicalAddr::from(vec![])
         || config.distribution_model != CanonicalAddr::from(vec![])
         || config.collector_contract != CanonicalAddr::from(vec![])
+        || config.borrow_reserves_bucket_contract != CanonicalAddr::from(vec![])
         || config.distributor_contract != CanonicalAddr::from(vec![])
     {
         return Err(ContractError::Unauthorized {});
@@ -289,6 +294,9 @@ pub fn register_contracts(
     config.interest_model = deps.api.addr_canonicalize(interest_model.as_str())?;
     config.distribution_model = deps.api.addr_canonicalize(distribution_model.as_str())?;
     config.collector_contract = deps.api.addr_canonicalize(collector_contract.as_str())?;
+    config.borrow_reserves_bucket_contract = deps
+        .api
+        .addr_canonicalize(borrow_reserves_bucket_contract.as_str())?;
     config.distributor_contract = deps.api.addr_canonicalize(distributor_contract.as_str())?;
     store_config(deps.storage, &config)?;
 
@@ -354,7 +362,6 @@ pub fn execute_epoch_operations(
     target_deposit_rate: Decimal256,
     threshold_deposit_rate: Decimal256,
     distributed_interest: Uint256,
-    available_borrower_incentives: Decimal256,
 ) -> Result<Response, ContractError> {
     let config: Config = read_config(deps.storage)?;
     if config.overseer_contract != deps.api.addr_canonicalize(info.sender.as_str())? {
@@ -382,7 +389,14 @@ pub fn execute_epoch_operations(
         state.total_reserves,
     )?;
 
-    compute_interest_raw(
+    let available_borrower_incentives = query_balance(
+        deps.as_ref(),
+        deps.api
+            .addr_humanize(&config.borrow_reserves_bucket_contract)?,
+        config.stable_denom.to_string(),
+    )?;
+
+    let mut messages = compute_interest_raw(
         &config,
         &mut state,
         env.block.height,
@@ -391,7 +405,10 @@ pub fn execute_epoch_operations(
         borrow_rate_res.rate,
         target_deposit_rate,
         available_borrower_incentives,
-    );
+    )?;
+
+    // We send the reserves used for borrower incentives back to the overseer contract
+    // This bucket contract uses the FundReserve message to avoid the funds being used again for borrowers incentives.
 
     // recompute prev_exchange_rate with distributed_interest
     state.prev_exchange_rate =
@@ -401,10 +418,10 @@ pub fn execute_epoch_operations(
     // Update total_reserves and send it to collector contract
     // only when there is enough balance
     let total_reserves = state.total_reserves * Uint256::one();
-    let messages: Vec<CosmosMsg> = if !total_reserves.is_zero() && balance > total_reserves {
-        state.total_reserves -= Decimal256::from_ratio(total_reserves,1u128);
+    if !total_reserves.is_zero() && balance > total_reserves {
+        state.total_reserves -= Decimal256::from_ratio(total_reserves, 1u128);
 
-        vec![CosmosMsg::Bank(BankMsg::Send {
+        messages.push(CosmosMsg::Bank(BankMsg::Send {
             to_address: deps
                 .api
                 .addr_humanize(&config.collector_contract)?
@@ -413,10 +430,8 @@ pub fn execute_epoch_operations(
                 denom: config.stable_denom,
                 amount: total_reserves.try_into()?,
             }],
-        })]
-    } else {
-        vec![]
-    };
+        }));
+    }
     // Query updated borrower_incentives_rate
 
     state.reserves_rate_used_for_borrowers = query_borrow_reserves_incentives_rate(
@@ -441,15 +456,19 @@ pub fn execute_epoch_operations(
     ]))
 }
 
+pub fn _to_binary<T: Serialize>(r: &T) -> Result<Binary, ContractError> {
+    Ok(to_binary(r)?)
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
     match msg {
-        QueryMsg::Config {} => to_binary(&query_config(deps)?),
-        QueryMsg::State { block_height } => to_binary(&query_state(deps, env, block_height)?),
+        QueryMsg::Config {} => _to_binary(&query_config(deps)?),
+        QueryMsg::State { block_height } => _to_binary(&query_state(deps, env, block_height)?),
         QueryMsg::EpochState {
             block_height,
             distributed_interest,
-        } => to_binary(&query_epoch_state(
+        } => _to_binary(&query_epoch_state(
             deps,
             block_height,
             distributed_interest,
@@ -457,13 +476,13 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::BorrowerInfo {
             borrower,
             block_height,
-        } => to_binary(&query_borrower_info(
+        } => _to_binary(&query_borrower_info(
             deps,
             env,
             deps.api.addr_validate(&borrower)?,
             block_height,
         )?),
-        QueryMsg::BorrowerInfos { start_after, limit } => to_binary(&query_borrower_infos(
+        QueryMsg::BorrowerInfos { start_after, limit } => _to_binary(&query_borrower_infos(
             deps,
             optional_addr_validate(deps.api, start_after)?,
             limit,
@@ -499,7 +518,11 @@ pub fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
     })
 }
 
-pub fn query_state(deps: Deps, env: Env, block_height: Option<u64>) -> StdResult<StateResponse> {
+pub fn query_state(
+    deps: Deps,
+    env: Env,
+    block_height: Option<u64>,
+) -> Result<StateResponse, ContractError> {
     let mut state: State = read_state(deps.storage)?;
 
     let block_height = if let Some(block_height) = block_height {
@@ -509,15 +532,15 @@ pub fn query_state(deps: Deps, env: Env, block_height: Option<u64>) -> StdResult
     };
 
     if block_height < state.last_interest_updated {
-        return Err(StdError::generic_err(
+        return Err(ContractError::Std(StdError::generic_err(
             "block_height must bigger than last_interest_updated",
-        ));
+        )));
     }
 
     if block_height < state.last_reward_updated {
-        return Err(StdError::generic_err(
+        return Err(ContractError::Std(StdError::generic_err(
             "block_height must bigger than last_reward_updated",
-        ));
+        )));
     }
 
     let config: Config = read_config(deps.storage)?;
@@ -543,7 +566,7 @@ pub fn query_epoch_state(
     deps: Deps,
     block_height: Option<u64>,
     distributed_interest: Option<Uint256>,
-) -> StdResult<EpochStateResponse> {
+) -> Result<EpochStateResponse, ContractError> {
     let config: Config = read_config(deps.storage)?;
     let mut state: State = read_state(deps.storage)?;
 
@@ -557,9 +580,9 @@ pub fn query_epoch_state(
 
     if let Some(block_height) = block_height {
         if block_height < state.last_interest_updated {
-            return Err(StdError::generic_err(
+            return Err(ContractError::Std(StdError::generic_err(
                 "block_height must bigger than last_interest_updated",
-            ));
+            )));
         }
 
         let borrow_rate_res: BorrowRateResponse = query_borrow_rate(
@@ -585,7 +608,7 @@ pub fn query_epoch_state(
             borrow_rate_res.rate,
             target_deposit_rate,
             prev_borrower_incentives,
-        );
+        )?;
     }
 
     // compute_interest_raw store current exchange rate
