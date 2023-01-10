@@ -82,7 +82,7 @@ pub fn instantiate(
             last_reward_updated: env.block.height,
             global_interest_index: Decimal256::one(),
             global_reward_index: Decimal256::zero(),
-            reserves_rate_used_for_borrowers: Decimal256::zero(),
+            reserves_rate_used_for_borrowers: msg.initial_borrower_incentives,
             prev_aterra_supply: Uint256::zero(),
             prev_exchange_rate: Decimal256::one(),
             prev_borrower_incentives: Uint256::zero(),
@@ -155,7 +155,7 @@ pub fn execute(
         ExecuteMsg::UpdateConfig {
             owner_addr,
             interest_model,
-            //distribution_model,
+            distribution_model,
             max_borrow_factor,
             max_borrow_subsidy_rate,
         } => {
@@ -166,7 +166,7 @@ pub fn execute(
                 info,
                 optional_addr_validate(api, owner_addr)?,
                 optional_addr_validate(api, interest_model)?,
-                //optional_addr_validate(api, distribution_model)?,
+                optional_addr_validate(api, distribution_model)?,
                 max_borrow_factor,
                 max_borrow_subsidy_rate,
             )
@@ -309,7 +309,7 @@ pub fn update_config(
     info: MessageInfo,
     owner_addr: Option<Addr>,
     interest_model: Option<Addr>,
-    //distribution_model: Option<Addr>,
+    distribution_model: Option<Addr>,
     max_borrow_factor: Option<Decimal256>,
     max_borrow_subsidy_rate: Option<Decimal256>,
 ) -> Result<Response, ContractError> {
@@ -324,22 +324,22 @@ pub fn update_config(
         config.owner_addr = deps.api.addr_canonicalize(owner_addr.as_str())?;
     }
 
-    if interest_model.is_some() {
+    let borrow_incentives_messages = if interest_model.is_some() {
         let mut state: State = read_state(deps.storage)?;
-        compute_interest(
-            deps.as_ref(),
-            &config,
-            &mut state,
-            env.block.height,
-            None,
-            None,
-        )?;
+        let borrow_incentives_messages =
+            compute_interest(deps.as_ref(), &config, &mut state, env.block.height, None)?;
         store_state(deps.storage, &state)?;
 
         if let Some(interest_model) = interest_model {
             config.interest_model = deps.api.addr_canonicalize(interest_model.as_str())?;
         }
-    }
+        if let Some(distribution_model) = distribution_model {
+            config.distribution_model = deps.api.addr_canonicalize(distribution_model.as_str())?;
+        }
+        borrow_incentives_messages
+    } else {
+        vec![]
+    };
 
     if let Some(max_borrow_factor) = max_borrow_factor {
         config.max_borrow_factor = max_borrow_factor;
@@ -350,7 +350,9 @@ pub fn update_config(
     }
 
     store_config(deps.storage, &config)?;
-    Ok(Response::new().add_attributes(vec![attr("action", "update_config")]))
+    Ok(Response::new()
+        .add_messages(borrow_incentives_messages)
+        .add_attributes(vec![attr("action", "update_config")]))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -389,14 +391,8 @@ pub fn execute_epoch_operations(
         state.total_reserves,
     )?;
 
-    let available_borrower_incentives = query_balance(
-        deps.as_ref(),
-        deps.api
-            .addr_humanize(&config.borrow_reserves_bucket_contract)?,
-        config.stable_denom.to_string(),
-    )?;
-
     let mut messages = compute_interest_raw(
+        deps.as_ref(),
         &config,
         &mut state,
         env.block.height,
@@ -404,7 +400,6 @@ pub fn execute_epoch_operations(
         aterra_supply,
         borrow_rate_res.rate,
         target_deposit_rate,
-        available_borrower_incentives,
     )?;
 
     // We send the reserves used for borrower incentives back to the overseer contract
@@ -546,7 +541,7 @@ pub fn query_state(
     let config: Config = read_config(deps.storage)?;
 
     // Compute interest rate with given block height
-    compute_interest(deps, &config, &mut state, block_height, None, None)?;
+    compute_interest(deps, &config, &mut state, block_height, None)?;
 
     Ok(StateResponse {
         total_liabilities: state.total_liabilities,
@@ -596,10 +591,9 @@ pub fn query_epoch_state(
         let target_deposit_rate: Decimal256 =
             query_target_deposit_rate(deps, deps.api.addr_humanize(&config.overseer_contract)?)?;
 
-        let prev_borrower_incentives = state.prev_borrower_incentives;
-
         // Compute interest rate to return latest epoch state
         compute_interest_raw(
+            deps,
             &config,
             &mut state,
             block_height,
@@ -607,7 +601,6 @@ pub fn query_epoch_state(
             aterra_supply,
             borrow_rate_res.rate,
             target_deposit_rate,
-            prev_borrower_incentives,
         )?;
     }
 
@@ -620,6 +613,7 @@ pub fn query_epoch_state(
         exchange_rate,
         aterra_supply,
         reserves_rate_used_for_borrowers: state.reserves_rate_used_for_borrowers,
+        prev_borrower_incentives: state.prev_borrower_incentives,
     })
 }
 

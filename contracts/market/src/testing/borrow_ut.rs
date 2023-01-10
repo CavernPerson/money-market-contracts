@@ -118,7 +118,6 @@ fn proper_compute_interest() {
         &mut mock_state,
         env.block.height,
         mock_deposit_amount,
-        None,
     )
     .unwrap();
     assert_eq!(
@@ -145,7 +144,6 @@ fn proper_compute_interest() {
         &mut mock_state,
         env.block.height,
         mock_deposit_amount,
-        None,
     )
     .unwrap();
     assert_eq!(
@@ -199,7 +197,6 @@ fn proper_compute_interest() {
         &mock_config,
         &mut mock_state,
         env.block.height,
-        None,
         None,
     )
     .unwrap();

@@ -11,8 +11,6 @@ fn proper_initialization() {
 
     let msg = InstantiateMsg {
         owner: "owner0000".to_string(),
-        sender_contract: "sender".to_string(),
-        overseer_contract: "recipient".to_string(),
     };
 
     let info = mock_info("addr0000", &[]);
@@ -33,8 +31,6 @@ fn update_config() {
 
     let msg = InstantiateMsg {
         owner: "owner0000".to_string(),
-        sender_contract: "sender".to_string(),
-        overseer_contract: "recipient".to_string(),
     };
 
     let info = mock_info("addr0000", &[]);
@@ -74,13 +70,11 @@ fn update_config() {
 }
 
 #[test]
-fn register_feeder() {
+fn send_from_bucket() {
     let mut deps = mock_dependencies();
 
     let msg = InstantiateMsg {
         owner: "owner0000".to_string(),
-        sender_contract: "sender".to_string(),
-        overseer_contract: "recipient".to_string(),
     };
 
     let info = mock_info("addr0000", &[]);
@@ -97,6 +91,20 @@ fn register_feeder() {
         Err(ContractError::Unauthorized {}) => (),
         _ => panic!("DO NOT ENTER HERE"),
     }
+
+    let info = mock_info("owner0000", &[]);
+    // Register sender and overseer contracts
+    execute(
+        deps.as_mut(),
+        mock_env(),
+        info,
+        ExecuteMsg::UpdateConfig {
+            owner: None,
+            sender_contract: Some("sender".to_string()),
+            overseer_contract: Some("overseer".to_string()),
+        },
+    )
+    .unwrap();
 
     let info = mock_info("sender", &[]);
     let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();

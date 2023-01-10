@@ -33,6 +33,8 @@ fn proper_initialization() {
         //anc_emission_rate: Decimal256::one(),
         max_borrow_factor: Decimal256::one(),
         max_borrow_subsidy_rate: Decimal256::zero(),
+
+        initial_borrower_incentives: Decimal256::zero(),
     };
 
     let info = mock_info(
@@ -164,6 +166,8 @@ fn update_config() {
         //anc_emission_rate: Decimal256::one(),
         max_borrow_factor: Decimal256::one(),
         max_borrow_subsidy_rate: Decimal256::zero(),
+
+        initial_borrower_incentives: Decimal256::zero(),
     };
 
     let info = mock_info(
@@ -206,7 +210,7 @@ fn update_config() {
     let msg = ExecuteMsg::UpdateConfig {
         owner_addr: Some("owner1".to_string()),
         interest_model: None,
-        //distribution_model: None,
+        distribution_model: None,
         max_borrow_factor: None,
         max_borrow_subsidy_rate: None,
     };
@@ -224,7 +228,7 @@ fn update_config() {
     let msg = ExecuteMsg::UpdateConfig {
         owner_addr: None,
         interest_model: Some("interest2".to_string()),
-        //distribution_model: Some("distribution2".to_string()),
+        distribution_model: Some("distribution2".to_string()),
         max_borrow_factor: Some(Decimal256::percent(100)),
         max_borrow_subsidy_rate: None,
     };
@@ -245,7 +249,7 @@ fn update_config() {
     let msg = ExecuteMsg::UpdateConfig {
         owner_addr: None,
         interest_model: None,
-        //distribution_model: None,
+        distribution_model: None,
         max_borrow_factor: None,
         max_borrow_subsidy_rate: None,
     };
@@ -271,6 +275,8 @@ fn deposit_stable_huge_amount() {
         //anc_emission_rate: Decimal256::one(),
         max_borrow_factor: Decimal256::one(),
         max_borrow_subsidy_rate: Decimal256::zero(),
+
+        initial_borrower_incentives: Decimal256::zero(),
     };
 
     let info = mock_info(
@@ -429,6 +435,8 @@ fn deposit_stable() {
         //anc_emission_rate: Decimal256::one(),
         max_borrow_factor: Decimal256::one(),
         max_borrow_subsidy_rate: Decimal256::zero(),
+
+        initial_borrower_incentives: Decimal256::zero(),
     };
 
     let info = mock_info(
@@ -678,6 +686,8 @@ fn redeem_stable() {
         //anc_emission_rate: Decimal256::one(),
         max_borrow_factor: Decimal256::one(),
         max_borrow_subsidy_rate: Decimal256::zero(),
+
+        initial_borrower_incentives: Decimal256::zero(),
     };
 
     let info = mock_info(
@@ -864,6 +874,8 @@ fn borrow_stable() {
         //anc_emission_rate: Decimal256::one(),
         max_borrow_factor: Decimal256::one(),
         max_borrow_subsidy_rate: Decimal256::zero(),
+
+        initial_borrower_incentives: Decimal256::zero(),
     };
 
     let info = mock_info(
@@ -1110,6 +1122,8 @@ fn assert_max_borrow_factor() {
         //anc_emission_rate: Decimal256::one(),
         max_borrow_factor: Decimal256::percent(1),
         max_borrow_subsidy_rate: Decimal256::zero(),
+
+        initial_borrower_incentives: Decimal256::zero(),
     };
 
     let info = mock_info(
@@ -1223,6 +1237,8 @@ fn repay_stable() {
         //anc_emission_rate: Decimal256::one(),
         max_borrow_factor: Decimal256::one(),
         max_borrow_subsidy_rate: Decimal256::zero(),
+
+        initial_borrower_incentives: Decimal256::zero(),
     };
 
     let info = mock_info(
@@ -1405,6 +1421,8 @@ fn repay_stable_from_liquidation() {
         //anc_emission_rate: Decimal256::one(),
         max_borrow_factor: Decimal256::one(),
         max_borrow_subsidy_rate: Decimal256::zero(),
+
+        initial_borrower_incentives: Decimal256::zero(),
     };
 
     let info = mock_info(
@@ -1707,6 +1725,8 @@ fn execute_epoch_operations() {
         //anc_emission_rate: Decimal256::one(),
         max_borrow_factor: Decimal256::one(),
         max_borrow_subsidy_rate: Decimal256::zero(),
+
+        initial_borrower_incentives: Decimal256::zero(),
     };
 
     let info = mock_info(

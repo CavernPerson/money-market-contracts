@@ -398,7 +398,7 @@ fn update_deposit_rate(deps: DepsMut, env: Env) -> StdResult<()> {
             config.stable_denom.to_string(),
         )?;
         // convert block rate into yearly rate
-        let blocks_per_year = Decimal256::from_ratio(Uint256::from(BLOCKS_PER_YEAR), 1u128);
+        let blocks_per_year = Decimal256::from_ratio(BLOCKS_PER_YEAR, 1u128);
         let current_rate = config.threshold_deposit_rate * blocks_per_year;
 
         let yield_reserve = Decimal256::from_ratio(interest_buffer, 1u128);

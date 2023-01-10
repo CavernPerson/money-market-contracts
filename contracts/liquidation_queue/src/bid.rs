@@ -550,12 +550,12 @@ fn execute_pool_liquidation(
     }
 
     // E / D
-    let col_per_bid: Decimal256 = Decimal256::from_ratio(pool_collateral_to_liquidate, 1u128)
-        / Decimal256::from_ratio(bid_pool.total_bid_amount, 1u128);
+    let col_per_bid: Decimal256 =
+        Decimal256::from_ratio(pool_collateral_to_liquidate, bid_pool.total_bid_amount);
 
     // Q / D
-    let expense_per_bid: Decimal256 = Decimal256::from_ratio(pool_required_stable, 1u128)
-        / Decimal256::from_ratio(bid_pool.total_bid_amount, 1u128);
+    let expense_per_bid: Decimal256 =
+        Decimal256::from_ratio(pool_required_stable, bid_pool.total_bid_amount);
 
     ///////// Update sum /////////
     // E / D * P

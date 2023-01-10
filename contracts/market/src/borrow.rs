@@ -34,14 +34,8 @@ pub fn borrow_stable(
     let mut liability: BorrowerInfo = read_borrower_info(deps.storage, &borrower_raw);
 
     // Compute interest
-    compute_interest(
-        deps.as_ref(),
-        &config,
-        &mut state,
-        env.block.height,
-        None,
-        None,
-    )?;
+    let borrow_incentives_messages =
+        compute_interest(deps.as_ref(), &config, &mut state, env.block.height, None)?;
     compute_borrower_interest(&state, &mut liability);
 
     compute_borrower_reward(&state, &mut liability);
@@ -82,6 +76,7 @@ pub fn borrow_stable(
                 amount: borrow_amount.try_into()?,
             }],
         }))
+        .add_messages(borrow_incentives_messages)
         .add_attributes(vec![
             attr("action", "borrow_stable"),
             attr("borrower", borrower),
@@ -142,13 +137,12 @@ pub fn repay_stable(deps: DepsMut, env: Env, info: MessageInfo) -> Result<Respon
     let mut liability: BorrowerInfo = read_borrower_info(deps.storage, &borrower_raw);
 
     // Compute interest
-    compute_interest(
+    let borrow_incentives_messages = compute_interest(
         deps.as_ref(),
         &config,
         &mut state,
         env.block.height,
         Some(amount),
-        None,
     )?;
     compute_borrower_interest(&state, &mut liability);
 
@@ -178,11 +172,14 @@ pub fn repay_stable(deps: DepsMut, env: Env, info: MessageInfo) -> Result<Respon
     store_borrower_info(deps.storage, &borrower_raw, &liability)?;
     store_state(deps.storage, &state)?;
 
-    Ok(Response::new().add_messages(messages).add_attributes(vec![
-        attr("action", "repay_stable"),
-        attr("borrower", borrower),
-        attr("repay_amount", repay_amount),
-    ]))
+    Ok(Response::new()
+        .add_messages(messages)
+        .add_messages(borrow_incentives_messages)
+        .add_attributes(vec![
+            attr("action", "repay_stable"),
+            attr("borrower", borrower),
+            attr("repay_amount", repay_amount),
+        ]))
 }
 
 pub fn claim_rewards(
@@ -199,14 +196,8 @@ pub fn claim_rewards(
     let mut liability: BorrowerInfo = read_borrower_info(deps.storage, &borrower_raw);
 
     // Compute interest
-    compute_interest(
-        deps.as_ref(),
-        &config,
-        &mut state,
-        env.block.height,
-        None,
-        None,
-    )?;
+    let borrow_incentives_messages =
+        compute_interest(deps.as_ref(), &config, &mut state, env.block.height, None)?;
     compute_borrower_interest(&state, &mut liability);
 
     // Compute Borrower reward
@@ -238,10 +229,13 @@ pub fn claim_rewards(
         vec![]
     };
 
-    Ok(Response::new().add_messages(messages).add_attributes(vec![
-        attr("action", "claim_rewards"),
-        attr("claim_amount", claim_amount),
-    ]))
+    Ok(Response::new()
+        .add_messages(messages)
+        .add_messages(borrow_incentives_messages)
+        .add_attributes(vec![
+            attr("action", "claim_rewards"),
+            attr("claim_amount", claim_amount),
+        ]))
 }
 
 /// Compute interest and update state
@@ -252,10 +246,9 @@ pub fn compute_interest(
     state: &mut State,
     block_height: u64,
     deposit_amount: Option<Uint256>,
-    available_borrower_incentives: Option<Uint256>,
-) -> Result<(), ContractError> {
+) -> Result<Vec<CosmosMsg>, ContractError> {
     if state.last_interest_updated >= block_height {
-        return Ok(());
+        return Ok(vec![]);
     }
 
     let aterra_supply = query_supply(deps, deps.api.addr_humanize(&config.aterra_contract)?)?;
@@ -277,6 +270,7 @@ pub fn compute_interest(
         query_target_deposit_rate(deps, deps.api.addr_humanize(&config.overseer_contract)?)?;
 
     compute_interest_raw(
+        deps,
         config,
         state,
         block_height,
@@ -284,10 +278,7 @@ pub fn compute_interest(
         aterra_supply,
         borrow_rate_res.rate,
         target_deposit_rate,
-        available_borrower_incentives.unwrap_or(state.prev_borrower_incentives),
-    )?;
-
-    Ok(())
+    )
 }
 
 // We want to take into account the borrower incentives that the oversser gives out based on its revenues.
@@ -355,6 +346,7 @@ fn get_actual_interest_factor(
 // * state.last_interest_updated
 #[allow(clippy::too_many_arguments)]
 pub fn compute_interest_raw(
+    deps: Deps,
     config: &Config,
     state: &mut State,
     block_height: u64,
@@ -362,7 +354,6 @@ pub fn compute_interest_raw(
     aterra_supply: Uint256,
     borrow_rate: Decimal256,
     target_deposit_rate: Decimal256,
-    available_borrower_incentives: Uint256,
 ) -> Result<Vec<CosmosMsg>, ContractError> {
     if state.last_interest_updated >= block_height {
         return Ok(vec![]);
@@ -371,6 +362,13 @@ pub fn compute_interest_raw(
     let passed_blocks = Decimal256::from_ratio(block_height - state.last_interest_updated, 1u128);
 
     let interest_factor_borrow = passed_blocks * borrow_rate;
+
+    let available_borrower_incentives = query_balance(
+        deps,
+        deps.api
+            .addr_humanize(&config.borrow_reserves_bucket_contract)?,
+        config.stable_denom.to_string(),
+    )?;
 
     let (interest_factor, interest_factor_messages) = get_actual_interest_factor(
         config,
@@ -389,8 +387,7 @@ pub fn compute_interest_raw(
     state.total_liabilities += interest_accrued;
 
     // We update the reward index as well here
-    let borrow_amount = state.total_liabilities / state.global_interest_index;
-
+    let borrow_amount = state.total_liabilities;
     if !state.prev_borrower_incentives.is_zero() && !borrow_amount.is_zero() {
         state.global_reward_index +=
             Decimal256::from_ratio(state.prev_borrower_incentives, 1u128) / borrow_amount;
@@ -457,7 +454,7 @@ pub fn query_borrower_info(
     let config: Config = read_config(deps.storage)?;
     let mut state: State = read_state(deps.storage)?;
 
-    compute_interest(deps, &config, &mut state, block_height, None, None)?;
+    compute_interest(deps, &config, &mut state, block_height, None)?;
     compute_borrower_interest(&state, &mut borrower_info);
 
     compute_borrower_reward(&state, &mut borrower_info);

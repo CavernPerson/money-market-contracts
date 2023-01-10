@@ -220,6 +220,7 @@ impl WasmMockQuerier {
                                 aterra_supply: v.0,
                                 exchange_rate: v.1,
                                 reserves_rate_used_for_borrowers: v.2,
+                                prev_borrower_incentives: Uint256::zero()
                             })))
                         }
                         None => SystemResult::Err(SystemError::InvalidRequest {

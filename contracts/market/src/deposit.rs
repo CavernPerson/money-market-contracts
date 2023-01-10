@@ -33,14 +33,12 @@ pub fn deposit_stable(
 
     // Update interest related state
     let mut state: State = read_state(deps.storage)?;
-    compute_interest(
+    let borrow_incentives_messages = compute_interest(
         deps.as_ref(),
         &config,
         &mut state,
         env.block.height,
         Some(deposit_amount),
-        // Here we can't take into account the past to preject the future, Incentives could stop instantly
-        Some(Uint256::zero()),
     )?;
 
     // Load anchor token exchange rate with updated state
@@ -60,6 +58,7 @@ pub fn deposit_stable(
                 amount: mint_amount.try_into()?,
             })?,
         }))
+        .add_messages(borrow_incentives_messages)
         .add_attributes(vec![
             attr("action", "deposit_stable"),
             attr("depositor", info.sender),
@@ -78,14 +77,12 @@ pub fn redeem_stable(
 
     // Update interest related state
     let mut state: State = read_state(deps.storage)?;
-    compute_interest(
+    let borrow_incentives_messages = compute_interest(
         deps.as_ref(),
         &config,
         &mut state,
         env.block.height,
         None,
-        // Here we can't take into account the past to preject the future, Incentives could stop instantly
-        Some(Uint256::zero()),
     )?;
 
     // Load anchor token exchange rate with updated state
@@ -120,6 +117,7 @@ pub fn redeem_stable(
                 }],
             }),
         ])
+        .add_messages(borrow_incentives_messages)
         .add_attributes(vec![
             attr("action", "redeem_stable"),
             attr("burn_amount", burn_amount),

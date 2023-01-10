@@ -20,6 +20,9 @@ pub struct InstantiateMsg {
 
     /// Maximum rate under which borrowers are not incentivised with reserves
     pub max_borrow_subsidy_rate: Decimal256,
+
+    /// Initial rate of rewards used for borrowers
+    pub initial_borrower_incentives: Decimal256,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -53,7 +56,7 @@ pub enum ExecuteMsg {
         max_borrow_factor: Option<Decimal256>,
         interest_model: Option<String>,
         max_borrow_subsidy_rate: Option<Decimal256>,
-        //distribution_model: Option<String>,
+        distribution_model: Option<String>,
     },
 
     ////////////////////
@@ -160,6 +163,7 @@ pub struct EpochStateResponse {
     pub exchange_rate: Decimal256,
     pub aterra_supply: Uint256,
     pub reserves_rate_used_for_borrowers: Decimal256,
+    pub prev_borrower_incentives: Uint256,
 }
 
 // We define a custom struct for each query response
