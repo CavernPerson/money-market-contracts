@@ -8,7 +8,7 @@ You can find information about the architecture, usage, and function of the smar
 
 ### Dependencies
 
-Money Market has dependencies on [aAsset Contracts](https://github.com/ACavernPerson/cavern-aAsset-contracts).
+Money Market has dependencies on [aAsset Contracts](https://github.com/CavernPerson/cavern-aAsset-contracts).
 
 ## Contracts
 
