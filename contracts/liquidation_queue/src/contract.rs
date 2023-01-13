@@ -1,4 +1,5 @@
 #[cfg(not(feature = "library"))]
+use moneymarket::liquidation_queue::MigrateMsg;
 use cosmwasm_std::entry_point;
 
 use crate::asserts::{assert_fees, assert_max_slot, assert_max_slot_premium};
@@ -326,4 +327,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             limit,
         )?),
     }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
+    Ok(Response::default())
 }

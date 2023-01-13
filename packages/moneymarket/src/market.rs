@@ -138,8 +138,10 @@ pub struct ConfigResponse {
     pub overseer_contract: String,
     pub collector_contract: String,
     pub distributor_contract: String,
+    pub borrow_reserves_bucket_contract: String,
     pub stable_denom: String,
     pub max_borrow_factor: Decimal256,
+    pub max_borrow_subsidy_rate: Decimal256
 }
 
 // We define a custom struct for each query response

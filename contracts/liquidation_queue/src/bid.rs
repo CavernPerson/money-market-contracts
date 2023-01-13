@@ -127,13 +127,21 @@ pub fn activate_bids(
     };
 
     let mut total_activated_amount = Uint256::zero();
+    let mut activated_bids: Vec<Uint128> = vec![];
     for mut bid in bids.into_iter() {
+        if activated_bids.contains(&bid.idx) {
+            return Err(StdError::generic_err("duplicate bid_idx"))
+        }
+        activated_bids.push(bid.idx);
+
         if bid.bidder != sender_raw {
             return Err(StdError::generic_err("unauthorized"));
         }
         if bid.collateral_token != collateral_token_raw {
             return Err(StdError::generic_err("Bid collateral token doesn't match"));
         }
+
+
         let mut bid_pool: BidPool =
             read_bid_pool(deps.storage, &bid.collateral_token, bid.premium_slot)?;
 
@@ -376,13 +384,17 @@ pub fn execute_liquidation(
     let liquidator_fee = repay_amount * config.liquidator_fee;
     let repay_amount = repay_amount - bid_fee - liquidator_fee;
 
-    let mut messages: Vec<CosmosMsg> = vec![CosmosMsg::Bank(BankMsg::Send {
-        to_address: repay_address,
-        amount: vec![Coin {
-            denom: config.stable_denom.clone(),
-            amount: repay_amount.try_into()?,
-        }],
-    })];
+    let mut messages: Vec<CosmosMsg> = vec![];
+
+    if !repay_amount.is_zero() {
+        messages.push(CosmosMsg::Bank(BankMsg::Send {
+            to_address: repay_address,
+            amount: vec![Coin {
+                denom: config.stable_denom.clone(),
+                amount: repay_amount.try_into()?,
+            }],
+        }));
+    }
 
     if !bid_fee.is_zero() {
         messages.push(CosmosMsg::Bank(BankMsg::Send {
@@ -436,7 +448,13 @@ pub fn claim_liquidations(
     };
 
     let mut claim_amount = Uint256::zero();
+    let mut claimed_bids: Vec<Uint128> = vec![];
     for bid in bids.into_iter() {
+        if claimed_bids.contains(&bid.idx) {
+            return Err(StdError::generic_err("duplicate bid_idx"));
+        }
+        claimed_bids.push(bid.idx);
+
         if bid.bidder != sender_raw {
             return Err(StdError::generic_err("unauthorized"));
         }

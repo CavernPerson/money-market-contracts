@@ -1,3 +1,5 @@
+
+use moneymarket::bucket::ExecuteMsg as BucketExecuteMsg;
 use crate::contract::{execute, instantiate, query, reply, INITIAL_DEPOSIT_AMOUNT};
 use crate::error::ContractError;
 use crate::response::MsgInstantiateContractResponse;
@@ -531,6 +533,7 @@ fn deposit_stable() {
         }],
     );
 
+
     let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
     // 1- As the last place to modify the state is compute_interest, a check on the state ensures the invocation of compute_interest.
     // However, because passed_blocks = 0, interest factor & interest accrued are also 0, and thus the values do not change
@@ -671,6 +674,195 @@ fn deposit_stable() {
         }
     );
 }
+
+#[test]
+fn deposit_stablewith_incentives() {
+    let mut deps = mock_dependencies(&[Coin {
+        denom: "uusd".to_string(),
+        amount: Uint128::from(INITIAL_DEPOSIT_AMOUNT),
+    }]);
+
+    let msg = InstantiateMsg {
+        owner_addr: "owner".to_string(),
+        stable_denom: "uusd".to_string(),
+        aterra_code_id: 123u64,
+        //anc_emission_rate: Decimal256::one(),
+        max_borrow_factor: Decimal256::one(),
+        max_borrow_subsidy_rate: Decimal256::zero(),
+
+        initial_borrower_incentives: Decimal256::zero(),
+    };
+
+    let info = mock_info(
+        "addr0000",
+        &[Coin {
+            denom: "uusd".to_string(),
+            amount: Uint128::from(INITIAL_DEPOSIT_AMOUNT),
+        }],
+    );
+
+    // we can just call .unwrap() to assert this was a success
+    let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+    // Register anchor token contract
+    let mut token_inst_res = MsgInstantiateContractResponse::new();
+    token_inst_res.set_contract_address("at-uusd".to_string());
+    let reply_msg = Reply {
+        id: 1,
+        result: SubMsgResult::Ok(SubMsgResponse {
+            events: vec![],
+            data: Some(token_inst_res.write_to_bytes().unwrap().into()),
+        }),
+    };
+    let _res = reply(deps.as_mut(), mock_env(), reply_msg).unwrap();
+
+    // Register overseer contract
+    let msg = ExecuteMsg::RegisterContracts {
+        overseer_contract: "overseer".to_string(),
+        interest_model: "interest".to_string(),
+        distribution_model: "distribution".to_string(),
+        collector_contract: "collector".to_string(),
+        borrow_reserves_bucket_contract: "bucket".to_string(),
+        distributor_contract: "distributor".to_string(),
+    };
+    let info = mock_info("addr0000", &[]);
+    let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+    // Must deposit stable_denom
+    let msg = ExecuteMsg::DepositStable {};
+
+    let info = mock_info(
+        "addr0000",
+        &[Coin {
+            denom: "uusd".to_string(),
+            amount: Uint128::from(1000000u128),
+        }],
+    );
+
+    deps.querier
+        .with_borrow_rate(&[(&"interest".to_string(), &Decimal256::percent(1))]);
+    deps.querier.with_token_balances(&[(
+        &"at-uusd".to_string(),
+        &[(
+            &MOCK_CONTRACT_ADDR.to_string(),
+            &Uint128::from(INITIAL_DEPOSIT_AMOUNT),
+        )],
+    )]);
+    deps.querier.update_balance(
+        MOCK_CONTRACT_ADDR.to_string(),
+        vec![Coin {
+            denom: "uusd".to_string(),
+            amount: Uint128::from(INITIAL_DEPOSIT_AMOUNT + 1000000u128),
+        }],
+    );
+
+    // There is borrower incentives to distribute
+    deps.querier.update_balance(
+        "bucket".to_string(),
+        vec![Coin {
+            denom: "uusd".to_string(),
+            amount: Uint128::from(8080u128),
+        }],
+    );
+
+
+    // make exchange rate to 50%
+    store_state(
+        deps.as_mut().storage,
+        &State {
+            total_liabilities: Decimal256::from_ratio(50000u128, 1u128),
+            total_reserves: Decimal256::from_ratio(550000u128, 1u128),
+            last_interest_updated: mock_env().block.height,
+            last_reward_updated: mock_env().block.height,
+            global_interest_index: Decimal256::one(),
+            global_reward_index: Decimal256::zero(),
+            reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
+            prev_aterra_supply: Uint256::zero(),
+            prev_exchange_rate: Decimal256::from_ratio(1u64, 2u64),
+            prev_borrower_incentives: Uint256::zero(),
+        },
+    )
+    .unwrap();
+
+    let res = execute(deps.as_mut(), mock_env(), info, msg.clone()).unwrap();
+    assert_eq!(
+        res.attributes,
+        vec![
+            attr("action", "deposit_stable"),
+            attr("depositor", "addr0000"),
+            attr("mint_amount", "2000000"),
+            attr("deposit_amount", "1000000"),
+        ]
+    );
+
+    assert_eq!(
+        res.messages,
+        vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: "at-uusd".to_string(),
+            funds: vec![],
+            msg: to_binary(&Cw20ExecuteMsg::Mint {
+                recipient: "addr0000".to_string(),
+                amount: Uint128::from(2000000u128),
+            })
+            .unwrap(),
+        }))]
+    );
+
+    // Case: compute_interest & compute_reward with block increment
+    let info = mock_info(
+        "addr0000",
+        &[Coin {
+            denom: "uusd".to_string(),
+            amount: Uint128::from(1000000u128),
+        }],
+    );
+    let mut env = mock_env();
+
+    store_state(
+        deps.as_mut().storage,
+        &State {
+            total_liabilities: Decimal256::from_ratio(50000u128, 1u128),
+            total_reserves: Decimal256::from_ratio(550000u128, 1u128),
+            last_interest_updated: env.block.height,
+            last_reward_updated: env.block.height,
+            global_interest_index: Decimal256::one(),
+            global_reward_index: Decimal256::zero(),
+            reserves_rate_used_for_borrowers: Decimal256::from_str("0.1").unwrap(),
+            prev_aterra_supply: Uint256::zero(),
+            prev_exchange_rate: Decimal256::from_ratio(1u64, 2u64),
+            prev_borrower_incentives: Uint256::zero(),
+        },
+    )
+    .unwrap();
+
+    env.block.height += 100;
+    let res = execute(deps.as_mut(), env, info, msg).unwrap();
+
+    assert_eq!(
+        res.messages,
+        vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: "at-uusd".to_string(),
+            funds: vec![],
+            msg: to_binary(&Cw20ExecuteMsg::Mint {
+                recipient: "addr0000".to_string(),
+                amount: Uint128::from(1845290u128),
+            })
+            .unwrap(),
+        })),
+
+        SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: "bucket".to_string(),
+            funds: vec![],
+            msg: to_binary(&BucketExecuteMsg::Send {
+                denom: "uusd".to_string(),
+                amount: 8080u128.into()
+            })
+            .unwrap(),
+        }))]
+    );
+
+}
+
 
 #[test]
 fn redeem_stable() {

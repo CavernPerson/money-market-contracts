@@ -508,8 +508,13 @@ pub fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
             .api
             .addr_humanize(&config.distributor_contract)?
             .to_string(),
+        borrow_reserves_bucket_contract: deps
+            .api
+            .addr_humanize(&config.borrow_reserves_bucket_contract)?
+            .to_string(),
         stable_denom: config.stable_denom,
         max_borrow_factor: config.max_borrow_factor,
+        max_borrow_subsidy_rate: config.max_borrow_subsidy_rate
     })
 }
 

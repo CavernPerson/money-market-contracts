@@ -3,18 +3,6 @@
 version = 3
 
 [[package]]
-name = "anchor-token"
-version = "0.4.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw20",
- "schemars",
- "serde",
-]
-
-[[package]]
 name = "base16ct"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -542,6 +530,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "moneymarket-custody-lsd"
+version = "0.0.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-storage-plus",
+ "cw20",
+ "moneymarket",
+ "schemars",
+ "serde",
+ "strum",
+ "strum_macros",
+ "thiserror",
+]
+
+[[package]]
 name = "moneymarket-distribution-model"
 version = "0.0.0"
 dependencies = [
@@ -585,7 +590,6 @@ dependencies = [
 name = "moneymarket-market"
 version = "0.0.0"
 dependencies = [
- "anchor-token",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",

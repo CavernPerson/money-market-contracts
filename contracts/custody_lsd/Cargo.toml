@@ -1,9 +1,9 @@
 [package]
-name = "moneymarket-market"
+name = "moneymarket-custody-lsd"
 version = "0.0.0"
-authors = ["Terraform Labs, PTE."]
+authors = ["CavernProtocol","Terraform Labs, PTE."]
 edition = "2018"
-description = "A MoneyMarket custody contract - handles over stable coins"
+description = "A MoneyMarket bluna custody contract - handles over collateral operations"
 license = "MIT"
 
 exclude = [
@@ -36,16 +36,18 @@ backtraces = ["cosmwasm-std/backtraces"]
 [dependencies]
 moneymarket = { path = "../../packages/moneymarket", default-features = false, version = "0.3.1"}
 cw20 = "0.15.1"
-cw20-base = "0.15.1"
-protobuf = { version = "2", features = ["with-bytes"] }
+cw-storage-plus = "0.15.1"
 cosmwasm-std = "1.1.0"
 cosmwasm-storage = { version = "1.1.0", features = ["iterator"] }
+cosmwasm-schema = "1.1.0"
 schemars = "0.8.1"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 thiserror = "1.0.2"
 
+strum = "0.24.1"
+strum_macros = "0.24.1"
+
 [dev-dependencies]
-cosmwasm-schema = "1.1.0"
 
 [profile.dev]
 overflow-checks = true

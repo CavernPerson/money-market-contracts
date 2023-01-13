@@ -1,7 +1,7 @@
-use anchor_token::distributor::ExecuteMsg as FaucetExecuteMsg;
+
 use cosmwasm_std::{
     attr, to_binary, Addr, BankMsg, Coin, CosmosMsg, Decimal256, Deps, DepsMut, Env, MessageInfo,
-    Response, StdResult, Uint256, WasmMsg,
+    Response, StdResult, Uint256, WasmMsg, Api
 };
 use moneymarket::interest_model::BorrowRateResponse;
 use moneymarket::market::{BorrowerInfoResponse, BorrowerInfosResponse};
@@ -182,62 +182,6 @@ pub fn repay_stable(deps: DepsMut, env: Env, info: MessageInfo) -> Result<Respon
         ]))
 }
 
-pub fn claim_rewards(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    to: Option<Addr>,
-) -> Result<Response, ContractError> {
-    let config: Config = read_config(deps.storage)?;
-    let mut state: State = read_state(deps.storage)?;
-
-    let borrower = info.sender;
-    let borrower_raw = deps.api.addr_canonicalize(borrower.as_str())?;
-    let mut liability: BorrowerInfo = read_borrower_info(deps.storage, &borrower_raw);
-
-    // Compute interest
-    let borrow_incentives_messages =
-        compute_interest(deps.as_ref(), &config, &mut state, env.block.height, None)?;
-    compute_borrower_interest(&state, &mut liability);
-
-    // Compute Borrower reward
-    compute_borrower_reward(&state, &mut liability);
-
-    let claim_amount = liability.pending_rewards * Uint256::one();
-    liability.pending_rewards -= Decimal256::from_ratio(claim_amount, 1u128);
-
-    store_state(deps.storage, &state)?;
-    store_borrower_info(deps.storage, &borrower_raw, &liability)?;
-
-    let messages: Vec<CosmosMsg> = if !claim_amount.is_zero() {
-        vec![CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: deps
-                .api
-                .addr_humanize(&config.distributor_contract)?
-                .to_string(),
-            funds: vec![],
-            msg: to_binary(&FaucetExecuteMsg::Spend {
-                recipient: if let Some(to) = to {
-                    to.to_string()
-                } else {
-                    borrower.to_string()
-                },
-                amount: claim_amount.try_into()?,
-            })?,
-        })]
-    } else {
-        vec![]
-    };
-
-    Ok(Response::new()
-        .add_messages(messages)
-        .add_messages(borrow_incentives_messages)
-        .add_attributes(vec![
-            attr("action", "claim_rewards"),
-            attr("claim_amount", claim_amount),
-        ]))
-}
-
 /// Compute interest and update state
 /// total liabilities and total reserves
 pub fn compute_interest(
@@ -286,6 +230,7 @@ pub fn compute_interest(
 // Those incentives are reserved for the market contract only during this operations so that's a bit risky, but should be okay
 //TODO
 fn get_actual_interest_factor(
+    api: &dyn Api,
     config: &Config,
     state: &mut State,
     available_borrower_incentives: Uint256,
@@ -325,7 +270,7 @@ fn get_actual_interest_factor(
 
     let incentives_messages = if !actual_incentives.is_zero() {
         vec![CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: config.borrow_reserves_bucket_contract.to_string(),
+            contract_addr: api.addr_humanize(&config.borrow_reserves_bucket_contract)?.to_string(),
             funds: vec![],
             msg: to_binary(&BucketExecuteMsg::Send {
                 denom: config.stable_denom.clone(),
@@ -371,6 +316,7 @@ pub fn compute_interest_raw(
     )?;
 
     let (interest_factor, interest_factor_messages) = get_actual_interest_factor(
+        deps.api,
         config,
         state,
         available_borrower_incentives,

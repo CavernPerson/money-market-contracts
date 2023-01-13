@@ -395,6 +395,65 @@ fn activate_bid() {
 }
 
 #[test]
+fn activate_same_bid_multiple_times() {
+    let mut deps = mock_dependencies(&[]);
+    deps.querier
+        .with_collateral_max_ltv(&[(&"asset0000".to_string(), &Decimal256::percent(90))]);
+
+    let msg = InstantiateMsg {
+        owner: "owner0000".to_string(),
+        oracle_contract: "oracle0000".to_string(),
+        stable_denom: "uusd".to_string(),
+        safe_ratio: Decimal256::percent(10),
+        bid_fee: Decimal256::percent(1),
+        liquidator_fee: Decimal256::percent(0),
+        liquidation_threshold: Uint256::from(100000000u64),
+        price_timeframe: 60u64,
+        waiting_period: 60u64,
+        overseer: "overseer0000".to_string(),
+    };
+
+    let info = mock_info("addr0000", &[]);
+    let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+    let msg = ExecuteMsg::WhitelistCollateral {
+        collateral_token: "asset0000".to_string(),
+        max_slot: 30u8,
+        bid_threshold: Uint256::zero(),
+        premium_rate_per_slot: Decimal256::percent(1),
+    };
+    let info = mock_info("owner0000", &[]);
+    execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+    let msg = ExecuteMsg::SubmitBid {
+        collateral_token: "asset0000".to_string(),
+        premium_slot: 1u8,
+    };
+    let info = mock_info(
+        "addr0000",
+        &[Coin {
+            denom: "uusd".to_string(),
+            amount: Uint128::from(1000000u128),
+        }],
+    );
+    let env = mock_env();
+    let wait_end = env.block.time.plus_seconds(60u64);
+    execute(deps.as_mut(), env, info, msg).unwrap();
+
+    let msg = ExecuteMsg::ActivateBids {
+        collateral_token: "asset0000".to_string(),
+        bids_idx: Some(vec![Uint128::from(1u64), Uint128::from(1u64)]),
+    };
+
+    let info = mock_info("addr0000", &[]);
+    let mut env = mock_env();
+    env.block.time = wait_end;
+    let err = execute(deps.as_mut(), env, info, msg).unwrap_err();
+    assert_eq!(err, StdError::generic_err("duplicate bid_idx"));
+
+}
+
+#[test]
 fn retract_bid() {
     let mut deps = mock_dependencies(&[]);
     deps.querier
