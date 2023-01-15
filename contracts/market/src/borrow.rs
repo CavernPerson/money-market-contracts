@@ -254,7 +254,7 @@ fn get_actual_interest_factor(
         (
             (interest_factor_borrow - max_epoch_borrow_subsidy)
                 * state.total_liabilities
-                * Uint256::zero(),
+                * Uint256::one(),
             max_epoch_borrow_subsidy,
         )
     } else {
