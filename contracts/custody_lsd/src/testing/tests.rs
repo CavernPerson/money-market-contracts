@@ -614,10 +614,7 @@ fn distribute_rewards() {
     // Do not print logs at this step
     let empty_vector: Vec<Attribute> = Vec::new();
     assert_eq!(res.attributes, empty_vector);
-    assert_eq!(
-        res.messages.len(),
-        1
-    );
+    assert_eq!(res.messages.len(), 1);
 }
 
 #[test]

@@ -1,11 +1,10 @@
-
-use moneymarket::bucket::ExecuteMsg as BucketExecuteMsg;
 use crate::contract::{execute, instantiate, query, reply, INITIAL_DEPOSIT_AMOUNT};
 use crate::error::ContractError;
 use crate::response::MsgInstantiateContractResponse;
 use crate::state::{read_borrower_infos, read_state, store_state, State};
 use crate::testing::mock_querier::mock_dependencies;
 use cosmwasm_std::SubMsgResult;
+use moneymarket::bucket::ExecuteMsg as BucketExecuteMsg;
 
 use cosmwasm_std::testing::{mock_env, mock_info, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
@@ -533,7 +532,6 @@ fn deposit_stable() {
         }],
     );
 
-
     let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
     // 1- As the last place to modify the state is compute_interest, a check on the state ensures the invocation of compute_interest.
     // However, because passed_blocks = 0, interest factor & interest accrued are also 0, and thus the values do not change
@@ -765,7 +763,6 @@ fn deposit_stablewith_incentives() {
         }],
     );
 
-
     // make exchange rate to 50%
     store_state(
         deps.as_mut().storage,
@@ -840,29 +837,28 @@ fn deposit_stablewith_incentives() {
 
     assert_eq!(
         res.messages,
-        vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: "at-uusd".to_string(),
-            funds: vec![],
-            msg: to_binary(&Cw20ExecuteMsg::Mint {
-                recipient: "addr0000".to_string(),
-                amount: Uint128::from(1845290u128),
-            })
-            .unwrap(),
-        })),
-
-        SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: "bucket".to_string(),
-            funds: vec![],
-            msg: to_binary(&BucketExecuteMsg::Send {
-                denom: "uusd".to_string(),
-                amount: 8080u128.into()
-            })
-            .unwrap(),
-        }))]
+        vec![
+            SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
+                contract_addr: "at-uusd".to_string(),
+                funds: vec![],
+                msg: to_binary(&Cw20ExecuteMsg::Mint {
+                    recipient: "addr0000".to_string(),
+                    amount: Uint128::from(1845290u128),
+                })
+                .unwrap(),
+            })),
+            SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
+                contract_addr: "bucket".to_string(),
+                funds: vec![],
+                msg: to_binary(&BucketExecuteMsg::Send {
+                    denom: "uusd".to_string(),
+                    amount: 8080u128.into()
+                })
+                .unwrap(),
+            }))
+        ]
     );
-
 }
-
 
 #[test]
 fn redeem_stable() {

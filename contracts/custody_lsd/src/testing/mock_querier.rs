@@ -186,9 +186,9 @@ impl WasmMockQuerier {
                     }),
                 },
                 _ => SystemResult::Err(SystemError::InvalidRequest {
-                        error: "not covered".to_string(),
-                        request: msg.clone(),
-                    }),
+                    error: "not covered".to_string(),
+                    request: msg.clone(),
+                }),
             },
             QueryRequest::Bank(BankQuery::Balance { address, denom }) => {
                 if address == "reward" && denom == "uusd" {

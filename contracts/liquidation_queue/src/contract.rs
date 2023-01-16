@@ -1,6 +1,6 @@
+use cosmwasm_std::entry_point;
 #[cfg(not(feature = "library"))]
 use moneymarket::liquidation_queue::MigrateMsg;
-use cosmwasm_std::entry_point;
 
 use crate::asserts::{assert_fees, assert_max_slot, assert_max_slot_premium};
 use crate::bid::{activate_bids, claim_liquidations, execute_liquidation, retract_bid, submit_bid};

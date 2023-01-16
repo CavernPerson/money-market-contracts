@@ -450,7 +450,6 @@ fn activate_same_bid_multiple_times() {
     env.block.time = wait_end;
     let err = execute(deps.as_mut(), env, info, msg).unwrap_err();
     assert_eq!(err, StdError::generic_err("duplicate bid_idx"));
-
 }
 
 #[test]

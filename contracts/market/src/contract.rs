@@ -1,3 +1,4 @@
+use crate::querier::query_next_borrower_incentives;
 use cosmwasm_std::entry_point;
 use serde::Serialize;
 #[cfg(not(feature = "library"))]
@@ -460,6 +461,9 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, ContractErro
     match msg {
         QueryMsg::Config {} => _to_binary(&query_config(deps)?),
         QueryMsg::State { block_height } => _to_binary(&query_state(deps, env, block_height)?),
+        QueryMsg::BorrowerIncentives { block_height } => {
+            _to_binary(&query_next_borrower_incentives(deps, env, block_height)?)
+        }
         QueryMsg::EpochState {
             block_height,
             distributed_interest,
@@ -514,7 +518,7 @@ pub fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
             .to_string(),
         stable_denom: config.stable_denom,
         max_borrow_factor: config.max_borrow_factor,
-        max_borrow_subsidy_rate: config.max_borrow_subsidy_rate
+        max_borrow_subsidy_rate: config.max_borrow_subsidy_rate,
     })
 }
 
@@ -578,6 +582,8 @@ pub fn query_epoch_state(
         config.stable_denom.to_string(),
     )? - distributed_interest;
 
+    let last_interest_updated = state.last_interest_updated;
+
     if let Some(block_height) = block_height {
         if block_height < state.last_interest_updated {
             return Err(ContractError::Std(StdError::generic_err(
@@ -619,6 +625,7 @@ pub fn query_epoch_state(
         aterra_supply,
         reserves_rate_used_for_borrowers: state.reserves_rate_used_for_borrowers,
         prev_borrower_incentives: state.prev_borrower_incentives,
+        last_interest_updated,
     })
 }
 

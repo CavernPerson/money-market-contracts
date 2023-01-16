@@ -1,11 +1,11 @@
-use cosmwasm_std::Uint128;
-use cosmwasm_std::Decimal;
-use cosmwasm_std::Coin;
 use cosmwasm_schema::cw_serde;
+use cosmwasm_std::Coin;
+use cosmwasm_std::Decimal;
+use cosmwasm_std::Uint128;
 
 #[cw_serde]
 pub enum LSDQueryMsg {
-	State{}
+    State {},
 }
 
 #[cw_serde]

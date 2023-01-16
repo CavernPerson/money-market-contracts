@@ -77,13 +77,8 @@ pub fn redeem_stable(
 
     // Update interest related state
     let mut state: State = read_state(deps.storage)?;
-    let borrow_incentives_messages = compute_interest(
-        deps.as_ref(),
-        &config,
-        &mut state,
-        env.block.height,
-        None,
-    )?;
+    let borrow_incentives_messages =
+        compute_interest(deps.as_ref(), &config, &mut state, env.block.height, None)?;
 
     // Load anchor token exchange rate with updated state
     let exchange_rate = compute_exchange_rate(deps.as_ref(), &config, &state, None)?;

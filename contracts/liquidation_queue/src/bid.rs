@@ -130,7 +130,7 @@ pub fn activate_bids(
     let mut activated_bids: Vec<Uint128> = vec![];
     for mut bid in bids.into_iter() {
         if activated_bids.contains(&bid.idx) {
-            return Err(StdError::generic_err("duplicate bid_idx"))
+            return Err(StdError::generic_err("duplicate bid_idx"));
         }
         activated_bids.push(bid.idx);
 
@@ -140,7 +140,6 @@ pub fn activate_bids(
         if bid.collateral_token != collateral_token_raw {
             return Err(StdError::generic_err("Bid collateral token doesn't match"));
         }
-
 
         let mut bid_pool: BidPool =
             read_bid_pool(deps.storage, &bid.collateral_token, bid.premium_slot)?;

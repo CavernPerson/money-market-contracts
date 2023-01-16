@@ -114,6 +114,9 @@ pub enum QueryMsg {
     State {
         block_height: Option<u64>,
     },
+    BorrowerIncentives {
+        block_height: Option<u64>,
+    },
     EpochState {
         block_height: Option<u64>,
         distributed_interest: Option<Uint256>,
@@ -141,7 +144,7 @@ pub struct ConfigResponse {
     pub borrow_reserves_bucket_contract: String,
     pub stable_denom: String,
     pub max_borrow_factor: Decimal256,
-    pub max_borrow_subsidy_rate: Decimal256
+    pub max_borrow_subsidy_rate: Decimal256,
 }
 
 // We define a custom struct for each query response
@@ -166,6 +169,7 @@ pub struct EpochStateResponse {
     pub aterra_supply: Uint256,
     pub reserves_rate_used_for_borrowers: Decimal256,
     pub prev_borrower_incentives: Uint256,
+    pub last_interest_updated: u64,
 }
 
 // We define a custom struct for each query response

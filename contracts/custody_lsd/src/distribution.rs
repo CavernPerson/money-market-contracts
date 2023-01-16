@@ -1,13 +1,13 @@
 use crate::swap::create_swap_msg;
 use cosmwasm_std::{
-    attr, to_binary, BankMsg, Coin, CosmosMsg, DepsMut, Env, MessageInfo,
-    ReplyOn, Response, StdResult, SubMsg, Uint256, WasmMsg,
+    attr, to_binary, BankMsg, Coin, CosmosMsg, DepsMut, Env, MessageInfo, ReplyOn, Response,
+    StdResult, SubMsg, Uint256, WasmMsg,
 };
 use std::convert::TryInto;
 
 use crate::contract::{CLAIM_REWARDS_OPERATION, SWAP_TO_STABLE_OPERATION};
 use crate::error::ContractError;
-use crate::external::handle::{RewardContractExecuteMsg};
+use crate::external::handle::RewardContractExecuteMsg;
 use crate::state::{read_config, Config};
 
 use moneymarket::querier::{query_all_balances, query_balance};

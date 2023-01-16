@@ -32,11 +32,12 @@ pub fn instantiate(
     let config = Config {
         owner: deps.api.addr_canonicalize(&msg.owner)?,
         overseer_contract: deps.api.addr_canonicalize(&msg.overseer_contract)?,
-        collateral_token: deps.api.addr_canonicalize(&msg.collateral_token)?,
         market_contract: deps.api.addr_canonicalize(&msg.market_contract)?,
-        reward_contract: deps.api.addr_canonicalize(&msg.reward_contract)?,
         liquidation_contract: deps.api.addr_canonicalize(&msg.liquidation_contract)?,
         stable_denom: msg.stable_denom,
+
+        collateral_token: deps.api.addr_canonicalize(&msg.collateral_token)?,
+        reward_contract: deps.api.addr_canonicalize(&msg.reward_contract)?,
         basset_info: msg.basset_info,
     };
 

@@ -1,7 +1,6 @@
-
 use cosmwasm_std::{
-    attr, to_binary, Addr, BankMsg, Coin, CosmosMsg, Decimal256, Deps, DepsMut, Env, MessageInfo,
-    Response, StdResult, Uint256, WasmMsg, Api
+    attr, to_binary, Addr, Api, BankMsg, Coin, CosmosMsg, Decimal256, Deps, DepsMut, Env,
+    MessageInfo, Response, StdResult, Uint256, WasmMsg,
 };
 use moneymarket::interest_model::BorrowRateResponse;
 use moneymarket::market::{BorrowerInfoResponse, BorrowerInfosResponse};
@@ -229,14 +228,14 @@ pub fn compute_interest(
 // new_available_borrower_incentives corresponds to the part of revenues that the overseer wants to dedicate to borrower incentives
 // Those incentives are reserved for the market contract only during this operations so that's a bit risky, but should be okay
 //TODO
-fn get_actual_interest_factor(
+pub fn get_actual_interest_factor(
     api: &dyn Api,
     config: &Config,
     state: &mut State,
     available_borrower_incentives: Uint256,
     interest_factor_borrow: Decimal256,
     passed_blocks: Decimal256,
-) -> Result<(Decimal256, Vec<CosmosMsg>), ContractError> {
+) -> StdResult<(Decimal256, Vec<CosmosMsg>)> {
     let max_epoch_borrow_subsidy = config.max_borrow_subsidy_rate * passed_blocks;
 
     let (actual_incentives, interest_factor_borrow) = if state.total_liabilities
@@ -270,7 +269,9 @@ fn get_actual_interest_factor(
 
     let incentives_messages = if !actual_incentives.is_zero() {
         vec![CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: api.addr_humanize(&config.borrow_reserves_bucket_contract)?.to_string(),
+            contract_addr: api
+                .addr_humanize(&config.borrow_reserves_bucket_contract)?
+                .to_string(),
             funds: vec![],
             msg: to_binary(&BucketExecuteMsg::Send {
                 denom: config.stable_denom.clone(),
