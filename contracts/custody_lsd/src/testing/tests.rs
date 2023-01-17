@@ -1,8 +1,9 @@
+use moneymarket::custody::Asset;
 use cosmwasm_std::SubMsgResult;
 use cosmwasm_std::{
-    attr, from_binary, to_binary, Api, Attribute, BankMsg, Coin, CosmosMsg, Decimal, Reply,
-    Response, SubMsg, SubMsgResponse, Uint128, Uint256, WasmMsg,
+    attr, from_binary, to_binary, Api, Attribute, BankMsg, Coin, CosmosMsg, Decimal, Reply, SubMsg, SubMsgResponse, Uint128, Uint256, WasmMsg,
 };
+use moneymarket::astroport_router::AssetInfo;
 
 use crate::contract::{
     execute, instantiate, query, reply, CLAIM_REWARDS_OPERATION, SWAP_TO_STABLE_OPERATION,
@@ -16,7 +17,7 @@ use crate::testing::mock_querier::mock_dependencies;
 use cosmwasm_std::testing::{mock_env, mock_info, MOCK_CONTRACT_ADDR};
 use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
 use moneymarket::custody::{
-    BAssetInfo, BorrowerResponse, ConfigResponse, Cw20HookMsg, ExecuteMsg, InstantiateMsg, QueryMsg,
+    BAssetInfo, BorrowerResponse, ConfigResponse, Cw20HookMsg, ExecuteMsg, LSDInstantiateMsg, QueryMsg,
 };
 use moneymarket::liquidation_queue::Cw20HookMsg as LiquidationCw20HookMsg;
 
@@ -24,14 +25,14 @@ use moneymarket::liquidation_queue::Cw20HookMsg as LiquidationCw20HookMsg;
 fn proper_initialization() {
     let mut deps = mock_dependencies(&[]);
 
-    let msg = InstantiateMsg {
+    let msg = LSDInstantiateMsg {
         owner: "owner".to_string(),
         collateral_token: "bluna".to_string(),
         overseer_contract: "overseer".to_string(),
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_denom: "uusd".to_string(),
+        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -62,14 +63,14 @@ fn proper_initialization() {
 fn update_config() {
     let mut deps = mock_dependencies(&[]);
 
-    let msg = InstantiateMsg {
+    let msg = LSDInstantiateMsg {
         owner: "owner".to_string(),
         collateral_token: "bluna".to_string(),
         overseer_contract: "overseer".to_string(),
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_denom: "uusd".to_string(),
+        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -114,14 +115,14 @@ fn update_config() {
 fn deposit_collateral() {
     let mut deps = mock_dependencies(&[]);
 
-    let msg = InstantiateMsg {
+    let msg = LSDInstantiateMsg {
         owner: "owner".to_string(),
         collateral_token: "bluna".to_string(),
         overseer_contract: "overseer".to_string(),
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_denom: "uusd".to_string(),
+        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -226,14 +227,14 @@ fn deposit_collateral() {
 fn withdraw_collateral() {
     let mut deps = mock_dependencies(&[]);
 
-    let msg = InstantiateMsg {
+    let msg = LSDInstantiateMsg {
         owner: "owner".to_string(),
         collateral_token: "bluna".to_string(),
         overseer_contract: "overseer".to_string(),
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_denom: "uusd".to_string(),
+        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -366,14 +367,14 @@ fn withdraw_collateral() {
 fn lock_collateral() {
     let mut deps = mock_dependencies(&[]);
 
-    let msg = InstantiateMsg {
+    let msg = LSDInstantiateMsg {
         owner: "owner".to_string(),
         collateral_token: "bluna".to_string(),
         overseer_contract: "overseer".to_string(),
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_denom: "uusd".to_string(),
+        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -574,14 +575,14 @@ fn distribute_rewards() {
         amount: Uint128::from(1000000u128),
     }]);
 
-    let msg = InstantiateMsg {
+    let msg = LSDInstantiateMsg {
         owner: "owner".to_string(),
         collateral_token: "bluna".to_string(),
         overseer_contract: "overseer".to_string(),
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_denom: "uusd".to_string(),
+        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -634,14 +635,14 @@ fn distribute_hook() {
         &[(&"uusd".to_string(), &Uint128::from(1000000u128))],
     );
 
-    let msg = InstantiateMsg {
+    let msg = LSDInstantiateMsg {
         owner: "owner".to_string(),
         collateral_token: "bluna".to_string(),
         overseer_contract: "overseer".to_string(),
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_denom: "uusd".to_string(),
+        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -691,14 +692,14 @@ fn distribute_hook() {
 fn distribution_hook_zero_rewards() {
     let mut deps = mock_dependencies(&[]);
 
-    let msg = InstantiateMsg {
+    let msg = LSDInstantiateMsg {
         owner: "owner".to_string(),
         collateral_token: "bluna".to_string(),
         overseer_contract: "overseer".to_string(),
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "terraswap".to_string(),
-        stable_denom: "uusd".to_string(),
+        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -773,14 +774,14 @@ fn swap_to_stable_denom() {
         },
     ]);
 
-    let msg = InstantiateMsg {
+    let msg = LSDInstantiateMsg {
         owner: "owner".to_string(),
         collateral_token: "bluna".to_string(),
         overseer_contract: "overseer".to_string(),
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_denom: "uusd".to_string(),
+        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -811,11 +812,16 @@ fn swap_to_stable_denom() {
                 create_swap_msg(
                     deps.as_ref(),
                     mock_env(),
-                    Coin {
-                        denom: "ukrw".to_string(),
+                    Asset{
                         amount: Uint128::from(20000000000u128),
+                        asset_info: AssetInfo::NativeToken{
+                            denom: "ukrw".to_string(),
+                        }
                     },
-                    "uusd".to_string(),
+                    AssetInfo::NativeToken{
+                        denom: "uusd".to_string(),
+                    }
+                    
                 )
                 .unwrap()[0]
                     .clone()
@@ -824,11 +830,15 @@ fn swap_to_stable_denom() {
                 create_swap_msg(
                     deps.as_ref(),
                     mock_env(),
-                    Coin {
-                        denom: "usdr".to_string(),
+                    Asset{
                         amount: Uint128::from(2000000u128),
+                        asset_info: AssetInfo::NativeToken{
+                            denom: "usdr".to_string(),
+                        }
                     },
-                    "uusd".to_string(),
+                    AssetInfo::NativeToken{
+                        denom: "uusd".to_string(),
+                    },
                 )
                 .unwrap()[0]
                     .clone(),
@@ -842,14 +852,14 @@ fn swap_to_stable_denom() {
 fn liquidate_collateral() {
     let mut deps = mock_dependencies(&[]);
 
-    let msg = InstantiateMsg {
+    let msg = LSDInstantiateMsg {
         owner: "owner".to_string(),
         collateral_token: "bluna".to_string(),
         overseer_contract: "overseer".to_string(),
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_denom: "uusd".to_string(),
+        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -956,14 +966,14 @@ fn proper_distribute_rewards_with_no_rewards() {
         amount: Uint128::new(1000000u128),
     }]);
 
-    let msg = InstantiateMsg {
+    let msg = LSDInstantiateMsg {
         owner: "owner".to_string(),
         collateral_token: "bluna".to_string(),
         overseer_contract: "overseer".to_string(),
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_denom: "uusd".to_string(),
+        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),

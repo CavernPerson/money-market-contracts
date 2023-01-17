@@ -1,3 +1,4 @@
+
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -7,7 +8,7 @@ use cosmwasm_std::{
 };
 use cw20::{Cw20QueryMsg, TokenInfoResponse};
 
-use crate::oracle::{PriceResponse, QueryMsg as OracleQueryMsg};
+use crate::{oracle::{PriceResponse, QueryMsg as OracleQueryMsg}, astroport_router::AssetInfo};
 
 pub fn query_all_balances(deps: Deps, account_addr: Addr) -> StdResult<Vec<Coin>> {
     // load price form the oracle
@@ -17,6 +18,14 @@ pub fn query_all_balances(deps: Deps, account_addr: Addr) -> StdResult<Vec<Coin>
                 address: account_addr.to_string(),
             }))?;
     Ok(all_balances.amount)
+}
+
+
+pub fn query_all_token_types_balance(deps: Deps, account_addr: Addr, asset_info: AssetInfo) -> StdResult<Uint256>{
+    match asset_info{
+        AssetInfo::NativeToken { denom } => query_balance(deps, account_addr, denom),
+        AssetInfo::Token { contract_addr } => query_token_balance(deps, contract_addr, account_addr)
+    }
 }
 
 pub fn query_balance(deps: Deps, account_addr: Addr, denom: String) -> StdResult<Uint256> {

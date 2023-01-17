@@ -16,7 +16,7 @@ use crate::state::{read_config, store_config, store_swap_config, Config, SwapCon
 use cw20::Cw20ReceiveMsg;
 use moneymarket::common::optional_addr_validate;
 use moneymarket::custody::{
-    ConfigResponse, Cw20HookMsg, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg,
+    Cw20HookMsg, ExecuteMsg, MigrateMsg, QueryMsg, LSDInstantiateMsg, LSDConfigResponse,
 };
 
 pub const CLAIM_REWARDS_OPERATION: u64 = 1u64;
@@ -27,7 +27,7 @@ pub fn instantiate(
     deps: DepsMut,
     _env: Env,
     _info: MessageInfo,
-    msg: InstantiateMsg,
+    msg: LSDInstantiateMsg,
 ) -> StdResult<Response> {
     let config = Config {
         owner: deps.api.addr_canonicalize(&msg.owner)?,
@@ -36,7 +36,7 @@ pub fn instantiate(
         market_contract: deps.api.addr_canonicalize(&msg.market_contract)?,
         reward_contract: deps.api.addr_canonicalize(&msg.reward_contract)?,
         liquidation_contract: deps.api.addr_canonicalize(&msg.liquidation_contract)?,
-        stable_denom: msg.stable_denom,
+        stable_token: msg.stable_token,
         basset_info: msg.basset_info,
     };
 
@@ -168,9 +168,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-pub fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
+pub fn query_config(deps: Deps) -> StdResult<LSDConfigResponse> {
     let config: Config = read_config(deps.storage)?;
-    Ok(ConfigResponse {
+    Ok(LSDConfigResponse {
         owner: deps.api.addr_humanize(&config.owner)?.to_string(),
         collateral_token: deps
             .api
@@ -186,7 +186,7 @@ pub fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
             .api
             .addr_humanize(&config.liquidation_contract)?
             .to_string(),
-        stable_denom: config.stable_denom,
+        stable_token: config.stable_token,
         basset_info: config.basset_info,
     })
 }

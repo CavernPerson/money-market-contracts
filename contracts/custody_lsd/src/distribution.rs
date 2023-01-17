@@ -1,6 +1,16 @@
+use moneymarket::astroport_router::AssetInfo;
+use moneymarket::custody::Asset;
+use cosmwasm_std::QueryRequest;
+use cosmwasm_std::Uint128;
+use cosmwasm_std::WasmQuery;
+use moneymarket::querier::query_all_token_types_balance;
+use crate::external::handle::RewardContractQueryMsg;
+use crate::state::BLunaAccruedRewardsResponse;
+use cosmwasm_std::Deps;
+use cosmwasm_std::Addr;
 use crate::swap::create_swap_msg;
 use cosmwasm_std::{
-    attr, to_binary, BankMsg, Coin, CosmosMsg, DepsMut, Env, MessageInfo, ReplyOn, Response,
+    attr, to_binary, Coin, CosmosMsg, DepsMut, Env, MessageInfo, ReplyOn, Response,
     StdResult, SubMsg, Uint256, WasmMsg,
 };
 use std::convert::TryInto;
@@ -10,14 +20,19 @@ use crate::error::ContractError;
 use crate::external::handle::RewardContractExecuteMsg;
 use crate::state::{read_config, Config};
 
-use moneymarket::querier::{query_all_balances, query_balance};
+use moneymarket::querier::{query_all_balances};
+
+// REWARD_THRESHOLD
+// This value is used as the minimum reward claim amount
+// thus if a user's reward is less than 1 ust do not send the ClaimRewards msg
+const REWARDS_THRESHOLD: Uint128 = Uint128::new(1000000);
 
 /// Request withdraw reward operation to
 /// reward contract and execute `distribute_hook`
 /// Executor: overseer
 pub fn distribute_rewards(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
 ) -> Result<Response, ContractError> {
     let config: Config = read_config(deps.storage)?;
@@ -25,7 +40,14 @@ pub fn distribute_rewards(
         return Err(ContractError::Unauthorized {});
     }
 
+    let contract_addr = env.contract.address;
     let reward_contract = deps.api.addr_humanize(&config.reward_contract)?;
+
+    let accrued_rewards =
+        get_accrued_rewards(deps.as_ref(), reward_contract.clone(), contract_addr)?;
+    if accrued_rewards < REWARDS_THRESHOLD {
+        return Ok(Response::default());
+    }
 
     // Do not emit the event logs here
     Ok(
@@ -49,20 +71,18 @@ pub fn distribute_hook(deps: DepsMut, env: Env) -> Result<Response, ContractErro
 
     // reward_amount = (prev_balance + reward_amount) - prev_balance
     // = (0 + reward_amount) - 0 = reward_amount = balance
-    let reward_amount: Uint256 = query_balance(
+    let reward_amount: Uint256 = query_all_token_types_balance(
         deps.as_ref(),
         contract_addr,
-        config.stable_denom.to_string(),
+        config.stable_token.clone(),
     )?;
     let mut messages: Vec<CosmosMsg> = vec![];
     if !reward_amount.is_zero() {
-        messages.push(CosmosMsg::Bank(BankMsg::Send {
-            to_address: overseer_contract.to_string(),
-            amount: vec![Coin {
-                denom: config.stable_denom,
-                amount: reward_amount.try_into()?,
-            }],
-        }));
+        messages.push(Asset{
+            asset_info: config.stable_token,
+            amount: reward_amount.try_into()?,
+        }.to_msg(overseer_contract)?);
+
     }
 
     Ok(Response::new().add_messages(messages).add_attributes(vec![
@@ -82,13 +102,18 @@ pub fn swap_to_stable_denom(deps: DepsMut, env: Env) -> Result<Response, Contrac
     let balances: Vec<Coin> = query_all_balances(deps.as_ref(), contract_addr)?;
     let mut messages: Vec<SubMsg> = balances
         .iter()
-        .filter(|x| x.denom != config.stable_denom)
+        .filter(|x| !config.stable_token.clone().is_same_asset(x))
         .map(|coin: &Coin| {
             create_swap_msg(
                 deps.as_ref(),
                 env.clone(),
-                coin.clone(),
-                config.stable_denom.clone(),
+                Asset{
+                    asset_info: AssetInfo::NativeToken{
+                        denom: coin.denom.clone()
+                    },
+                    amount: coin.amount
+                },
+                config.stable_token.clone(),
             )
         })
         .flat_map(|result| match result {
@@ -105,4 +130,20 @@ pub fn swap_to_stable_denom(deps: DepsMut, env: Env) -> Result<Response, Contrac
     }
 
     Ok(Response::new().add_submessages(messages))
+}
+
+pub(crate) fn get_accrued_rewards(
+    deps: Deps,
+    reward_contract_addr: Addr,
+    contract_addr: Addr,
+) -> StdResult<Uint128> {
+    let rewards: BLunaAccruedRewardsResponse =
+        deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
+            contract_addr: reward_contract_addr.to_string(),
+            msg: to_binary(&RewardContractQueryMsg::AccruedRewards {
+                address: contract_addr.to_string(),
+            })?,
+        }))?;
+
+    Ok(rewards.rewards)
 }

@@ -1,3 +1,5 @@
+use cw20::Cw20ExecuteMsg;
+use moneymarket::custody::Asset;
 use crate::state::SWAP_CONFIG;
 use cosmwasm_std::{
     to_binary, Coin, CosmosMsg, Deps, Env, QueryRequest, StdResult, Uint128, WasmMsg, WasmQuery,
@@ -27,12 +29,12 @@ pub fn into_cosmos_msg<M: Serialize, T: Into<String>>(
 pub fn create_swap_msg(
     deps: Deps,
     env: Env,
-    c: Coin,
-    stable_denom: String,
+    asset_to_swap: Asset,
+    stable_token: AssetInfo
 ) -> StdResult<Vec<CosmosMsg>> {
     let (best_price_index, best_price): (usize, Uint128) = SwapMessageType::iter()
         .map(|message_type| {
-            get_swap_result_for(deps, c.clone(), stable_denom.clone(), message_type)
+            get_swap_result_for(deps, asset_to_swap.clone(), stable_token.clone(), message_type)
         })
         .filter_map(Result::ok)
         /*
@@ -53,8 +55,8 @@ pub fn create_swap_msg(
     Ok(vec![create_swap_message_for(
         deps,
         env,
-        c,
-        stable_denom,
+        asset_to_swap,
+        stable_token,
         best_price_marketplace,
     )?])
 }
@@ -75,22 +77,22 @@ pub fn create_swap_msg(
 // Mainnet : terra13ehuhysn5mqjeaheeuew2gjs785f6k7jm8vfsqg3jhtpkwppcmzqcu7chk
 
 fn get_astroport_swap_operation(
-    offer_denom: String,
-    ask_denom: String,
+    offer_token: AssetInfo,
+    ask_token: AssetInfo,
     message_type: SwapMessageType,
 ) -> SwapOperation {
     match message_type {
         SwapMessageType::Astroport => SwapOperation::AstroSwap {
-            offer_asset_info: AssetInfo::NativeToken { denom: offer_denom },
-            ask_asset_info: AssetInfo::NativeToken { denom: ask_denom },
+            offer_asset_info: offer_token,
+            ask_asset_info: ask_token
         },
         SwapMessageType::Phoenix => SwapOperation::TokenSwap {
-            offer_asset_info: AssetInfo::NativeToken { denom: offer_denom },
-            ask_asset_info: AssetInfo::NativeToken { denom: ask_denom },
+            offer_asset_info: offer_token,
+            ask_asset_info: ask_token
         },
         SwapMessageType::TerraSwap => SwapOperation::TerraSwap {
-            offer_asset_info: AssetInfo::NativeToken { denom: offer_denom },
-            ask_asset_info: AssetInfo::NativeToken { denom: ask_denom },
+            offer_asset_info: offer_token,
+            ask_asset_info: ask_token
         },
     }
 }
@@ -108,28 +110,53 @@ fn get_contract_address(deps: Deps, message_type: SwapMessageType) -> StdResult<
 pub fn create_swap_message_for(
     deps: Deps,
     _env: Env,
-    c: Coin,
-    stable_denom: String,
+    asset_to_swap: Asset,
+    stable_token: AssetInfo,
     message_type: SwapMessageType,
 ) -> StdResult<CosmosMsg> {
-    let contract_address = get_contract_address(deps, message_type)?;
+    let swap_contract_address = get_contract_address(deps, message_type)?;
 
-    into_cosmos_msg(
-        AstroportExecuteMsg::ExecuteSwapOperation {
-            operation: get_astroport_swap_operation(c.denom.clone(), stable_denom, message_type),
-            to: None,
-            max_spread: None,
-            single: true,
-        },
-        contract_address,
-        vec![c],
-    )
+    match asset_to_swap.asset_info.clone(){
+        AssetInfo::Token { contract_addr } => Ok(CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: contract_addr.to_string(),
+            funds: vec![],
+            msg: to_binary(&Cw20ExecuteMsg::Send { 
+                contract: swap_contract_address,
+                amount: asset_to_swap.amount,
+                msg: to_binary(&
+                    AstroportExecuteMsg::ExecuteSwapOperation {
+                        operation: get_astroport_swap_operation(asset_to_swap.asset_info, stable_token, message_type),
+                        to: None,
+                        max_spread: None,
+                        single: true,
+                    }
+                )?
+            })?
+        })),
+        AssetInfo::NativeToken { denom } => 
+            into_cosmos_msg(
+                AstroportExecuteMsg::ExecuteSwapOperation {
+                    operation: get_astroport_swap_operation(asset_to_swap.asset_info.clone(), stable_token, message_type),
+                    to: None,
+                    max_spread: None,
+                    single: true,
+                },
+                swap_contract_address,
+                vec![
+                    Coin{
+                        amount: asset_to_swap.amount,
+                        denom,
+                    }
+                ]
+                
+            )
+    }
 }
 
 pub fn get_swap_result_for(
     deps: Deps,
-    c: Coin,
-    stable_denom: String,
+    asset_to_swap: Asset,
+    stable_token: AssetInfo,
     message_type: SwapMessageType,
 ) -> StdResult<Uint128> {
     let contract_address = get_contract_address(deps, message_type)?;
@@ -138,10 +165,10 @@ pub fn get_swap_result_for(
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: contract_address,
             msg: to_binary(&AstroportQueryMsg::SimulateSwapOperations {
-                offer_amount: c.amount,
+                offer_amount:  asset_to_swap.amount,
                 operations: vec![get_astroport_swap_operation(
-                    c.denom,
-                    stable_denom,
+                    asset_to_swap.asset_info,
+                    stable_token,
                     message_type,
                 )],
             })?,

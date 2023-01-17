@@ -1,3 +1,4 @@
+use moneymarket::astroport_router::AssetInfo;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Addr;
 use cw_storage_plus::Item;
@@ -25,7 +26,7 @@ pub struct Config {
     pub market_contract: CanonicalAddr,
     pub reward_contract: CanonicalAddr,
     pub liquidation_contract: CanonicalAddr,
-    pub stable_denom: String,
+    pub stable_token: AssetInfo,
     pub basset_info: BAssetInfo,
 }
 
