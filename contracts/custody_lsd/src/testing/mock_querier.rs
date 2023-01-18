@@ -1,3 +1,4 @@
+use crate::external::handle::RewardContractQueryMsg;
 use crate::state::BLunaAccruedRewardsResponse;
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::Empty;
@@ -185,10 +186,13 @@ impl WasmMockQuerier {
                         request: msg.clone(),
                     }),
                 },
-                _ => SystemResult::Err(SystemError::InvalidRequest {
-                    error: "not covered".to_string(),
-                    request: msg.clone(),
-                }),
+                _ => match from_binary(msg).unwrap() {
+                    RewardContractQueryMsg::AccruedRewards { address: _ } => SystemResult::Ok(
+                        ContractResult::from(to_binary(&BLunaAccruedRewardsResponse {
+                            rewards: self.accrued_rewards.rewards,
+                        })),
+                    ),
+                },
             },
             QueryRequest::Bank(BankQuery::Balance { address, denom }) => {
                 if address == "reward" && denom == "uusd" {

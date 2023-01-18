@@ -28,6 +28,8 @@ pub struct Config {
     pub liquidation_contract: CanonicalAddr,
     pub stable_token: AssetInfo,
     pub basset_info: BAssetInfo,
+
+    pub known_cw20_tokens: Vec<Addr>
 }
 
 // New mecanism specific variables

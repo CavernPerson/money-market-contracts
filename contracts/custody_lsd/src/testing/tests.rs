@@ -17,7 +17,7 @@ use crate::testing::mock_querier::mock_dependencies;
 use cosmwasm_std::testing::{mock_env, mock_info, MOCK_CONTRACT_ADDR};
 use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
 use moneymarket::custody::{
-    BAssetInfo, BorrowerResponse, ConfigResponse, Cw20HookMsg, ExecuteMsg, LSDInstantiateMsg, QueryMsg,
+    BAssetInfo, BorrowerResponse, LSDConfigResponse, Cw20HookMsg, ExecuteMsg, LSDInstantiateMsg, QueryMsg,
 };
 use moneymarket::liquidation_queue::Cw20HookMsg as LiquidationCw20HookMsg;
 
@@ -41,6 +41,8 @@ fn proper_initialization() {
         astroport_addr: "astroport_addr".to_string(),
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
+
+        known_tokens: vec![]
     };
 
     let info = mock_info("addr0000", &[]);
@@ -49,14 +51,14 @@ fn proper_initialization() {
     let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     let query_res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let config_res: ConfigResponse = from_binary(&query_res).unwrap();
+    let config_res: LSDConfigResponse = from_binary(&query_res).unwrap();
     assert_eq!("owner".to_string(), config_res.owner);
     assert_eq!("bluna".to_string(), config_res.collateral_token);
     assert_eq!("overseer".to_string(), config_res.overseer_contract);
     assert_eq!("market".to_string(), config_res.market_contract);
     assert_eq!("reward".to_string(), config_res.reward_contract);
     assert_eq!("liquidation".to_string(), config_res.liquidation_contract);
-    assert_eq!("uusd".to_string(), config_res.stable_denom);
+    assert_eq!(AssetInfo::NativeToken { denom: "uusd".to_string()}, config_res.stable_token);
 }
 
 #[test]
@@ -79,6 +81,8 @@ fn update_config() {
         astroport_addr: "astroport_addr".to_string(),
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
+
+        known_tokens: vec![]
     };
 
     let info = mock_info("addr0000", &[]);
@@ -89,19 +93,22 @@ fn update_config() {
     let msg = ExecuteMsg::UpdateConfig {
         owner: Some("owner2".to_string()),
         liquidation_contract: Some("liquidation2".to_string()),
+        known_tokens: Some(vec!["test_adddr0".to_string(), "bad_person".to_string()])
     };
     let info = mock_info("owner", &[]);
     execute(deps.as_mut(), mock_env(), info, msg.clone()).unwrap();
 
     let query_res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let config_res: ConfigResponse = from_binary(&query_res).unwrap();
+    let config_res: LSDConfigResponse = from_binary(&query_res).unwrap();
     assert_eq!("owner2".to_string(), config_res.owner);
     assert_eq!("bluna".to_string(), config_res.collateral_token);
     assert_eq!("overseer".to_string(), config_res.overseer_contract);
     assert_eq!("market".to_string(), config_res.market_contract);
     assert_eq!("reward".to_string(), config_res.reward_contract);
     assert_eq!("liquidation2".to_string(), config_res.liquidation_contract);
-    assert_eq!("uusd".to_string(), config_res.stable_denom);
+    assert_eq!(AssetInfo::NativeToken { denom: "uusd".to_string()}, config_res.stable_token);
+
+    assert_eq!(vec!["test_adddr0".to_string(), "bad_person".to_string()], config_res.known_tokens);
 
     let info = mock_info("addr0000", &[]);
     let res = execute(deps.as_mut(), mock_env(), info, msg);
@@ -131,6 +138,8 @@ fn deposit_collateral() {
         astroport_addr: "astroport_addr".to_string(),
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
+
+        known_tokens: vec![]
     };
 
     let info = mock_info("addr0000", &[]);
@@ -243,6 +252,8 @@ fn withdraw_collateral() {
         astroport_addr: "astroport_addr".to_string(),
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
+
+        known_tokens: vec![]
     };
 
     let info = mock_info("addr0000", &[]);
@@ -383,6 +394,8 @@ fn lock_collateral() {
         astroport_addr: "astroport_addr".to_string(),
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
+
+        known_tokens: vec![]
     };
 
     let info = mock_info("addr0000", &[]);
@@ -591,6 +604,8 @@ fn distribute_rewards() {
         astroport_addr: "astroport_addr".to_string(),
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
+
+        known_tokens: vec![]
     };
 
     let info = mock_info("addr0000", &[]);
@@ -651,6 +666,8 @@ fn distribute_hook() {
         astroport_addr: "astroport_addr".to_string(),
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
+
+        known_tokens: vec![]
     };
 
     let info = mock_info("addr0000", &[]);
@@ -708,6 +725,8 @@ fn distribution_hook_zero_rewards() {
         astroport_addr: "astroport_addr".to_string(),
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
+
+        known_tokens: vec![]
     };
 
     let info = mock_info("addr0000", &[]);
@@ -790,6 +809,8 @@ fn swap_to_stable_denom() {
         astroport_addr: "astroport_addr".to_string(),
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
+
+        known_tokens: vec![]
     };
 
     let info = mock_info("addr0000", &[]);
@@ -868,6 +889,8 @@ fn liquidate_collateral() {
         astroport_addr: "astroport_addr".to_string(),
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
+
+        known_tokens: vec![]
     };
 
     let info = mock_info("addr0000", &[]);
@@ -982,6 +1005,8 @@ fn proper_distribute_rewards_with_no_rewards() {
         astroport_addr: "astroport_addr".to_string(),
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
+
+        known_tokens: vec![]
     };
 
     let info = mock_info("addr0000", &[]);
@@ -998,7 +1023,7 @@ fn proper_distribute_rewards_with_no_rewards() {
     let info = mock_info("overseer", &[]);
     let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
     // must return
-    assert_eq!(res.messages.len(), 1);
+    assert_eq!(res.messages.len(), 0);
 
     let msg = ExecuteMsg::DistributeRewards {};
     let info = mock_info("overseer", &[]);
@@ -1008,7 +1033,7 @@ fn proper_distribute_rewards_with_no_rewards() {
         });
     let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
     // must return
-    assert_eq!(res.messages.len(), 1);
+    assert_eq!(res.messages.len(), 0);
 
     let msg = ExecuteMsg::DistributeRewards {};
     let info = mock_info("overseer", &[]);

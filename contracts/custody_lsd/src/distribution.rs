@@ -3,6 +3,7 @@ use moneymarket::custody::Asset;
 use cosmwasm_std::QueryRequest;
 use cosmwasm_std::Uint128;
 use cosmwasm_std::WasmQuery;
+use moneymarket::querier::query_all_cw20_balances;
 use moneymarket::querier::query_all_token_types_balance;
 use crate::external::handle::RewardContractQueryMsg;
 use crate::state::BLunaAccruedRewardsResponse;
@@ -93,13 +94,16 @@ pub fn distribute_hook(deps: DepsMut, env: Env) -> Result<Response, ContractErro
 
 /// Swap all coins to stable_denom
 /// and execute `swap_hook`
+/// We also swap known tokens (from the known token list in config) to the stable denom
 /// Executor: itself
 /// TODO, adapt what we prefer doing, what swaps we want to have
 pub fn swap_to_stable_denom(deps: DepsMut, env: Env) -> Result<Response, ContractError> {
     let config: Config = read_config(deps.storage)?;
 
     let contract_addr = env.contract.address.clone();
-    let balances: Vec<Coin> = query_all_balances(deps.as_ref(), contract_addr)?;
+
+    // We start by swapping all coin balances
+    let balances: Vec<Coin> = query_all_balances(deps.as_ref(), contract_addr.clone())?;
     let mut messages: Vec<SubMsg> = balances
         .iter()
         .filter(|x| !config.stable_token.clone().is_same_asset(x))
@@ -121,6 +125,32 @@ pub fn swap_to_stable_denom(deps: DepsMut, env: Env) -> Result<Response, Contrac
             Err(er) => vec![Err(er)],
         })
         .collect::<StdResult<Vec<SubMsg>>>()?;
+
+    // Then we want to swap all cw20 token balances we know to the stable denom
+    // First, we query all balances
+    let cw20_balances: Vec<Asset> = query_all_cw20_balances(deps.as_ref(), contract_addr, &config.known_cw20_tokens)?;
+    let mut cw20_messages: Vec<SubMsg> = cw20_balances
+        .iter()
+        .filter(|asset| !asset.amount.is_zero())
+        .filter(|x| config.stable_token != x.asset_info)
+        .map(|asset: &Asset| {
+            create_swap_msg(
+                deps.as_ref(),
+                env.clone(),
+                Asset{
+                    asset_info: asset.asset_info.clone(),
+                    amount: asset.amount
+                },
+                config.stable_token.clone(),
+            )
+        })
+        .flat_map(|result| match result {
+            Ok(vec) => vec.into_iter().map(|item| Ok(SubMsg::new(item))).collect(),
+            Err(er) => vec![Err(er)],
+        })
+        .collect::<StdResult<Vec<SubMsg>>>()?;
+
+    messages.append(&mut cw20_messages);
 
     if let Some(last) = messages.last_mut() {
         last.id = SWAP_TO_STABLE_OPERATION;

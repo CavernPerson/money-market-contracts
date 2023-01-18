@@ -62,6 +62,9 @@ pub struct LSDInstantiateMsg {
     pub astroport_addr: String,
     pub phoenix_addr: String,
     pub terraswap_addr: String,
+
+    // Known tokens to swap from to the stable_token
+    pub known_tokens: Vec<String>
 }
 
 #[cw_serde]
@@ -117,6 +120,7 @@ pub enum ExecuteMsg {
     UpdateConfig {
         owner: Option<String>,
         liquidation_contract: Option<String>,
+        known_tokens: Option<Vec<String>>,
     },
     /// Make specified amount of tokens unspendable
     LockCollateral { borrower: String, amount: Uint256 },
@@ -191,6 +195,8 @@ pub struct LSDConfigResponse {
     pub liquidation_contract: String,
     pub stable_token: AssetInfo,
     pub basset_info: BAssetInfo,
+
+    pub known_tokens: Vec<String>
 }
 
 // We define a custom struct for each query response

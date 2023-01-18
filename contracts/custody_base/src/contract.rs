@@ -56,6 +56,7 @@ pub fn execute(
         ExecuteMsg::UpdateConfig {
             owner,
             liquidation_contract,
+            ..
         } => {
             let api = deps.api;
             update_config(

@@ -38,6 +38,8 @@ pub fn instantiate(
         liquidation_contract: deps.api.addr_canonicalize(&msg.liquidation_contract)?,
         stable_token: msg.stable_token,
         basset_info: msg.basset_info,
+
+        known_cw20_tokens: msg.known_tokens.iter().map(|addr| deps.api.addr_validate(addr)).collect::<StdResult<Vec<Addr>>>()?
     };
 
     let swap_config = SwapConfig {
@@ -64,6 +66,7 @@ pub fn execute(
         ExecuteMsg::UpdateConfig {
             owner,
             liquidation_contract,
+            known_tokens,
         } => {
             let api = deps.api;
             update_config(
@@ -71,6 +74,7 @@ pub fn execute(
                 info,
                 optional_addr_validate(api, owner)?,
                 optional_addr_validate(api, liquidation_contract)?,
+                known_tokens
             )
         }
         ExecuteMsg::LockCollateral { borrower, amount } => {
@@ -133,6 +137,7 @@ pub fn update_config(
     info: MessageInfo,
     owner: Option<Addr>,
     liquidation_contract: Option<Addr>,
+    known_tokens: Option<Vec<String>>
 ) -> Result<Response, ContractError> {
     let mut config: Config = read_config(deps.storage)?;
 
@@ -146,6 +151,10 @@ pub fn update_config(
 
     if let Some(liquidation_contract) = liquidation_contract {
         config.liquidation_contract = deps.api.addr_canonicalize(liquidation_contract.as_str())?;
+    }
+
+    if let Some(known_tokens) = known_tokens{
+        config.known_cw20_tokens = known_tokens.iter().map(|addr| deps.api.addr_validate(addr)).collect::<StdResult<Vec<Addr>>>()?;
     }
 
     store_config(deps.storage, &config)?;
@@ -188,6 +197,8 @@ pub fn query_config(deps: Deps) -> StdResult<LSDConfigResponse> {
             .to_string(),
         stable_token: config.stable_token,
         basset_info: config.basset_info,
+
+        known_tokens: config.known_cw20_tokens.iter().map(|addr| addr.to_string()).collect()
     })
 }
 
