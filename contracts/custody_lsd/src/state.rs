@@ -1,7 +1,7 @@
-use moneymarket::astroport_router::AssetInfo;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Addr;
 use cw_storage_plus::Item;
+use moneymarket::astroport_router::AssetInfo;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -29,7 +29,7 @@ pub struct Config {
     pub stable_token: AssetInfo,
     pub basset_info: BAssetInfo,
 
-    pub known_cw20_tokens: Vec<Addr>
+    pub known_cw20_tokens: Vec<Addr>,
 }
 
 // New mecanism specific variables

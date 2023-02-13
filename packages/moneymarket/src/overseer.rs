@@ -100,6 +100,11 @@ pub enum ExecuteMsg {
         max_ltv: Option<Decimal256>,      // Loan To Value ratio
     },
 
+    /// Remove registered whitelist info
+    RemoveWhitelist {
+        collateral_token: String, // bAsset token contract
+    },
+
     /// Claims all staking rewards from the bAsset contracts
     /// and also do a epoch basis updates
     /// 1. Distribute interest buffers to depositors

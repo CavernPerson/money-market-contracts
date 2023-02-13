@@ -139,6 +139,12 @@ pub fn read_collateral_info(
         .map_err(|_| StdError::generic_err("Collateral is not whitelisted"))
 }
 
+pub fn remove_collateral_info(storage: &mut dyn Storage, collateral_token: &CanonicalAddr) {
+    let mut collateral_info_bucket: Bucket<CollateralInfo> =
+        Bucket::new(storage, PREFIX_COLLATERAL_INFO);
+    collateral_info_bucket.remove(collateral_token.as_slice())
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct BidPool {
     pub sum_snapshot: Decimal256,

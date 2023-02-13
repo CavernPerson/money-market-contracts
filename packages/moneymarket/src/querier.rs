@@ -1,7 +1,7 @@
-use std::convert::TryInto;
 use crate::custody::Asset;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::convert::TryInto;
 
 use cosmwasm_std::{
     to_binary, Addr, AllBalanceResponse, BalanceResponse, BankQuery, Coin, Deps, QueryRequest,
@@ -9,7 +9,10 @@ use cosmwasm_std::{
 };
 use cw20::{Cw20QueryMsg, TokenInfoResponse};
 
-use crate::{oracle::{PriceResponse, QueryMsg as OracleQueryMsg}, astroport_router::AssetInfo};
+use crate::{
+    astroport_router::AssetInfo,
+    oracle::{PriceResponse, QueryMsg as OracleQueryMsg},
+};
 
 pub fn query_all_balances(deps: Deps, account_addr: Addr) -> StdResult<Vec<Coin>> {
     // load price form the oracle
@@ -21,28 +24,43 @@ pub fn query_all_balances(deps: Deps, account_addr: Addr) -> StdResult<Vec<Coin>
     Ok(all_balances.amount)
 }
 
-pub fn query_all_cw20_balances(deps: Deps, contract_addr: Addr, tokens: &[Addr]) -> StdResult<Vec<Asset>>{
-
-    tokens.iter().map(|token|{
-        let result = query_token_balance(deps, token.clone(), contract_addr.clone());
-        let asset_info = AssetInfo::Token { contract_addr: token.clone() };
-        result.map(|amount| Asset{
-            amount: amount.try_into().unwrap(),
-            asset_info: asset_info.clone(),
-        }).or_else(|_| Ok(Asset{
-            amount: Uint128::zero(),
-            asset_info: asset_info.clone(),
-        }))
-    })
-    .collect()
+pub fn query_all_cw20_balances(
+    deps: Deps,
+    contract_addr: Addr,
+    tokens: &[Addr],
+) -> StdResult<Vec<Asset>> {
+    tokens
+        .iter()
+        .map(|token| {
+            let result = query_token_balance(deps, token.clone(), contract_addr.clone());
+            let asset_info = AssetInfo::Token {
+                contract_addr: token.clone(),
+            };
+            result
+                .map(|amount| Asset {
+                    amount: amount.try_into().unwrap(),
+                    asset_info: asset_info.clone(),
+                })
+                .or_else(|_| {
+                    Ok(Asset {
+                        amount: Uint128::zero(),
+                        asset_info: asset_info.clone(),
+                    })
+                })
+        })
+        .collect()
 }
 
-
-
-pub fn query_all_token_types_balance(deps: Deps, account_addr: Addr, asset_info: AssetInfo) -> StdResult<Uint256>{
-    match asset_info{
+pub fn query_all_token_types_balance(
+    deps: Deps,
+    account_addr: Addr,
+    asset_info: AssetInfo,
+) -> StdResult<Uint256> {
+    match asset_info {
         AssetInfo::NativeToken { denom } => query_balance(deps, account_addr, denom),
-        AssetInfo::Token { contract_addr } => query_token_balance(deps, contract_addr, account_addr)
+        AssetInfo::Token { contract_addr } => {
+            query_token_balance(deps, contract_addr, account_addr)
+        }
     }
 }
 

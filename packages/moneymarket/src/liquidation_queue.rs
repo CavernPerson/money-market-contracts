@@ -58,6 +58,9 @@ pub enum ExecuteMsg {
         bid_threshold: Option<Uint256>,
         max_slot: Option<u8>,
     },
+    RemoveCollateral {
+        collateral_token: String,
+    },
     /// Submit a new bid to a bid pool
     SubmitBid {
         collateral_token: String,

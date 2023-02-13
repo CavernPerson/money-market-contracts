@@ -4,6 +4,7 @@ use crate::state::{
     read_bid, read_bid_pool, read_bid_pools, read_bids_by_user, read_collateral_info, read_config,
     read_total_bids, Bid, BidPool, CollateralInfo, Config,
 };
+use cosmwasm_std::StdError;
 use cosmwasm_std::{CanonicalAddr, Decimal256, Deps, StdResult, Uint128, Uint256};
 use moneymarket::liquidation_queue::{
     BidPoolResponse, BidPoolsResponse, BidResponse, BidsResponse, CollateralInfoResponse,

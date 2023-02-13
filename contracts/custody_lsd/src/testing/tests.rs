@@ -1,9 +1,10 @@
-use moneymarket::custody::Asset;
 use cosmwasm_std::SubMsgResult;
 use cosmwasm_std::{
-    attr, from_binary, to_binary, Api, Attribute, BankMsg, Coin, CosmosMsg, Decimal, Reply, SubMsg, SubMsgResponse, Uint128, Uint256, WasmMsg,
+    attr, from_binary, to_binary, Api, Attribute, BankMsg, Coin, CosmosMsg, Decimal, Reply, SubMsg,
+    SubMsgResponse, Uint128, Uint256, WasmMsg,
 };
 use moneymarket::astroport_router::AssetInfo;
+use moneymarket::custody::Asset;
 
 use crate::contract::{
     execute, instantiate, query, reply, CLAIM_REWARDS_OPERATION, SWAP_TO_STABLE_OPERATION,
@@ -17,7 +18,8 @@ use crate::testing::mock_querier::mock_dependencies;
 use cosmwasm_std::testing::{mock_env, mock_info, MOCK_CONTRACT_ADDR};
 use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
 use moneymarket::custody::{
-    BAssetInfo, BorrowerResponse, LSDConfigResponse, Cw20HookMsg, ExecuteMsg, LSDInstantiateMsg, QueryMsg,
+    BAssetInfo, BorrowerResponse, Cw20HookMsg, ExecuteMsg, LSDConfigResponse, LSDInstantiateMsg,
+    QueryMsg,
 };
 use moneymarket::liquidation_queue::Cw20HookMsg as LiquidationCw20HookMsg;
 
@@ -32,7 +34,9 @@ fn proper_initialization() {
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
+        stable_token: AssetInfo::NativeToken {
+            denom: "uusd".to_string(),
+        },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -42,7 +46,7 @@ fn proper_initialization() {
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
 
-        known_tokens: vec![]
+        known_tokens: vec![],
     };
 
     let info = mock_info("addr0000", &[]);
@@ -58,7 +62,12 @@ fn proper_initialization() {
     assert_eq!("market".to_string(), config_res.market_contract);
     assert_eq!("reward".to_string(), config_res.reward_contract);
     assert_eq!("liquidation".to_string(), config_res.liquidation_contract);
-    assert_eq!(AssetInfo::NativeToken { denom: "uusd".to_string()}, config_res.stable_token);
+    assert_eq!(
+        AssetInfo::NativeToken {
+            denom: "uusd".to_string()
+        },
+        config_res.stable_token
+    );
 }
 
 #[test]
@@ -72,7 +81,9 @@ fn update_config() {
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
+        stable_token: AssetInfo::NativeToken {
+            denom: "uusd".to_string(),
+        },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -82,7 +93,7 @@ fn update_config() {
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
 
-        known_tokens: vec![]
+        known_tokens: vec![],
     };
 
     let info = mock_info("addr0000", &[]);
@@ -93,7 +104,7 @@ fn update_config() {
     let msg = ExecuteMsg::UpdateConfig {
         owner: Some("owner2".to_string()),
         liquidation_contract: Some("liquidation2".to_string()),
-        known_tokens: Some(vec!["test_adddr0".to_string(), "bad_person".to_string()])
+        known_tokens: Some(vec!["test_adddr0".to_string(), "bad_person".to_string()]),
     };
     let info = mock_info("owner", &[]);
     execute(deps.as_mut(), mock_env(), info, msg.clone()).unwrap();
@@ -106,9 +117,17 @@ fn update_config() {
     assert_eq!("market".to_string(), config_res.market_contract);
     assert_eq!("reward".to_string(), config_res.reward_contract);
     assert_eq!("liquidation2".to_string(), config_res.liquidation_contract);
-    assert_eq!(AssetInfo::NativeToken { denom: "uusd".to_string()}, config_res.stable_token);
+    assert_eq!(
+        AssetInfo::NativeToken {
+            denom: "uusd".to_string()
+        },
+        config_res.stable_token
+    );
 
-    assert_eq!(vec!["test_adddr0".to_string(), "bad_person".to_string()], config_res.known_tokens);
+    assert_eq!(
+        vec!["test_adddr0".to_string(), "bad_person".to_string()],
+        config_res.known_tokens
+    );
 
     let info = mock_info("addr0000", &[]);
     let res = execute(deps.as_mut(), mock_env(), info, msg);
@@ -129,7 +148,9 @@ fn deposit_collateral() {
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
+        stable_token: AssetInfo::NativeToken {
+            denom: "uusd".to_string(),
+        },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -139,7 +160,7 @@ fn deposit_collateral() {
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
 
-        known_tokens: vec![]
+        known_tokens: vec![],
     };
 
     let info = mock_info("addr0000", &[]);
@@ -243,7 +264,9 @@ fn withdraw_collateral() {
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
+        stable_token: AssetInfo::NativeToken {
+            denom: "uusd".to_string(),
+        },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -253,7 +276,7 @@ fn withdraw_collateral() {
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
 
-        known_tokens: vec![]
+        known_tokens: vec![],
     };
 
     let info = mock_info("addr0000", &[]);
@@ -385,7 +408,9 @@ fn lock_collateral() {
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
+        stable_token: AssetInfo::NativeToken {
+            denom: "uusd".to_string(),
+        },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -395,7 +420,7 @@ fn lock_collateral() {
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
 
-        known_tokens: vec![]
+        known_tokens: vec![],
     };
 
     let info = mock_info("addr0000", &[]);
@@ -595,7 +620,9 @@ fn distribute_rewards() {
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
+        stable_token: AssetInfo::NativeToken {
+            denom: "uusd".to_string(),
+        },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -605,7 +632,7 @@ fn distribute_rewards() {
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
 
-        known_tokens: vec![]
+        known_tokens: vec![],
     };
 
     let info = mock_info("addr0000", &[]);
@@ -657,7 +684,9 @@ fn distribute_hook() {
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
+        stable_token: AssetInfo::NativeToken {
+            denom: "uusd".to_string(),
+        },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -667,7 +696,7 @@ fn distribute_hook() {
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
 
-        known_tokens: vec![]
+        known_tokens: vec![],
     };
 
     let info = mock_info("addr0000", &[]);
@@ -716,7 +745,9 @@ fn distribution_hook_zero_rewards() {
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "terraswap".to_string(),
-        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
+        stable_token: AssetInfo::NativeToken {
+            denom: "uusd".to_string(),
+        },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -726,7 +757,7 @@ fn distribution_hook_zero_rewards() {
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
 
-        known_tokens: vec![]
+        known_tokens: vec![],
     };
 
     let info = mock_info("addr0000", &[]);
@@ -800,7 +831,9 @@ fn swap_to_stable_denom() {
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
+        stable_token: AssetInfo::NativeToken {
+            denom: "uusd".to_string(),
+        },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -810,7 +843,7 @@ fn swap_to_stable_denom() {
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
 
-        known_tokens: vec![]
+        known_tokens: vec![],
     };
 
     let info = mock_info("addr0000", &[]);
@@ -833,16 +866,15 @@ fn swap_to_stable_denom() {
                 create_swap_msg(
                     deps.as_ref(),
                     mock_env(),
-                    Asset{
+                    Asset {
                         amount: Uint128::from(20000000000u128),
-                        asset_info: AssetInfo::NativeToken{
+                        asset_info: AssetInfo::NativeToken {
                             denom: "ukrw".to_string(),
                         }
                     },
-                    AssetInfo::NativeToken{
+                    AssetInfo::NativeToken {
                         denom: "uusd".to_string(),
                     }
-                    
                 )
                 .unwrap()[0]
                     .clone()
@@ -851,13 +883,13 @@ fn swap_to_stable_denom() {
                 create_swap_msg(
                     deps.as_ref(),
                     mock_env(),
-                    Asset{
+                    Asset {
                         amount: Uint128::from(2000000u128),
-                        asset_info: AssetInfo::NativeToken{
+                        asset_info: AssetInfo::NativeToken {
                             denom: "usdr".to_string(),
                         }
                     },
-                    AssetInfo::NativeToken{
+                    AssetInfo::NativeToken {
                         denom: "uusd".to_string(),
                     },
                 )
@@ -880,7 +912,9 @@ fn liquidate_collateral() {
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
+        stable_token: AssetInfo::NativeToken {
+            denom: "uusd".to_string(),
+        },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -890,7 +924,7 @@ fn liquidate_collateral() {
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
 
-        known_tokens: vec![]
+        known_tokens: vec![],
     };
 
     let info = mock_info("addr0000", &[]);
@@ -996,7 +1030,9 @@ fn proper_distribute_rewards_with_no_rewards() {
         market_contract: "market".to_string(),
         reward_contract: "reward".to_string(),
         liquidation_contract: "liquidation".to_string(),
-        stable_token: AssetInfo::NativeToken { denom: "uusd".to_string() },
+        stable_token: AssetInfo::NativeToken {
+            denom: "uusd".to_string(),
+        },
         basset_info: BAssetInfo {
             name: "bluna".to_string(),
             symbol: "bluna".to_string(),
@@ -1006,7 +1042,7 @@ fn proper_distribute_rewards_with_no_rewards() {
         phoenix_addr: "phoenix_addr".to_string(),
         terraswap_addr: "terraswap_addr".to_string(),
 
-        known_tokens: vec![]
+        known_tokens: vec![],
     };
 
     let info = mock_info("addr0000", &[]);

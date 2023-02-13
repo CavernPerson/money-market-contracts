@@ -1,3 +1,4 @@
+use crate::state::{remove_whitelist_elem};
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     attr, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal256, Deps, DepsMut, Env,
@@ -103,6 +104,8 @@ pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -> StdResult<Response> 
             dyn_rate_max: msg.dyn_rate_max,
         },
     )?;
+    /*
+    // Ensure we migrate the config variable to the newest version
     let mut config = read_config(deps.storage)?;
     let prev_yield_reserve = query_balance(
         deps.as_ref(),
@@ -123,6 +126,7 @@ pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -> StdResult<Response> 
     config.threshold_deposit_rate = new_rate;
     config.target_deposit_rate = new_rate;
     store_config(deps.storage, &config)?;
+    */
     Ok(Response::default())
 }
 
@@ -201,6 +205,10 @@ pub fn execute(
                 optional_addr_validate(api, custody_contract)?,
                 max_ltv,
             )
+        }
+        ExecuteMsg::RemoveWhitelist { collateral_token } => {
+            let api = deps.api;
+            remove_whitelist(deps, info, api.addr_validate(&collateral_token)?)
         }
         ExecuteMsg::ExecuteEpochOperations {} => execute_epoch_operations(deps, env),
         ExecuteMsg::UpdateEpochState {
@@ -384,6 +392,24 @@ pub fn update_whitelist(
     ]))
 }
 
+pub fn remove_whitelist(
+    deps: DepsMut,
+    info: MessageInfo,
+    collateral_token: Addr,
+) -> Result<Response, ContractError> {
+    let config: Config = read_config(deps.storage)?;
+    if deps.api.addr_canonicalize(info.sender.as_str())? != config.owner_addr {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    let collateral_token_raw = deps.api.addr_canonicalize(collateral_token.as_str())?;
+    remove_whitelist_elem(deps.storage, &collateral_token_raw);
+
+    Ok(Response::new().add_attributes(vec![
+        attr("action", "remove_whitelist"),
+        attr("collateral_token", collateral_token),
+    ]))
+}
 fn update_deposit_rate(deps: DepsMut, env: Env) -> StdResult<()> {
     let dynrate_config: DynrateConfig = read_dynrate_config(deps.storage)?;
     let dynrate_state: DynrateState = read_dynrate_state(deps.storage)?;
@@ -503,34 +529,53 @@ pub fn execute_epoch_operations(deps: DepsMut, env: Env) -> Result<Response, Con
     // Remove accrued_buffer * config.borrow_incentives_factor from the reserves (partial redistribution of the staking yield to the borrowers)
     // We compute this value now, and make the borrowers pay less interest in the market contract
     let accrued_buffer = interest_buffer - state.prev_interest_buffer;
-    let borrow_incentives_amount = accrued_buffer * epoch_state.reserves_rate_used_for_borrowers;
+    let mut borrow_incentives_amount =
+        accrued_buffer * epoch_state.reserves_rate_used_for_borrowers;
 
-    if !borrow_incentives_amount.is_zero() {
-        messages.push(CosmosMsg::Bank(BankMsg::Send {
-            to_address: deps
-                .api
-                .addr_humanize(&config.borrow_reserves_bucket_contract)?
-                .to_string(),
-            amount: vec![Coin {
-                denom: config.stable_denom.clone(),
-                amount: borrow_incentives_amount.try_into()?,
-            }],
-        }));
+    // We only send those incentives if there are some available AND if the borrow reserves is not too high already !
+    // We limit the borrowing reserves to res_b < rate * (res_b + res_d)
+    // res_d = interest_buffer
+    // res_b = reserve_bucket_balance
+    // Here res_d + res_b is fixed (this is the total amount of reserves we want to balance) we use this criteria : 
+    // max_borrow_reserves = rate * (res_b_initial + res_d_initial)
+    // rate = epoch_state.reserves_rate_used_for_borrowers
+
+    let reserve_bucket_balance = query_balance(
+        deps.as_ref(),
+        deps.api
+            .addr_humanize(&config.borrow_reserves_bucket_contract)?,
+        config.stable_denom.to_string(),
+    )?;
+
+    let max_borrow_reserves = epoch_state.reserves_rate_used_for_borrowers * (reserve_bucket_balance + interest_buffer);
+
+    if !borrow_incentives_amount.is_zero()
+        && reserve_bucket_balance < max_borrow_reserves
+    {
+        // The final borrow reserves must also observe that criteria
+        borrow_incentives_amount = min(
+            borrow_incentives_amount,
+            max_borrow_reserves - reserve_bucket_balance,
+        );
+
+        // Deduct borrow_incentives_amount from the interest_buffer, we used that
+        interest_buffer -= borrow_incentives_amount;
     }
 
-    // Deduct anc_purchase_amount from the interest_buffer
-    interest_buffer -= borrow_incentives_amount;
-
     // Distribute Interest Buffer to depositor
-    // Only executed when deposit rate < threshold_deposit_rate
+    // Only executed when deposit rate < target_deposit_rate
+    // The goal is to get to the target deposit rate if possible
+    // We changed that because now, the borrow rate is not sufficient to cover the target rate
+    // So this condition is met very regularly
     let mut distributed_interest: Uint256 = Uint256::zero();
-    if deposit_rate < config.threshold_deposit_rate {
+    let mut missing_deposits = Uint256::zero();
+    if deposit_rate < config.target_deposit_rate {
         // missing_deposit_rate(_per_block)
-        let missing_deposit_rate = config.threshold_deposit_rate - deposit_rate;
+        let missing_deposit_rate = config.target_deposit_rate - deposit_rate;
         let prev_deposits = state.prev_aterra_supply * state.prev_exchange_rate;
 
         // missing_deposits = prev_deposits * missing_deposit_rate(_per_block) * blocks
-        let missing_deposits = prev_deposits * blocks * missing_deposit_rate;
+        missing_deposits = prev_deposits * blocks * missing_deposit_rate;
         let distribution_buffer = interest_buffer * config.buffer_distribution_factor;
 
         // When there was not enough deposits happens,
@@ -543,7 +588,7 @@ pub fn execute_epoch_operations(deps: DepsMut, env: Env) -> Result<Response, Con
             messages.push(CosmosMsg::Bank(BankMsg::Send {
                 to_address: market_contract.to_string(),
                 amount: vec![Coin {
-                    denom: config.stable_denom,
+                    denom: config.stable_denom.clone(),
                     amount: distributed_interest.try_into()?,
                 }],
             }));
@@ -571,12 +616,28 @@ pub fn execute_epoch_operations(deps: DepsMut, env: Env) -> Result<Response, Con
         })?,
     }));
 
+    // The last message we send out is the borrow reserves top up, so that it doesn't interfere with the current deposit rate top-up
+    if !borrow_incentives_amount.is_zero() {
+        messages.push(CosmosMsg::Bank(BankMsg::Send {
+            to_address: deps
+                .api
+                .addr_humanize(&config.borrow_reserves_bucket_contract)?
+                .to_string(),
+            amount: vec![Coin {
+                denom: config.stable_denom,
+                amount: borrow_incentives_amount.try_into()?,
+            }],
+        }));
+    }
+
+
     Ok(Response::new().add_messages(messages).add_attributes(vec![
         attr("action", "epoch_operations"),
         attr("deposit_rate", deposit_rate.to_string()),
         attr("exchange_rate", epoch_state.exchange_rate.to_string()),
         attr("aterra_supply", epoch_state.aterra_supply),
         attr("distributed_interest", distributed_interest),
+        attr("missing_deposits", missing_deposits),
     ]))
 }
 

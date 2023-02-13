@@ -16,6 +16,21 @@ const PREFIX_WHITELIST: &[u8] = b"whitelist";
 const PREFIX_COLLATERALS: &[u8] = b"collateral";
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct OldConfig {
+    pub owner_addr: CanonicalAddr,
+    pub oracle_contract: CanonicalAddr,
+    pub market_contract: CanonicalAddr,
+    pub liquidation_contract: CanonicalAddr,
+    //pub borrow_reserves_bucket_contract: CanonicalAddr,
+    pub stable_denom: String,
+    pub epoch_period: u64,
+    pub threshold_deposit_rate: Decimal256,
+    pub target_deposit_rate: Decimal256,
+    pub buffer_distribution_factor: Decimal256,
+    pub price_timeframe: u64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub owner_addr: CanonicalAddr,
     pub oracle_contract: CanonicalAddr,
@@ -72,6 +87,10 @@ pub fn read_config(storage: &dyn Storage) -> StdResult<Config> {
     ReadonlySingleton::new(storage, KEY_CONFIG).load()
 }
 
+pub fn read_old_config(storage: &dyn Storage) -> StdResult<OldConfig> {
+    ReadonlySingleton::new(storage, KEY_CONFIG).load()
+}
+
 pub fn store_dynrate_config(storage: &mut dyn Storage, data: &DynrateConfig) -> StdResult<()> {
     Singleton::new(storage, KEY_DYNRATE_CONFIG).save(data)
 }
@@ -119,6 +138,11 @@ pub fn read_whitelist_elem(
             "Token is not registered as collateral",
         )),
     }
+}
+
+pub fn remove_whitelist_elem(storage: &mut dyn Storage, collateral_token: &CanonicalAddr) {
+    let mut whitelist_bucket: Bucket<WhitelistElem> = Bucket::new(storage, PREFIX_WHITELIST);
+    whitelist_bucket.remove(collateral_token.as_slice());
 }
 
 pub fn read_whitelist(

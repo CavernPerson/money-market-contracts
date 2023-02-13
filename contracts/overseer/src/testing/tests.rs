@@ -497,6 +497,7 @@ fn execute_epoch_operations() {
             attr("exchange_rate", "1.2"),
             attr("aterra_supply", "1000000"),
             attr("distributed_interest", "0"),
+            attr("missing_deposits", "0"),
         ]
     );
 
@@ -584,6 +585,7 @@ fn execute_epoch_operations() {
             attr("exchange_rate", "1.25"),
             attr("aterra_supply", "1000000"),
             attr("distributed_interest", "53680"),
+            attr("missing_deposits", "53680"),
         ]
     );
 }

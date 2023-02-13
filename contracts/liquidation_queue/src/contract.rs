@@ -1,3 +1,4 @@
+use crate::state::remove_collateral_info;
 use cosmwasm_std::entry_point;
 #[cfg(not(feature = "library"))]
 use moneymarket::liquidation_queue::MigrateMsg;
@@ -93,6 +94,10 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
             bid_threshold,
             max_slot,
         } => update_collateral_info(deps, info, collateral_token, bid_threshold, max_slot),
+
+        ExecuteMsg::RemoveCollateral { collateral_token } => {
+            remove_collateral(deps, info, collateral_token)
+        }
         ExecuteMsg::SubmitBid {
             collateral_token,
             premium_slot,
@@ -278,6 +283,23 @@ pub fn update_collateral_info(
     store_collateral_info(deps.storage, &collateral_token_raw, &collateral_info)?;
 
     Ok(Response::new().add_attribute("action", "update_collateral_info"))
+}
+
+pub fn remove_collateral(
+    deps: DepsMut,
+    info: MessageInfo,
+    collateral_token: String,
+) -> StdResult<Response> {
+    let config: Config = read_config(deps.storage)?;
+    let collateral_token_raw = deps.api.addr_canonicalize(&collateral_token)?;
+    if deps.api.addr_canonicalize(info.sender.as_str())? != config.owner {
+        return Err(StdError::generic_err("unauthorized"));
+    }
+
+    // update collateral info
+    remove_collateral_info(deps.storage, &collateral_token_raw);
+
+    Ok(Response::new().add_attribute("action", "remove_collateral_info"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

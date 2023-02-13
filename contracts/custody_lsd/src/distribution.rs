@@ -1,19 +1,19 @@
-use moneymarket::astroport_router::AssetInfo;
-use moneymarket::custody::Asset;
+use crate::external::handle::RewardContractQueryMsg;
+use crate::state::BLunaAccruedRewardsResponse;
+use crate::swap::create_swap_msg;
+use cosmwasm_std::Addr;
+use cosmwasm_std::Deps;
 use cosmwasm_std::QueryRequest;
 use cosmwasm_std::Uint128;
 use cosmwasm_std::WasmQuery;
+use cosmwasm_std::{
+    attr, to_binary, Coin, CosmosMsg, DepsMut, Env, MessageInfo, ReplyOn, Response, StdResult,
+    SubMsg, Uint256, WasmMsg,
+};
+use moneymarket::astroport_router::AssetInfo;
+use moneymarket::custody::Asset;
 use moneymarket::querier::query_all_cw20_balances;
 use moneymarket::querier::query_all_token_types_balance;
-use crate::external::handle::RewardContractQueryMsg;
-use crate::state::BLunaAccruedRewardsResponse;
-use cosmwasm_std::Deps;
-use cosmwasm_std::Addr;
-use crate::swap::create_swap_msg;
-use cosmwasm_std::{
-    attr, to_binary, Coin, CosmosMsg, DepsMut, Env, MessageInfo, ReplyOn, Response,
-    StdResult, SubMsg, Uint256, WasmMsg,
-};
 use std::convert::TryInto;
 
 use crate::contract::{CLAIM_REWARDS_OPERATION, SWAP_TO_STABLE_OPERATION};
@@ -21,7 +21,7 @@ use crate::error::ContractError;
 use crate::external::handle::RewardContractExecuteMsg;
 use crate::state::{read_config, Config};
 
-use moneymarket::querier::{query_all_balances};
+use moneymarket::querier::query_all_balances;
 
 // REWARD_THRESHOLD
 // This value is used as the minimum reward claim amount
@@ -72,18 +72,17 @@ pub fn distribute_hook(deps: DepsMut, env: Env) -> Result<Response, ContractErro
 
     // reward_amount = (prev_balance + reward_amount) - prev_balance
     // = (0 + reward_amount) - 0 = reward_amount = balance
-    let reward_amount: Uint256 = query_all_token_types_balance(
-        deps.as_ref(),
-        contract_addr,
-        config.stable_token.clone(),
-    )?;
+    let reward_amount: Uint256 =
+        query_all_token_types_balance(deps.as_ref(), contract_addr, config.stable_token.clone())?;
     let mut messages: Vec<CosmosMsg> = vec![];
     if !reward_amount.is_zero() {
-        messages.push(Asset{
-            asset_info: config.stable_token,
-            amount: reward_amount.try_into()?,
-        }.to_msg(overseer_contract)?);
-
+        messages.push(
+            Asset {
+                asset_info: config.stable_token,
+                amount: reward_amount.try_into()?,
+            }
+            .to_msg(overseer_contract)?,
+        );
     }
 
     Ok(Response::new().add_messages(messages).add_attributes(vec![
@@ -111,11 +110,11 @@ pub fn swap_to_stable_denom(deps: DepsMut, env: Env) -> Result<Response, Contrac
             create_swap_msg(
                 deps.as_ref(),
                 env.clone(),
-                Asset{
-                    asset_info: AssetInfo::NativeToken{
-                        denom: coin.denom.clone()
+                Asset {
+                    asset_info: AssetInfo::NativeToken {
+                        denom: coin.denom.clone(),
                     },
-                    amount: coin.amount
+                    amount: coin.amount,
                 },
                 config.stable_token.clone(),
             )
@@ -128,7 +127,8 @@ pub fn swap_to_stable_denom(deps: DepsMut, env: Env) -> Result<Response, Contrac
 
     // Then we want to swap all cw20 token balances we know to the stable denom
     // First, we query all balances
-    let cw20_balances: Vec<Asset> = query_all_cw20_balances(deps.as_ref(), contract_addr, &config.known_cw20_tokens)?;
+    let cw20_balances: Vec<Asset> =
+        query_all_cw20_balances(deps.as_ref(), contract_addr, &config.known_cw20_tokens)?;
     let mut cw20_messages: Vec<SubMsg> = cw20_balances
         .iter()
         .filter(|asset| !asset.amount.is_zero())
@@ -137,9 +137,9 @@ pub fn swap_to_stable_denom(deps: DepsMut, env: Env) -> Result<Response, Contrac
             create_swap_msg(
                 deps.as_ref(),
                 env.clone(),
-                Asset{
+                Asset {
                     asset_info: asset.asset_info.clone(),
-                    amount: asset.amount
+                    amount: asset.amount,
                 },
                 config.stable_token.clone(),
             )

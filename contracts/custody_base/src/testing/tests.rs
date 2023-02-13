@@ -82,7 +82,7 @@ fn update_config() {
     let msg = ExecuteMsg::UpdateConfig {
         owner: Some("owner2".to_string()),
         liquidation_contract: Some("liquidation2".to_string()),
-        known_tokens: None
+        known_tokens: None,
     };
     let info = mock_info("owner", &[]);
     execute(deps.as_mut(), mock_env(), info, msg.clone()).unwrap();

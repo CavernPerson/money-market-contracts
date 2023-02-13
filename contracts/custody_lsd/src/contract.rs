@@ -16,7 +16,7 @@ use crate::state::{read_config, store_config, store_swap_config, Config, SwapCon
 use cw20::Cw20ReceiveMsg;
 use moneymarket::common::optional_addr_validate;
 use moneymarket::custody::{
-    Cw20HookMsg, ExecuteMsg, MigrateMsg, QueryMsg, LSDInstantiateMsg, LSDConfigResponse,
+    Cw20HookMsg, ExecuteMsg, LSDConfigResponse, LSDInstantiateMsg, MigrateMsg, QueryMsg,
 };
 
 pub const CLAIM_REWARDS_OPERATION: u64 = 1u64;
@@ -39,7 +39,11 @@ pub fn instantiate(
         stable_token: msg.stable_token,
         basset_info: msg.basset_info,
 
-        known_cw20_tokens: msg.known_tokens.iter().map(|addr| deps.api.addr_validate(addr)).collect::<StdResult<Vec<Addr>>>()?
+        known_cw20_tokens: msg
+            .known_tokens
+            .iter()
+            .map(|addr| deps.api.addr_validate(addr))
+            .collect::<StdResult<Vec<Addr>>>()?,
     };
 
     let swap_config = SwapConfig {
@@ -74,7 +78,7 @@ pub fn execute(
                 info,
                 optional_addr_validate(api, owner)?,
                 optional_addr_validate(api, liquidation_contract)?,
-                known_tokens
+                known_tokens,
             )
         }
         ExecuteMsg::LockCollateral { borrower, amount } => {
@@ -137,7 +141,7 @@ pub fn update_config(
     info: MessageInfo,
     owner: Option<Addr>,
     liquidation_contract: Option<Addr>,
-    known_tokens: Option<Vec<String>>
+    known_tokens: Option<Vec<String>>,
 ) -> Result<Response, ContractError> {
     let mut config: Config = read_config(deps.storage)?;
 
@@ -153,8 +157,11 @@ pub fn update_config(
         config.liquidation_contract = deps.api.addr_canonicalize(liquidation_contract.as_str())?;
     }
 
-    if let Some(known_tokens) = known_tokens{
-        config.known_cw20_tokens = known_tokens.iter().map(|addr| deps.api.addr_validate(addr)).collect::<StdResult<Vec<Addr>>>()?;
+    if let Some(known_tokens) = known_tokens {
+        config.known_cw20_tokens = known_tokens
+            .iter()
+            .map(|addr| deps.api.addr_validate(addr))
+            .collect::<StdResult<Vec<Addr>>>()?;
     }
 
     store_config(deps.storage, &config)?;
@@ -198,7 +205,11 @@ pub fn query_config(deps: Deps) -> StdResult<LSDConfigResponse> {
         stable_token: config.stable_token,
         basset_info: config.basset_info,
 
-        known_tokens: config.known_cw20_tokens.iter().map(|addr| addr.to_string()).collect()
+        known_tokens: config
+            .known_cw20_tokens
+            .iter()
+            .map(|addr| addr.to_string())
+            .collect(),
     })
 }
 
