@@ -1,7 +1,10 @@
+use cosmwasm_schema::cw_serde;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{CanonicalAddr, Decimal256, Deps, Order, StdError, StdResult, Storage, Uint256};
+use cosmwasm_std::{
+    Addr, CanonicalAddr, Decimal256, Deps, Order, StdError, StdResult, Storage, Uint256,
+};
 use cosmwasm_storage::{Bucket, ReadonlyBucket, ReadonlySingleton, Singleton};
 
 use moneymarket::overseer::{CollateralsResponse, WhitelistResponseElem};
@@ -21,13 +24,20 @@ pub struct OldConfig {
     pub oracle_contract: CanonicalAddr,
     pub market_contract: CanonicalAddr,
     pub liquidation_contract: CanonicalAddr,
-    //pub borrow_reserves_bucket_contract: CanonicalAddr,
+    pub borrow_reserves_bucket_contract: CanonicalAddr,
+
     pub stable_denom: String,
     pub epoch_period: u64,
     pub threshold_deposit_rate: Decimal256,
     pub target_deposit_rate: Decimal256,
     pub buffer_distribution_factor: Decimal256,
     pub price_timeframe: u64,
+}
+
+#[cw_serde]
+pub struct PlatformFee {
+    pub rate: Decimal256,
+    pub receiver: Addr,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -44,6 +54,7 @@ pub struct Config {
     pub target_deposit_rate: Decimal256,
     pub buffer_distribution_factor: Decimal256,
     pub price_timeframe: u64,
+    pub platform_fee: PlatformFee,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

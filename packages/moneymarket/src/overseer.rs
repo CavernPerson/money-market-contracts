@@ -1,8 +1,15 @@
+use cosmwasm_schema::cw_serde;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::tokens::TokensHuman;
 use cosmwasm_std::{Decimal256, Uint256};
+
+#[cw_serde]
+pub struct PlatformFeeInstantiateMsg {
+    pub rate: Decimal256,
+    pub receiver: String,
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -44,20 +51,13 @@ pub struct InstantiateMsg {
     /// clamps for dyn rate
     pub dyn_rate_min: Decimal256,
     pub dyn_rate_max: Decimal256,
+    pub platform_fee: PlatformFeeInstantiateMsg,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct MigrateMsg {
-    /// Period of time in blocks when rate is evaluated/changed
-    pub dyn_rate_epoch: u64,
-    /// Maximum allowed rate change per epoch
-    pub dyn_rate_maxchange: Decimal256,
-    /// Margin to define expectation of rate increase
-    pub dyn_rate_yr_increase_expectation: Decimal256,
-    pub dyn_rate_current: Decimal256,
-    pub dyn_rate_min: Decimal256,
-    pub dyn_rate_max: Decimal256,
+    pub platform_fee: PlatformFeeInstantiateMsg,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -84,6 +84,7 @@ pub enum ExecuteMsg {
         dyn_rate_yr_increase_expectation: Option<Decimal256>,
         dyn_rate_min: Option<Decimal256>,
         dyn_rate_max: Option<Decimal256>,
+        platform_fee: Option<PlatformFeeMsg>,
     },
     /// Create new custody contract for the given collateral token
     Whitelist {
@@ -134,6 +135,12 @@ pub enum ExecuteMsg {
     },
 
     FundReserve {},
+}
+
+#[cw_serde]
+pub struct PlatformFeeMsg {
+    pub rate: Option<Decimal256>,
+    pub receiver: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

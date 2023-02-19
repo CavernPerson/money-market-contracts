@@ -5,6 +5,7 @@ use crate::state::{
     read_epoch_state, store_dynrate_state, store_epoch_state, DynrateState, EpochState,
 };
 use crate::testing::mock_querier::mock_dependencies;
+use moneymarket::overseer::PlatformFeeInstantiateMsg;
 
 use cosmwasm_std::testing::{mock_env, mock_info, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
@@ -42,6 +43,10 @@ fn proper_initialization() {
         dyn_rate_yr_increase_expectation: Decimal256::permille(1),
         dyn_rate_min: Decimal256::from_ratio(1000000000000u64, 1000000000000000000u64),
         dyn_rate_max: Decimal256::from_ratio(1200000000000u64, 1000000000000000000u64),
+        platform_fee: PlatformFeeInstantiateMsg {
+            rate: Decimal256::from_str("0").unwrap(),
+            receiver: "cavernperson".to_string(),
+        },
     };
 
     let info = mock_info("addr0000", &[]);
@@ -111,6 +116,10 @@ fn update_config() {
         dyn_rate_yr_increase_expectation: Decimal256::from_str("0.01").unwrap(),
         dyn_rate_min: Decimal256::zero(),
         dyn_rate_max: Decimal256::one(),
+        platform_fee: PlatformFeeInstantiateMsg {
+            rate: Decimal256::from_str("0").unwrap(),
+            receiver: "cavernperson".to_string(),
+        },
     };
 
     // we can just call .unwrap() to assert this was a success
@@ -133,6 +142,7 @@ fn update_config() {
         dyn_rate_yr_increase_expectation: None,
         dyn_rate_min: None,
         dyn_rate_max: None,
+        platform_fee: None,
     };
 
     let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
@@ -166,6 +176,7 @@ fn update_config() {
             1200000000000u64,
             1000000000000000000u64,
         )),
+        platform_fee: None,
     };
 
     let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
@@ -204,6 +215,7 @@ fn update_config() {
         dyn_rate_yr_increase_expectation: None,
         dyn_rate_min: None,
         dyn_rate_max: None,
+        platform_fee: None,
     };
 
     let res = execute(deps.as_mut(), mock_env(), info, msg);
@@ -236,6 +248,10 @@ fn whitelist() {
         dyn_rate_yr_increase_expectation: Decimal256::from_str("0.01").unwrap(),
         dyn_rate_min: Decimal256::zero(),
         dyn_rate_max: Decimal256::one(),
+        platform_fee: PlatformFeeInstantiateMsg {
+            rate: Decimal256::from_str("0").unwrap(),
+            receiver: "cavernperson".to_string(),
+        },
     };
 
     // we can just call .unwrap() to assert this was a success
@@ -387,6 +403,10 @@ fn execute_epoch_operations() {
         dyn_rate_yr_increase_expectation: Decimal256::from_str("0.01").unwrap(),
         dyn_rate_min: Decimal256::zero(),
         dyn_rate_max: Decimal256::one(),
+        platform_fee: PlatformFeeInstantiateMsg {
+            rate: Decimal256::from_str("0").unwrap(),
+            receiver: "cavernperson".to_string(),
+        },
     };
 
     // we can just call .unwrap() to assert this was a success
@@ -616,6 +636,10 @@ fn update_epoch_state() {
         dyn_rate_yr_increase_expectation: Decimal256::from_str("0.01").unwrap(),
         dyn_rate_min: Decimal256::zero(),
         dyn_rate_max: Decimal256::one(),
+        platform_fee: PlatformFeeInstantiateMsg {
+            rate: Decimal256::from_str("0").unwrap(),
+            receiver: "cavernperson".to_string(),
+        },
     };
 
     // we can just call .unwrap() to assert this was a success
@@ -775,6 +799,10 @@ fn lock_collateral() {
         dyn_rate_yr_increase_expectation: Decimal256::from_str("0.01").unwrap(),
         dyn_rate_min: Decimal256::zero(),
         dyn_rate_max: Decimal256::one(),
+        platform_fee: PlatformFeeInstantiateMsg {
+            rate: Decimal256::from_str("0").unwrap(),
+            receiver: "cavernperson".to_string(),
+        },
     };
 
     // we can just call .unwrap() to assert this was a success
@@ -934,6 +962,10 @@ fn unlock_collateral() {
         dyn_rate_yr_increase_expectation: Decimal256::from_str("0.01").unwrap(),
         dyn_rate_min: Decimal256::zero(),
         dyn_rate_max: Decimal256::one(),
+        platform_fee: PlatformFeeInstantiateMsg {
+            rate: Decimal256::from_str("0").unwrap(),
+            receiver: "cavernperson".to_string(),
+        },
     };
 
     // we can just call .unwrap() to assert this was a success
@@ -1149,6 +1181,10 @@ fn liquidate_collateral() {
         dyn_rate_yr_increase_expectation: Decimal256::from_str("0.01").unwrap(),
         dyn_rate_min: Decimal256::zero(),
         dyn_rate_max: Decimal256::one(),
+        platform_fee: PlatformFeeInstantiateMsg {
+            rate: Decimal256::from_str("0").unwrap(),
+            receiver: "cavernperson".to_string(),
+        },
     };
 
     // we can just call .unwrap() to assert this was a success
@@ -1321,6 +1357,10 @@ fn dynamic_rate_model() {
         dyn_rate_yr_increase_expectation: Decimal256::permille(1),
         dyn_rate_min: Decimal256::from_ratio(1000000000000u64, 1000000000000000000u64),
         dyn_rate_max: Decimal256::from_ratio(1200000000000u64, 1000000000000000000u64),
+        platform_fee: PlatformFeeInstantiateMsg {
+            rate: Decimal256::from_str("0").unwrap(),
+            receiver: "cavernperson".to_string(),
+        },
     };
 
     // we can just call .unwrap() to assert this was a success
