@@ -19,6 +19,10 @@ pub enum ExecuteMsg {
         asset: String,
         feeder: String,
     },
+    UpdateFeeder {
+        asset: String,
+        feeder: String,
+    },
     FeedPrice {
         prices: Vec<(String, Decimal256)>, // (asset, price)
     },

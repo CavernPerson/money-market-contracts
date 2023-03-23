@@ -41,6 +41,7 @@ pub fn execute(
     match msg {
         ExecuteMsg::UpdateConfig { owner } => update_config(deps, info, owner),
         ExecuteMsg::RegisterFeeder { asset, feeder } => register_feeder(deps, info, asset, feeder),
+        ExecuteMsg::UpdateFeeder { asset, feeder } => register_feeder(deps, info, asset, feeder),
         ExecuteMsg::FeedPrice { prices } => feed_prices(deps, env, info, prices),
     }
 }
@@ -74,10 +75,40 @@ pub fn register_feeder(
         return Err(ContractError::Unauthorized {});
     }
 
+    // We don't allow storing a new feeder for a contract
+    if read_feeder(deps.storage, &asset).is_ok() {
+        return Err(ContractError::FeederExists(asset));
+    }
+
     store_feeder(deps.storage, &asset, &deps.api.addr_canonicalize(&feeder)?)?;
 
     Ok(Response::new().add_attributes(vec![
         attr("action", "register_feeder"),
+        attr("asset", asset),
+        attr("feeder", feeder),
+    ]))
+}
+
+pub fn update_feeder(
+    deps: DepsMut,
+    info: MessageInfo,
+    asset: String,
+    feeder: String,
+) -> Result<Response, ContractError> {
+    let config: Config = read_config(deps.storage)?;
+    if deps.api.addr_canonicalize(info.sender.as_str())? != config.owner {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    // We don't allow storing a new feeder if it was not registered first
+    if read_feeder(deps.storage, &asset).is_err() {
+        return Err(ContractError::FeederDoesntExist(asset));
+    }
+
+    store_feeder(deps.storage, &asset, &deps.api.addr_canonicalize(&feeder)?)?;
+
+    Ok(Response::new().add_attributes(vec![
+        attr("action", "update_feeder"),
         attr("asset", asset),
         attr("feeder", feeder),
     ]))

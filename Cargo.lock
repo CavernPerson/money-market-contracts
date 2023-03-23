@@ -630,20 +630,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "moneymarket-overseer-temp"
-version = "0.0.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw20",
- "moneymarket",
- "schemars",
- "serde",
- "thiserror",
-]
-
-[[package]]
 name = "opaque-debug"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

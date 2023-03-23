@@ -11,4 +11,10 @@ pub enum ContractError {
 
     #[error("Unauthorized")]
     Unauthorized {},
+
+    #[error("A feeder already exists for {0}, please update instead")]
+    FeederExists(String),
+
+    #[error("There is no feeder registered for {0}, please register instead")]
+    FeederDoesntExist(String),
 }
