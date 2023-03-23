@@ -92,11 +92,6 @@ pub enum ExecuteMsg {
 
     /// Repay stable asset to decrease liability
     RepayStable {},
-
-    /// Claim distributed ANC rewards
-    ClaimRewards {
-        to: Option<String>,
-    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

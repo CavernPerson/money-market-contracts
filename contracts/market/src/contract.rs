@@ -211,7 +211,6 @@ pub fn execute(
                 prev_balance,
             )
         }
-        ExecuteMsg::ClaimRewards { .. } => Err(ContractError::Unauthorized {}),
     }
 }
 
