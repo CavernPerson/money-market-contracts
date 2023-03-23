@@ -10,9 +10,7 @@ use std::convert::TryInto;
 
 use crate::deposit::compute_exchange_rate_raw;
 use crate::error::ContractError;
-use crate::querier::{
-    query_borrow_limit, query_borrow_rate, query_overseer_config, query_target_deposit_rate,
-};
+use crate::querier::{query_borrow_limit, query_borrow_rate, query_target_deposit_rate, query_overseer_config};
 use crate::state::{
     read_borrower_info, read_borrower_infos, read_config, read_state, store_borrower_info,
     store_state, BorrowerInfo, Config, State,
@@ -318,13 +316,12 @@ pub fn compute_interest_raw(
         config.stable_denom.to_string(),
     )?;
 
-    let overseer_config =
-        query_overseer_config(deps, deps.api.addr_humanize(&config.overseer_contract)?)?;
+    let overseer_config = query_overseer_config(deps, deps.api.addr_humanize(&config.overseer_contract)?)?;
 
     // We limit the maximum borrow incentives to a percentage of the total balance available to spread the reserves over more blocks
     // This makes the borrow distribution APY more stable over time and is best for users
-    available_borrower_incentives =
-        available_borrower_incentives * overseer_config.buffer_distribution_factor;
+    available_borrower_incentives = available_borrower_incentives * overseer_config.buffer_distribution_factor;
+
 
     let (interest_factor, interest_factor_messages) = get_actual_interest_factor(
         deps.api,

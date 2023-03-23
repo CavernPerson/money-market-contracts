@@ -123,7 +123,7 @@ pub fn query_borrow_reserves_incentives_rate(
 }
 
 pub fn query_target_deposit_rate(deps: Deps, overseer_contract: Addr) -> StdResult<Decimal256> {
-    let overseer_config = query_overseer_config(deps, overseer_contract)?;
+    let overseer_config = query_overseer_config(deps,overseer_contract)?;
 
     Ok(overseer_config.target_deposit_rate)
 }
@@ -131,6 +131,6 @@ pub fn query_target_deposit_rate(deps: Deps, overseer_contract: Addr) -> StdResu
 pub fn query_overseer_config(deps: Deps, overseer_contract: Addr) -> StdResult<ConfigResponse> {
     deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
         contract_addr: overseer_contract.to_string(),
-        msg: to_binary(&OverseerQueryMsg::Config {})?,
+        msg: to_binary(&OverseerQueryMsg::Config {  })?,
     }))
 }

@@ -1,4 +1,4 @@
-use crate::state::{read_old_config, remove_whitelist_elem, PlatformFee};
+use crate::state::{remove_whitelist_elem};
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     attr, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal256, Deps, DepsMut, Env,
@@ -26,8 +26,8 @@ use moneymarket::custody::ExecuteMsg as CustodyExecuteMsg;
 use moneymarket::market::EpochStateResponse;
 use moneymarket::market::ExecuteMsg as MarketExecuteMsg;
 use moneymarket::overseer::{
-    ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, PlatformFeeMsg, QueryMsg,
-    WhitelistResponse, WhitelistResponseElem,
+    ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, WhitelistResponse,
+    WhitelistResponseElem,
 };
 use moneymarket::querier::query_balance;
 
@@ -56,10 +56,6 @@ pub fn instantiate(
             target_deposit_rate: msg.target_deposit_rate,
             buffer_distribution_factor: msg.buffer_distribution_factor,
             price_timeframe: msg.price_timeframe,
-            platform_fee: PlatformFee {
-                rate: msg.platform_fee.rate,
-                receiver: deps.api.addr_validate(&msg.platform_fee.receiver)?,
-            },
         },
     )?;
 
@@ -97,29 +93,40 @@ pub fn instantiate(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response> {
-    // Ensure we migrate the config variable to the newest version
-    let config = read_old_config(deps.storage)?;
-
-    let new_config: Config = Config {
-        owner_addr: config.owner_addr,
-        oracle_contract: config.oracle_contract,
-        market_contract: config.market_contract,
-        liquidation_contract: config.liquidation_contract,
-        borrow_reserves_bucket_contract: config.borrow_reserves_bucket_contract,
-        stable_denom: config.stable_denom,
-        epoch_period: config.epoch_period,
-        threshold_deposit_rate: config.threshold_deposit_rate,
-        target_deposit_rate: config.target_deposit_rate,
-        buffer_distribution_factor: config.buffer_distribution_factor,
-        price_timeframe: config.price_timeframe,
-        platform_fee: PlatformFee {
-            rate: msg.platform_fee.rate,
-            receiver: deps.api.addr_validate(&msg.platform_fee.receiver)?,
+pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -> StdResult<Response> {
+    store_dynrate_config(
+        deps.storage,
+        &DynrateConfig {
+            dyn_rate_epoch: msg.dyn_rate_epoch,
+            dyn_rate_maxchange: msg.dyn_rate_maxchange,
+            dyn_rate_yr_increase_expectation: msg.dyn_rate_yr_increase_expectation,
+            dyn_rate_min: msg.dyn_rate_min,
+            dyn_rate_max: msg.dyn_rate_max,
         },
-    };
-
-    store_config(deps.storage, &new_config)?;
+    )?;
+    /*
+    // Ensure we migrate the config variable to the newest version
+    let mut config = read_config(deps.storage)?;
+    let prev_yield_reserve = query_balance(
+        deps.as_ref(),
+        env.contract.address.clone(),
+        config.stable_denom.clone(),
+    )?;
+    store_dynrate_state(
+        deps.storage,
+        &DynrateState {
+            last_executed_height: env.block.height,
+            prev_yield_reserve: Decimal256::from_ratio(prev_yield_reserve, 1u128),
+        },
+    )?;
+    let new_rate = max(
+        min(config.threshold_deposit_rate, msg.dyn_rate_current),
+        msg.dyn_rate_min,
+    );
+    config.threshold_deposit_rate = new_rate;
+    config.target_deposit_rate = new_rate;
+    store_config(deps.storage, &config)?;
+    */
     Ok(Response::default())
 }
 
@@ -146,7 +153,6 @@ pub fn execute(
             dyn_rate_yr_increase_expectation,
             dyn_rate_min,
             dyn_rate_max,
-            platform_fee,
         } => {
             let api = deps.api;
             update_config(
@@ -166,7 +172,6 @@ pub fn execute(
                 dyn_rate_yr_increase_expectation,
                 dyn_rate_min,
                 dyn_rate_max,
-                platform_fee,
             )
         }
         ExecuteMsg::Whitelist {
@@ -240,7 +245,6 @@ pub fn update_config(
     dyn_rate_yr_increase_expectation: Option<Decimal256>,
     dyn_rate_min: Option<Decimal256>,
     dyn_rate_max: Option<Decimal256>,
-    platform_fee: Option<PlatformFeeMsg>,
 ) -> Result<Response, ContractError> {
     let mut config: Config = read_config(deps.storage)?;
     let mut dynrate_config: DynrateConfig = read_dynrate_config(deps.storage)?;
@@ -303,15 +307,6 @@ pub fn update_config(
 
     if let Some(dyn_rate_max) = dyn_rate_max {
         dynrate_config.dyn_rate_max = dyn_rate_max;
-    }
-
-    if let Some(platform_fee) = platform_fee {
-        if let Some(rate) = platform_fee.rate {
-            config.platform_fee.rate = rate;
-        }
-        if let Some(receiver) = platform_fee.receiver {
-            config.platform_fee.receiver = deps.api.addr_validate(&receiver)?;
-        }
     }
 
     store_config(deps.storage, &config)?;
@@ -531,24 +526,9 @@ pub fn execute_epoch_operations(deps: DepsMut, env: Env) -> Result<Response, Con
         config.stable_denom.to_string(),
     )?;
 
-    let mut accrued_buffer = interest_buffer - state.prev_interest_buffer;
-    // We start by taking a fee on accrued buffer so that the protocol operates (1% at the beginning)
-    // This might become variable in the future for more automatism on the platform
-    let platform_fees: Uint256 = accrued_buffer * config.platform_fee.rate;
-    if !platform_fees.is_zero() {
-        messages.push(CosmosMsg::Bank(BankMsg::Send {
-            to_address: config.platform_fee.receiver.to_string(),
-            amount: vec![Coin {
-                denom: config.stable_denom.clone(),
-                amount: platform_fees.try_into()?,
-            }],
-        }));
-    }
-
-    accrued_buffer -= platform_fees;
-
     // Remove accrued_buffer * config.borrow_incentives_factor from the reserves (partial redistribution of the staking yield to the borrowers)
     // We compute this value now, and make the borrowers pay less interest in the market contract
+    let accrued_buffer = interest_buffer - state.prev_interest_buffer;
     let mut borrow_incentives_amount =
         accrued_buffer * epoch_state.reserves_rate_used_for_borrowers;
 
@@ -556,7 +536,7 @@ pub fn execute_epoch_operations(deps: DepsMut, env: Env) -> Result<Response, Con
     // We limit the borrowing reserves to res_b < rate * (res_b + res_d)
     // res_d = interest_buffer
     // res_b = reserve_bucket_balance
-    // Here res_d + res_b is fixed (this is the total amount of reserves we want to balance) we use this criteria :
+    // Here res_d + res_b is fixed (this is the total amount of reserves we want to balance) we use this criteria : 
     // max_borrow_reserves = rate * (res_b_initial + res_d_initial)
     // rate = epoch_state.reserves_rate_used_for_borrowers
 
@@ -567,10 +547,11 @@ pub fn execute_epoch_operations(deps: DepsMut, env: Env) -> Result<Response, Con
         config.stable_denom.to_string(),
     )?;
 
-    let max_borrow_reserves =
-        epoch_state.reserves_rate_used_for_borrowers * (reserve_bucket_balance + interest_buffer);
+    let max_borrow_reserves = epoch_state.reserves_rate_used_for_borrowers * (reserve_bucket_balance + interest_buffer);
 
-    if !borrow_incentives_amount.is_zero() && reserve_bucket_balance < max_borrow_reserves {
+    if !borrow_incentives_amount.is_zero()
+        && reserve_bucket_balance < max_borrow_reserves
+    {
         // The final borrow reserves must also observe that criteria
         borrow_incentives_amount = min(
             borrow_incentives_amount,
@@ -648,6 +629,7 @@ pub fn execute_epoch_operations(deps: DepsMut, env: Env) -> Result<Response, Con
             }],
         }));
     }
+
 
     Ok(Response::new().add_messages(messages).add_attributes(vec![
         attr("action", "epoch_operations"),
