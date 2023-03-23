@@ -55,13 +55,16 @@ pub fn update_config(
     if deps.api.addr_canonicalize(info.sender.as_str())? != config.owner {
         return Err(ContractError::Unauthorized {});
     }
+    let mut res = Response::new()
+        .add_attribute("action", "update_config");
 
     if let Some(owner) = owner {
         config.owner = deps.api.addr_canonicalize(&owner)?;
+        res = res.add_attribute("owner", owner);
     }
 
     store_config(deps.storage, &config)?;
-    Ok(Response::default())
+    Ok(res)
 }
 
 pub fn register_feeder(

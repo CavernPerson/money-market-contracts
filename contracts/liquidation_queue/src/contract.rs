@@ -163,47 +163,59 @@ pub fn update_config(
     if deps.api.addr_canonicalize(info.sender.as_str())? != config.owner {
         return Err(StdError::generic_err("unauthorized"));
     }
+    let mut res = Response::new()
+        .add_attribute("action", "update_config");
 
     if let Some(owner) = owner {
         config.owner = deps.api.addr_canonicalize(&owner)?;
+        res = res.add_attribute("owner", owner);
     }
 
     if let Some(oracle_contract) = oracle_contract {
         config.oracle_contract = deps.api.addr_canonicalize(&oracle_contract)?;
+        res = res.add_attribute("oracle_contract", oracle_contract);
     }
 
     if let Some(safe_ratio) = safe_ratio {
         config.safe_ratio = safe_ratio;
+        res = res.add_attribute("safe_ratio", safe_ratio.to_string());
     }
 
     if let Some(bid_fee) = bid_fee {
         assert_fees(bid_fee + config.liquidator_fee)?;
         config.bid_fee = bid_fee;
+        res = res.add_attribute("bid_fee", bid_fee.to_string());
     }
 
     if let Some(liquidator_fee) = liquidator_fee {
         assert_fees(liquidator_fee + config.bid_fee)?;
         config.liquidator_fee = liquidator_fee;
+        res = res.add_attribute("liquidator_fee", liquidator_fee.to_string());
     }
 
     if let Some(liquidation_threshold) = liquidation_threshold {
         config.liquidation_threshold = liquidation_threshold;
+        res = res.add_attribute("liquidation_threshold", liquidation_threshold);
     }
 
     if let Some(price_timeframe) = price_timeframe {
         config.price_timeframe = price_timeframe;
+        res = res.add_attribute("price_timeframe", price_timeframe.to_string());
     }
 
     if let Some(waiting_period) = waiting_period {
         config.waiting_period = waiting_period;
+        res = res.add_attribute("waiting_period", waiting_period.to_string());
     }
 
     if let Some(overseer) = overseer {
         config.overseer = deps.api.addr_canonicalize(&overseer)?;
+        res = res.add_attribute("overseer", overseer);
     }
 
     store_config(deps.storage, &config)?;
-    Ok(Response::new())
+
+    Ok(res)
 }
 
 pub fn whitelist_collateral(

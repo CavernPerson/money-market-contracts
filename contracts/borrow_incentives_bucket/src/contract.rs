@@ -84,20 +84,25 @@ pub fn update_config(
     if info.sender != config.owner {
         return Err(ContractError::Unauthorized {});
     }
+    let mut res = Response::new()
+        .add_attribute("action", "update_config");
 
     if let Some(owner) = owner {
         config.owner = deps.api.addr_validate(&owner)?;
+        res = res.add_attribute("owner", owner);
     }
 
     if let Some(sender_contract) = sender_contract {
         config.sender_contract = deps.api.addr_validate(&sender_contract)?;
+        res = res.add_attribute("sender_contract", sender_contract);
     }
     if let Some(overseer_contract) = overseer_contract {
         config.overseer_contract = deps.api.addr_validate(&overseer_contract)?;
+        res = res.add_attribute("overseer_contract", overseer_contract);
     }
 
     store_config(deps.storage, &config)?;
-    Ok(Response::default())
+    Ok(res)
 }
 
 fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
