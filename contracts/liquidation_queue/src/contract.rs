@@ -182,16 +182,17 @@ pub fn update_config(
     }
 
     if let Some(bid_fee) = bid_fee {
-        assert_fees(bid_fee + config.liquidator_fee)?;
         config.bid_fee = bid_fee;
         res = res.add_attribute("bid_fee", bid_fee.to_string());
     }
 
     if let Some(liquidator_fee) = liquidator_fee {
-        assert_fees(liquidator_fee + config.bid_fee)?;
         config.liquidator_fee = liquidator_fee;
         res = res.add_attribute("liquidator_fee", liquidator_fee.to_string());
     }
+
+    // We make sure the fee is validated here after setting both
+    assert_fees(config.bid_fee + config.liquidator_fee)?;
 
     if let Some(liquidation_threshold) = liquidation_threshold {
         config.liquidation_threshold = liquidation_threshold;
