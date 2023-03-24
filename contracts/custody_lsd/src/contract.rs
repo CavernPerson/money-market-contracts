@@ -4,6 +4,7 @@ use cosmwasm_std::{
     attr, from_binary, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response,
     StdResult,
 };
+use moneymarket::astroport_router::AssetInfo;
 
 use crate::collateral::{
     deposit_collateral, liquidate_collateral, lock_collateral, query_borrower, query_borrowers,
@@ -29,6 +30,12 @@ pub fn instantiate(
     _info: MessageInfo,
     msg: LSDInstantiateMsg,
 ) -> StdResult<Response> {
+
+    // In the case of a stable CW20 token, we validate their address
+    if let AssetInfo::Token {contract_addr} = msg.stable_token.clone(){
+        deps.api.addr_validate(contract_addr.as_ref())?;
+    }
+
     let config = Config {
         owner: deps.api.addr_canonicalize(&msg.owner)?,
         overseer_contract: deps.api.addr_canonicalize(&msg.overseer_contract)?,
