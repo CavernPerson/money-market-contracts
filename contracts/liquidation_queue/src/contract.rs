@@ -29,6 +29,9 @@ pub fn instantiate(
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
     assert_fees(msg.liquidator_fee + msg.bid_fee)?;
+    if msg.safe_ratio > Decimal256::one(){
+        return Err(StdError::generic_err("Safe ratio should be below 1, to avoid undercollateralized loans"));
+    }
 
     store_config(
         deps.storage,
@@ -177,6 +180,9 @@ pub fn update_config(
     }
 
     if let Some(safe_ratio) = safe_ratio {
+        if safe_ratio > Decimal256::one(){
+            return Err(StdError::generic_err("Safe ratio should be below 1, to avoid undercollateralized loans"));
+        }
         config.safe_ratio = safe_ratio;
         res = res.add_attribute("safe_ratio", safe_ratio.to_string());
     }

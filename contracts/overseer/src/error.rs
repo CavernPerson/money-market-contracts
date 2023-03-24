@@ -29,4 +29,10 @@ pub enum ContractError {
 
     #[error("Unlock amount too high; Loan liability becomes greater than borrow limit: {0}")]
     UnlockTooLarge(Uint128),
+
+    #[error("LTV should be lower than 1")]
+    InvalidLTV{},
+
+    #[error("Distribution factor should be lower than 1")]
+    InvalidDistributionFactor{},
 }

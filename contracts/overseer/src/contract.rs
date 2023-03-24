@@ -1,5 +1,5 @@
 use crate::state::{remove_whitelist_elem};
-use cosmwasm_std::entry_point;
+use cosmwasm_std::{entry_point, StdError};
 use cosmwasm_std::{
     attr, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal256, Deps, DepsMut, Env,
     MessageInfo, Response, StdResult, Uint128, Uint256, WasmMsg,
@@ -40,6 +40,11 @@ pub fn instantiate(
     _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
+
+    if msg.buffer_distribution_factor > Decimal256::one(){
+        return Err(StdError::generic_err(ContractError::InvalidDistributionFactor {  }.to_string()));
+    }
+
     store_config(
         deps.storage,
         &Config {
@@ -93,7 +98,7 @@ pub fn instantiate(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -> StdResult<Response> {
+pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response> {
     store_dynrate_config(
         deps.storage,
         &DynrateConfig {
@@ -270,6 +275,9 @@ pub fn update_config(
     }
 
     if let Some(buffer_distribution_factor) = buffer_distribution_factor {
+        if buffer_distribution_factor > Decimal256::one(){
+            return Err(ContractError::InvalidDistributionFactor {  });
+        }
         config.buffer_distribution_factor = buffer_distribution_factor;
     }
     /*
@@ -334,6 +342,10 @@ pub fn register_whitelist(
         return Err(ContractError::TokenAlreadyRegistered {});
     }
 
+    if max_ltv > Decimal256::one() {
+        return Err(ContractError::InvalidLTV {  });
+    }
+
     store_whitelist_elem(
         deps.storage,
         &collateral_token_raw,
@@ -376,6 +388,9 @@ pub fn update_whitelist(
     }
 
     if let Some(max_ltv) = max_ltv {
+        if max_ltv > Decimal256::one() {
+            return Err(ContractError::InvalidLTV {  });
+        }
         whitelist_elem.max_ltv = max_ltv;
     }
 

@@ -4,7 +4,7 @@ use crate::state::{
     read_bid, read_bid_pool, read_bid_pools, read_bids_by_user, read_collateral_info, read_config,
     read_total_bids, Bid, BidPool, CollateralInfo, Config,
 };
-use cosmwasm_std::StdError;
+
 use cosmwasm_std::{CanonicalAddr, Decimal256, Deps, StdResult, Uint128, Uint256};
 use moneymarket::liquidation_queue::{
     BidPoolResponse, BidPoolsResponse, BidResponse, BidsResponse, CollateralInfoResponse,
@@ -163,9 +163,14 @@ fn compute_collateral_weights(
         .max_ltv;
 
         let collateral_value = collateral.1 * *price;
-        let weigth = Decimal256::from_ratio(collateral_value.min(collateral_available_bids), 1u128)
+        
+        let weigth = if max_ltv == Decimal256::zero() {
+            Uint256::zero()
+        }else{
+            Decimal256::from_ratio(collateral_value.min(collateral_available_bids), 1u128)
             / max_ltv
-            * Uint256::one();
+            * Uint256::one()
+        };
 
         total_weight += weigth;
         collaterals_value += collateral_value;
