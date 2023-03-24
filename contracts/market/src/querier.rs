@@ -75,11 +75,17 @@ pub fn query_next_borrower_incentives(
         passed_blocks,
     )?;
 
-    Ok(BorrowRateResponse {
-        rate: Decimal256::from_ratio(state.prev_borrower_incentives, 1u128)
-            / state.total_liabilities
-            / passed_blocks,
-    })
+    if state.total_liabilities.is_zero(){
+        Ok(BorrowRateResponse{rate: Decimal256::zero()})
+    }else{
+        Ok(BorrowRateResponse {
+            rate: Decimal256::from_ratio(state.prev_borrower_incentives, 1u128)
+                / state.total_liabilities
+                / passed_blocks,
+        })
+    }
+
+    
 }
 
 pub fn query_borrow_limit(
