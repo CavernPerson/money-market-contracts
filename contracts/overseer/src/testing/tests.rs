@@ -712,8 +712,8 @@ fn update_epoch_state() {
             funds: vec![],
             msg: to_binary(&MarketExecuteMsg::ExecuteEpochOperations {
                 deposit_rate: Decimal256::from_str("0.000000482253086419").unwrap(),
-                target_deposit_rate: Decimal256::from_str("0.000001006442178229").unwrap(),
-                threshold_deposit_rate: Decimal256::from_str("0.000001006442178229").unwrap(),
+                target_deposit_rate: Decimal256::from_str("0.000001005707762557").unwrap(),
+                threshold_deposit_rate: Decimal256::from_str("0.000001005707762557").unwrap(),
                 distributed_interest: Uint256::from(1000000u128),
             })
             .unwrap(),
@@ -1418,8 +1418,8 @@ fn dynamic_rate_model() {
             funds: vec![],
             msg: to_binary(&MarketExecuteMsg::ExecuteEpochOperations {
                 deposit_rate: Decimal256::from_str("0.000000482253086419").unwrap(),
-                target_deposit_rate: Decimal256::from_str("0.000001001073696371").unwrap(),
-                threshold_deposit_rate: Decimal256::from_str("0.000001001073696371").unwrap(),
+                target_deposit_rate: Decimal256::from_str("0.000001000951293759").unwrap(),
+                threshold_deposit_rate: Decimal256::from_str("0.000001000951293759").unwrap(),
                 distributed_interest: Uint256::from(1000000u128),
             })
             .unwrap(),
@@ -1461,7 +1461,7 @@ fn dynamic_rate_model() {
     // 214739275 * 4656810 (bpy) = 1e15 = dyn_rate_yr_increase_expectation
     validate_deposit_rates(
         deps.as_mut(),
-        Decimal256::from_ratio(1000858957096u64, 1000000000000000000u64),
+        Decimal256::from_ratio(1000761035007u64, 1000000000000000000u64),
     );
     // Case 2: Stillk unchanged, repeating behavior
     // Rate drop: 1000858957096 - 1000644217821 = 214739275 = dyn_rate_yr_increase_expectation
@@ -1477,7 +1477,7 @@ fn dynamic_rate_model() {
     let _res = execute(deps.as_mut(), env.clone(), info.clone(), msg.clone()).unwrap();
     validate_deposit_rates(
         deps.as_mut(),
-        Decimal256::from_ratio(1000644217821u64, 1000000000000000000u64),
+        Decimal256::from_ratio(1000570776255u64, 1000000000000000000u64),
     );
 
     // ----- YR increasing dramarically, 10x
@@ -1494,7 +1494,7 @@ fn dynamic_rate_model() {
     let _res = execute(deps.as_mut(), env.clone(), info.clone(), msg.clone()).unwrap();
     validate_deposit_rates(
         deps.as_mut(),
-        Decimal256::from_ratio(1001717914192u64, 1000000000000000000u64),
+        Decimal256::from_ratio(1001522070014u64, 1000000000000000000u64),
     );
 
     // ----- YR increasing just a little, rate will still drop to compensate for dyn_rate_yr_increase_expectation
@@ -1511,7 +1511,7 @@ fn dynamic_rate_model() {
     let _res = execute(deps.as_mut(), env.clone(), info.clone(), msg.clone()).unwrap();
     validate_deposit_rates(
         deps.as_mut(),
-        Decimal256::from_ratio(1001503174896u64, 1000000000000000000u64),
+        Decimal256::from_ratio(1001331811243u64, 1000000000000000000u64),
     );
 
     // lets hit lower threshold
@@ -1539,7 +1539,7 @@ fn dynamic_rate_model() {
     }
     validate_deposit_rates(
         deps.as_mut(),
-        Decimal256::from_ratio(1200000000000u64, 1000000000000000000u64),
+        Decimal256::from_ratio(1189307458041u64, 1000000000000000000u64),
     );
 }
 
