@@ -1,4 +1,3 @@
-use crate::state::remove_whitelist_elem;
 use cosmwasm_std::{
     attr, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal256, Deps, DepsMut, Env,
     MessageInfo, Response, StdResult, Uint128, Uint256, WasmMsg,
@@ -212,10 +211,6 @@ pub fn execute(
                 max_ltv,
             )
         }
-        ExecuteMsg::RemoveWhitelist { collateral_token } => {
-            let api = deps.api;
-            remove_whitelist(deps, info, api.addr_validate(&collateral_token)?)
-        }
         ExecuteMsg::ExecuteEpochOperations {} => execute_epoch_operations(deps, env),
         ExecuteMsg::UpdateEpochState {
             interest_buffer,
@@ -408,24 +403,6 @@ pub fn update_whitelist(
     ]))
 }
 
-pub fn remove_whitelist(
-    deps: DepsMut,
-    info: MessageInfo,
-    collateral_token: Addr,
-) -> Result<Response, ContractError> {
-    let config: Config = read_config(deps.storage)?;
-    if deps.api.addr_canonicalize(info.sender.as_str())? != config.owner_addr {
-        return Err(ContractError::Unauthorized {});
-    }
-
-    let collateral_token_raw = deps.api.addr_canonicalize(collateral_token.as_str())?;
-    remove_whitelist_elem(deps.storage, &collateral_token_raw);
-
-    Ok(Response::new().add_attributes(vec![
-        attr("action", "remove_whitelist"),
-        attr("collateral_token", collateral_token),
-    ]))
-}
 fn update_deposit_rate(deps: DepsMut, env: Env) -> StdResult<()> {
     let dynrate_config: DynrateConfig = read_dynrate_config(deps.storage)?;
     let dynrate_state: DynrateState = read_dynrate_state(deps.storage)?;

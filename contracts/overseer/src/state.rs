@@ -140,11 +140,6 @@ pub fn read_whitelist_elem(
     }
 }
 
-pub fn remove_whitelist_elem(storage: &mut dyn Storage, collateral_token: &CanonicalAddr) {
-    let mut whitelist_bucket: Bucket<WhitelistElem> = Bucket::new(storage, PREFIX_WHITELIST);
-    whitelist_bucket.remove(collateral_token.as_slice());
-}
-
 pub fn read_whitelist(
     deps: Deps,
     start_after: Option<CanonicalAddr>,
