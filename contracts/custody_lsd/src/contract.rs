@@ -30,9 +30,8 @@ pub fn instantiate(
     _info: MessageInfo,
     msg: LSDInstantiateMsg,
 ) -> StdResult<Response> {
-
     // In the case of a stable CW20 token, we validate their address
-    if let AssetInfo::Token {contract_addr} = msg.stable_token.clone(){
+    if let AssetInfo::Token { contract_addr } = msg.stable_token.clone() {
         deps.api.addr_validate(contract_addr.as_ref())?;
     }
 

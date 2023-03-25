@@ -1,9 +1,9 @@
-use crate::state::{remove_whitelist_elem};
-use cosmwasm_std::{entry_point, StdError};
+use crate::state::remove_whitelist_elem;
 use cosmwasm_std::{
     attr, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal256, Deps, DepsMut, Env,
     MessageInfo, Response, StdResult, Uint128, Uint256, WasmMsg,
 };
+use cosmwasm_std::{entry_point, StdError};
 use std::cmp::{max, min};
 use std::convert::TryInto;
 
@@ -40,9 +40,10 @@ pub fn instantiate(
     _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
-
-    if msg.buffer_distribution_factor > Decimal256::one(){
-        return Err(StdError::generic_err(ContractError::InvalidDistributionFactor {  }.to_string()));
+    if msg.buffer_distribution_factor > Decimal256::one() {
+        return Err(StdError::generic_err(
+            ContractError::InvalidDistributionFactor {}.to_string(),
+        ));
     }
 
     store_config(
@@ -275,8 +276,8 @@ pub fn update_config(
     }
 
     if let Some(buffer_distribution_factor) = buffer_distribution_factor {
-        if buffer_distribution_factor > Decimal256::one(){
-            return Err(ContractError::InvalidDistributionFactor {  });
+        if buffer_distribution_factor > Decimal256::one() {
+            return Err(ContractError::InvalidDistributionFactor {});
         }
         config.buffer_distribution_factor = buffer_distribution_factor;
     }
@@ -343,7 +344,7 @@ pub fn register_whitelist(
     }
 
     if max_ltv > Decimal256::one() {
-        return Err(ContractError::InvalidLTV {  });
+        return Err(ContractError::InvalidLTV {});
     }
 
     store_whitelist_elem(
@@ -389,7 +390,7 @@ pub fn update_whitelist(
 
     if let Some(max_ltv) = max_ltv {
         if max_ltv > Decimal256::one() {
-            return Err(ContractError::InvalidLTV {  });
+            return Err(ContractError::InvalidLTV {});
         }
         whitelist_elem.max_ltv = max_ltv;
     }
@@ -551,7 +552,7 @@ pub fn execute_epoch_operations(deps: DepsMut, env: Env) -> Result<Response, Con
     // We limit the borrowing reserves to res_b < rate * (res_b + res_d)
     // res_d = interest_buffer
     // res_b = reserve_bucket_balance
-    // Here res_d + res_b is fixed (this is the total amount of reserves we want to balance) we use this criteria : 
+    // Here res_d + res_b is fixed (this is the total amount of reserves we want to balance) we use this criteria :
     // max_borrow_reserves = rate * (res_b_initial + res_d_initial)
     // rate = epoch_state.reserves_rate_used_for_borrowers
 
@@ -562,11 +563,10 @@ pub fn execute_epoch_operations(deps: DepsMut, env: Env) -> Result<Response, Con
         config.stable_denom.to_string(),
     )?;
 
-    let max_borrow_reserves = epoch_state.reserves_rate_used_for_borrowers * (reserve_bucket_balance + interest_buffer);
+    let max_borrow_reserves =
+        epoch_state.reserves_rate_used_for_borrowers * (reserve_bucket_balance + interest_buffer);
 
-    if !borrow_incentives_amount.is_zero()
-        && reserve_bucket_balance < max_borrow_reserves
-    {
+    if !borrow_incentives_amount.is_zero() && reserve_bucket_balance < max_borrow_reserves {
         // The final borrow reserves must also observe that criteria
         borrow_incentives_amount = min(
             borrow_incentives_amount,
@@ -644,7 +644,6 @@ pub fn execute_epoch_operations(deps: DepsMut, env: Env) -> Result<Response, Con
             }],
         }));
     }
-
 
     Ok(Response::new().add_messages(messages).add_attributes(vec![
         attr("action", "epoch_operations"),

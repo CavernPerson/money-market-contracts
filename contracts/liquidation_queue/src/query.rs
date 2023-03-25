@@ -163,13 +163,12 @@ fn compute_collateral_weights(
         .max_ltv;
 
         let collateral_value = collateral.1 * *price;
-        
+
         let weigth = if max_ltv == Decimal256::zero() {
             Uint256::zero()
-        }else{
-            Decimal256::from_ratio(collateral_value.min(collateral_available_bids), 1u128)
-            / max_ltv
-            * Uint256::one()
+        } else {
+            Decimal256::from_ratio(collateral_value.min(collateral_available_bids), 1u128) / max_ltv
+                * Uint256::one()
         };
 
         total_weight += weigth;

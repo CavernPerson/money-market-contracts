@@ -84,8 +84,7 @@ pub fn update_config(
     if info.sender != config.owner {
         return Err(ContractError::Unauthorized {});
     }
-    let mut res = Response::new()
-        .add_attribute("action", "update_config");
+    let mut res = Response::new().add_attribute("action", "update_config");
 
     if let Some(owner) = owner {
         config.owner = deps.api.addr_validate(&owner)?;

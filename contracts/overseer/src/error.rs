@@ -31,8 +31,8 @@ pub enum ContractError {
     UnlockTooLarge(Uint128),
 
     #[error("LTV should be lower than 1")]
-    InvalidLTV{},
+    InvalidLTV {},
 
     #[error("Distribution factor should be lower than 1")]
-    InvalidDistributionFactor{},
+    InvalidDistributionFactor {},
 }

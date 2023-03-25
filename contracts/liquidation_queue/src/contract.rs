@@ -29,8 +29,10 @@ pub fn instantiate(
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
     assert_fees(msg.liquidator_fee + msg.bid_fee)?;
-    if msg.safe_ratio > Decimal256::one(){
-        return Err(StdError::generic_err("Safe ratio should be below 1, to avoid undercollateralized loans"));
+    if msg.safe_ratio > Decimal256::one() {
+        return Err(StdError::generic_err(
+            "Safe ratio should be below 1, to avoid undercollateralized loans",
+        ));
     }
 
     store_config(
@@ -166,8 +168,7 @@ pub fn update_config(
     if deps.api.addr_canonicalize(info.sender.as_str())? != config.owner {
         return Err(StdError::generic_err("unauthorized"));
     }
-    let mut res = Response::new()
-        .add_attribute("action", "update_config");
+    let mut res = Response::new().add_attribute("action", "update_config");
 
     if let Some(owner) = owner {
         config.owner = deps.api.addr_canonicalize(&owner)?;
@@ -180,8 +181,10 @@ pub fn update_config(
     }
 
     if let Some(safe_ratio) = safe_ratio {
-        if safe_ratio > Decimal256::one(){
-            return Err(StdError::generic_err("Safe ratio should be below 1, to avoid undercollateralized loans"));
+        if safe_ratio > Decimal256::one() {
+            return Err(StdError::generic_err(
+                "Safe ratio should be below 1, to avoid undercollateralized loans",
+            ));
         }
         config.safe_ratio = safe_ratio;
         res = res.add_attribute("safe_ratio", safe_ratio.to_string());
