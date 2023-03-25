@@ -31,7 +31,7 @@ use moneymarket::overseer::{
 };
 use moneymarket::querier::query_balance;
 
-pub const BLOCKS_PER_YEAR: u128 = 4656810;
+pub const BLOCKS_PER_YEAR: u128 = 5256000;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
