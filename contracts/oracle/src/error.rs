@@ -17,4 +17,7 @@ pub enum ContractError {
 
     #[error("There is no feeder registered for {0}, please register instead")]
     FeederDoesntExist(String),
+
+    #[error("You can't provide a price equals 0")]
+    PriceCantBeZero {},
 }

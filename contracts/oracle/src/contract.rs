@@ -128,6 +128,10 @@ pub fn feed_prices(
         let asset: String = price.0;
         let price: Decimal256 = price.1;
 
+        if price == Decimal256::zero() {
+            return Err(ContractError::PriceCantBeZero {});
+        }
+
         // Check feeder permission
         let feeder = read_feeder(deps.storage, &asset)?;
         if feeder != sender_raw {
