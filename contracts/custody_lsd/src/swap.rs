@@ -41,12 +41,9 @@ pub fn create_swap_msg(
                 message_type,
             )
         })
-        .filter_map(Result::ok)
-        /*
-        .collect::<StdResult<Vec<Uint128>>>()?
-        .iter()
-        */
         .enumerate()
+        .filter(|(_, best_price)| best_price.is_ok())
+        .map(|(best_price_index, best_price)| (best_price_index, best_price.unwrap()))
         .max_by_key(|&(_, item)| item)
         .unwrap();
 
