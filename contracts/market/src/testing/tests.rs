@@ -108,7 +108,7 @@ fn proper_initialization() {
         borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
-    let info = mock_info("addr0000", &[]);
+    let info = mock_info("owner", &[]);
     let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     // Cannot register again
@@ -203,7 +203,7 @@ fn update_config() {
         borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
-    let info = mock_info("addr0000", &[]);
+    let info = mock_info("owner", &[]);
     let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     // update owner
@@ -312,7 +312,7 @@ fn deposit_stable_huge_amount() {
         borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
-    let info = mock_info("addr0000", &[]);
+    let info = mock_info("owner", &[]);
     let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     // Must deposit stable_denom
@@ -472,7 +472,7 @@ fn deposit_stable() {
         borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
-    let info = mock_info("addr0000", &[]);
+    let info = mock_info("owner", &[]);
     let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     // Must deposit stable_denom
@@ -723,7 +723,7 @@ fn deposit_stablewith_incentives() {
         borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
-    let info = mock_info("addr0000", &[]);
+    let info = mock_info("owner", &[]);
     let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     // Must deposit stable_denom
@@ -910,7 +910,7 @@ fn redeem_stable() {
         borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
-    let info = mock_info("addr0000", &[]);
+    let info = mock_info("owner", &[]);
     let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     // Deposit 1000000
@@ -1099,9 +1099,10 @@ fn borrow_stable() {
         distributor_contract: "distributor".to_string(),
     };
     let mut env = mock_env();
-    let info = mock_info("addr0000", &[]);
-    let _res = execute(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
+    let info = mock_info("owner", &[]);
+    let _res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
+    let info = mock_info("addr0000", &[]);
     deps.querier
         .with_borrow_rate(&[(&"interest".to_string(), &Decimal256::percent(1))]);
     deps.querier
@@ -1346,9 +1347,10 @@ fn assert_max_borrow_factor() {
         borrow_reserves_bucket_contract: "bucket".to_string(),
         distributor_contract: "distributor".to_string(),
     };
-    let info = mock_info("addr0000", &[]);
-    let _res = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+    let info = mock_info("owner", &[]);
+    let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
+    let info = mock_info("addr0000", &[]);
     deps.querier
         .with_borrow_rate(&[(&"interest".to_string(), &Decimal256::percent(1))]);
     deps.querier
@@ -1462,9 +1464,10 @@ fn repay_stable() {
         distributor_contract: "distributor".to_string(),
     };
     let mut env = mock_env();
-    let mut info = mock_info("addr0000", &[]);
-    let _res = execute(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
+    let info = mock_info("owner", &[]);
+    let _res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
+    let mut info = mock_info("addr0000", &[]);
     deps.querier
         .with_borrow_rate(&[(&"interest".to_string(), &Decimal256::percent(1))]);
     deps.querier
@@ -1646,9 +1649,10 @@ fn repay_stable_from_liquidation() {
         distributor_contract: "distributor".to_string(),
     };
     let mut env = mock_env();
-    let info = mock_info("addr0000", &[]);
-    let _res = execute(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
+    let info = mock_info("owner", &[]);
+    let _res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
+    let info = mock_info("addr0000", &[]);
     deps.querier
         .with_borrow_rate(&[(&"interest".to_string(), &Decimal256::percent(1))]);
     deps.querier
@@ -1950,7 +1954,7 @@ fn execute_epoch_operations() {
         distributor_contract: "distributor".to_string(),
     };
     let mut env = mock_env();
-    let mut info = mock_info("addr0000", &[]);
+    let mut info = mock_info("owner", &[]);
     let _res = execute(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
 
     deps.querier

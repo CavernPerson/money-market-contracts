@@ -145,6 +145,7 @@ pub fn execute(
             let api = deps.api;
             register_contracts(
                 deps,
+                info,
                 api.addr_validate(&overseer_contract)?,
                 api.addr_validate(&interest_model)?,
                 api.addr_validate(&distribution_model)?,
@@ -272,6 +273,7 @@ pub fn register_aterra(deps: DepsMut, token_addr: Addr) -> Result<Response, Cont
 
 pub fn register_contracts(
     deps: DepsMut,
+    info: MessageInfo,
     overseer_contract: Addr,
     interest_model: Addr,
     distribution_model: Addr,
@@ -286,6 +288,7 @@ pub fn register_contracts(
         || config.collector_contract != CanonicalAddr::from(vec![])
         || config.borrow_reserves_bucket_contract != CanonicalAddr::from(vec![])
         || config.distributor_contract != CanonicalAddr::from(vec![])
+        || deps.api.addr_humanize(&config.owner_addr)? != info.sender
     {
         return Err(ContractError::Unauthorized {});
     }
