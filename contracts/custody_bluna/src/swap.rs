@@ -111,11 +111,15 @@ pub fn create_swap_message_for(
     let contract_address = get_contract_address(deps, message_type)?;
 
     into_cosmos_msg(
-        AstroportExecuteMsg::ExecuteSwapOperation {
-            operation: get_astroport_swap_operation(c.denom.clone(), stable_denom, message_type),
+        AstroportExecuteMsg::ExecuteSwapOperations {
+            operations: vec![get_astroport_swap_operation(
+                c.denom.clone(),
+                stable_denom,
+                message_type,
+            )],
             to: None,
             max_spread: None,
-            single: true,
+            minimum_receive: None,
         },
         contract_address,
         vec![c],

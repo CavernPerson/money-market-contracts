@@ -125,28 +125,28 @@ pub fn create_swap_message_for(
             msg: to_binary(&Cw20ExecuteMsg::Send {
                 contract: swap_contract_address,
                 amount: asset_to_swap.amount,
-                msg: to_binary(&AstroportExecuteMsg::ExecuteSwapOperation {
-                    operation: get_astroport_swap_operation(
+                msg: to_binary(&AstroportExecuteMsg::ExecuteSwapOperations {
+                    operations: vec![get_astroport_swap_operation(
                         asset_to_swap.asset_info,
                         stable_token,
                         message_type,
-                    ),
+                    )],
                     to: None,
                     max_spread: None,
-                    single: true,
+                    minimum_receive: None,
                 })?,
             })?,
         })),
         AssetInfo::NativeToken { denom } => into_cosmos_msg(
-            AstroportExecuteMsg::ExecuteSwapOperation {
-                operation: get_astroport_swap_operation(
+            AstroportExecuteMsg::ExecuteSwapOperations {
+                operations: vec![get_astroport_swap_operation(
                     asset_to_swap.asset_info.clone(),
                     stable_token,
                     message_type,
-                ),
+                )],
                 to: None,
                 max_spread: None,
-                single: true,
+                minimum_receive: None,
             },
             swap_contract_address,
             vec![Coin {

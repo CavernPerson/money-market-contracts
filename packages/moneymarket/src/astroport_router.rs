@@ -65,12 +65,14 @@ pub enum ExecuteMsg {
 
     /// Internal use
     /// ExecuteSwapOperation executes a single swap operation
-    ExecuteSwapOperation {
-        operation: SwapOperation,
-        to: Option<String>,
-        max_spread: Option<Decimal>,
-        single: bool,
-    },
+    /// This shoulnd't be used as an external endpoint
+    /// That's why we don't expose it
+    // ExecuteSwapOperation {
+    //     operation: SwapOperation,
+    //     to: Option<String>,
+    //     max_spread: Option<Decimal>,
+    //     single: bool,
+    // },
     /// Internal use
     /// AssertMinimumReceive checks that a receiver will get a minimum amount of tokens from a swap
     AssertMinimumReceive {
