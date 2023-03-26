@@ -195,8 +195,8 @@ pub fn read_collaterals(storage: &dyn Storage, borrower: &CanonicalAddr) -> Toke
 }
 
 // settings for pagination
-const MAX_LIMIT: u32 = 150;
-const DEFAULT_LIMIT: u32 = 10;
+pub const MAX_LIMIT: u32 = 150;
+pub const DEFAULT_LIMIT: u32 = 30;
 pub fn read_all_collaterals(
     deps: Deps,
     start_after: Option<CanonicalAddr>,

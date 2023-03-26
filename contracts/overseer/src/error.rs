@@ -35,4 +35,7 @@ pub enum ContractError {
 
     #[error("Distribution factor should be lower than 1")]
     InvalidDistributionFactor {},
+
+    #[error("Too much collaterals were already registered")]
+    TooMuchCollaterals {},
 }

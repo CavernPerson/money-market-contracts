@@ -1,3 +1,5 @@
+use crate::state::DEFAULT_LIMIT;
+use crate::state::MAX_LIMIT;
 use cosmwasm_std::{
     attr, to_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal256, Deps, DepsMut, Env,
     MessageInfo, Response, StdResult, Uint128, Uint256, WasmMsg,
@@ -340,6 +342,12 @@ pub fn register_whitelist(
 
     if max_ltv > Decimal256::one() {
         return Err(ContractError::InvalidLTV {});
+    }
+
+    if read_whitelist(deps.as_ref(), None, Some(MAX_LIMIT))?.len()
+        >= DEFAULT_LIMIT.try_into().unwrap()
+    {
+        return Err(ContractError::TooMuchCollaterals {});
     }
 
     store_whitelist_elem(
