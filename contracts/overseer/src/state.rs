@@ -1,3 +1,5 @@
+use cosmwasm_schema::cw_serde;
+use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -21,7 +23,7 @@ pub struct OldConfig {
     pub oracle_contract: CanonicalAddr,
     pub market_contract: CanonicalAddr,
     pub liquidation_contract: CanonicalAddr,
-    //pub borrow_reserves_bucket_contract: CanonicalAddr,
+    pub borrow_reserves_bucket_contract: CanonicalAddr,
     pub stable_denom: String,
     pub epoch_period: u64,
     pub threshold_deposit_rate: Decimal256,
@@ -30,7 +32,13 @@ pub struct OldConfig {
     pub price_timeframe: u64,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
+pub struct PlatformFee {
+    pub rate: Decimal256,
+    pub receiver: Addr,
+}
+
+#[cw_serde]
 pub struct Config {
     pub owner_addr: CanonicalAddr,
     pub oracle_contract: CanonicalAddr,
@@ -44,6 +52,7 @@ pub struct Config {
     pub target_deposit_rate: Decimal256,
     pub buffer_distribution_factor: Decimal256,
     pub price_timeframe: u64,
+    pub platform_fee: PlatformFee,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

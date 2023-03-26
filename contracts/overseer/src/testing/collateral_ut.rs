@@ -1,6 +1,7 @@
 use crate::collateral::compute_borrow_limit;
 use crate::contract::{execute, instantiate};
 use crate::testing::mock_querier::mock_dependencies;
+use moneymarket::overseer::PlatformFeeInstantiateMsg;
 
 use cosmwasm_std::testing::{mock_env, mock_info};
 use cosmwasm_std::{Api, Decimal256, Uint256};
@@ -34,6 +35,10 @@ fn proper_compute_borrow_limit() {
         dyn_rate_yr_increase_expectation: Decimal256::from_str("0.01").unwrap(),
         dyn_rate_min: Decimal256::zero(),
         dyn_rate_max: Decimal256::one(),
+        platform_fee: PlatformFeeInstantiateMsg {
+            rate: Decimal256::from_str("0").unwrap(),
+            receiver: "cavernperson".to_string(),
+        },
     };
 
     // we can just call .unwrap() to assert this was a success
