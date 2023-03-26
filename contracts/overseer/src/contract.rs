@@ -552,6 +552,9 @@ pub fn execute_epoch_operations(deps: DepsMut, env: Env) -> Result<Response, Con
 
         // Deduct borrow_incentives_amount from the interest_buffer, we used that
         interest_buffer -= borrow_incentives_amount;
+    } else {
+        // We don't distribute borrow_incentives if there is alread too much in the borrow bucket
+        borrow_incentives_amount = Uint256::zero();
     }
 
     // Distribute Interest Buffer to depositor
