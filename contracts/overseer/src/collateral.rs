@@ -1,3 +1,4 @@
+use cosmwasm_std::StdError;
 use cosmwasm_std::{
     attr, to_binary, Addr, CosmosMsg, Decimal256, Deps, DepsMut, Env, MessageInfo, Response,
     StdResult, SubMsg, Uint256, WasmMsg,
@@ -175,6 +176,12 @@ pub fn liquidate_collateral(
     let liquidation_messages: Vec<CosmosMsg> = liquidation_amount
         .iter()
         .map(|collateral| {
+            if collateral.1.is_zero() {
+                return Err(StdError::generic_err(
+                    "Won't liquidate if there is a zero amount to liquidate",
+                ));
+            }
+
             let whitelist_elem: WhitelistElem = read_whitelist_elem(deps.storage, &collateral.0)?;
 
             Ok(CosmosMsg::Wasm(WasmMsg::Execute {
