@@ -1609,3 +1609,172 @@ fn validate_deposit_rates(deps: DepsMut, rate: Decimal256) {
         }
     );
 }
+
+#[test]
+fn partial_liquidate_collateral() {
+    let mut deps = mock_dependencies(&[]);
+    deps.querier
+        .with_liquidation_percent(&[(&"liquidation".to_string(), &Decimal256::percent(1))]);
+
+    let info = mock_info("owner", &[]);
+    let env = mock_env();
+    let msg = InstantiateMsg {
+        owner_addr: "owner".to_string(),
+        oracle_contract: "oracle".to_string(),
+        market_contract: "market".to_string(),
+        liquidation_contract: "liquidation".to_string(),
+        borrow_reserves_bucket_contract: "collector".to_string(),
+        stable_denom: "uusd".to_string(),
+        epoch_period: 86400u64,
+        threshold_deposit_rate: Decimal256::permille(3),
+        target_deposit_rate: Decimal256::permille(5),
+        buffer_distribution_factor: Decimal256::percent(20),
+        //anc_purchase_factor: Decimal256::percent(20),
+        price_timeframe: 60u64,
+        dyn_rate_epoch: 86400u64,
+        dyn_rate_maxchange: Decimal256::from_str("0.03").unwrap(),
+        dyn_rate_yr_increase_expectation: Decimal256::from_str("0.01").unwrap(),
+        dyn_rate_min: Decimal256::zero(),
+        dyn_rate_max: Decimal256::one(),
+        platform_fee: PlatformFeeInstantiateMsg {
+            rate: Decimal256::from_str("0").unwrap(),
+            receiver: "cavernperson".to_string(),
+        },
+    };
+
+    // we can just call .unwrap() to assert this was a success
+    let _res = instantiate(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
+
+    let batom_collat_token = deps
+        .api
+        .addr_humanize(&CanonicalAddr::from(vec![
+            1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        ]))
+        .unwrap()
+        .to_string();
+
+    let bluna_collat_token = deps
+        .api
+        .addr_humanize(&CanonicalAddr::from(vec![
+            1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        ]))
+        .unwrap()
+        .to_string();
+
+    deps.querier.with_available_bids(&[(
+        &"liquidation".to_string(),
+        &[
+            (&bluna_collat_token, &Uint128::from(10000000000000u128)),
+            (&batom_collat_token, &Uint128::zero()),
+        ],
+    )]);
+
+    // store whitelist elems
+    let msg = ExecuteMsg::Whitelist {
+        name: "bluna".to_string(),
+        symbol: "bluna".to_string(),
+        collateral_token: bluna_collat_token.clone(),
+        custody_contract: "custody_bluna".to_string(),
+        max_ltv: Decimal256::percent(60),
+    };
+
+    let _res = execute(deps.as_mut(), env.clone(), info.clone(), msg);
+
+    let msg = ExecuteMsg::Whitelist {
+        name: "batom".to_string(),
+        symbol: "batom".to_string(),
+        collateral_token: batom_collat_token.clone(),
+        custody_contract: "custody_batom".to_string(),
+        max_ltv: Decimal256::percent(60),
+    };
+
+    let _res = execute(deps.as_mut(), env.clone(), info, msg);
+
+    let msg = ExecuteMsg::LockCollateral {
+        collaterals: vec![
+            (bluna_collat_token.clone(), Uint256::from(1000000u64)),
+            (batom_collat_token.clone(), Uint256::from(10000000u64)),
+        ],
+    };
+    let info = mock_info("addr0000", &[]);
+    let _res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
+
+    deps.querier.with_oracle_price(&[
+        (
+            &(bluna_collat_token.clone(), "uusd".to_string()),
+            &(
+                Decimal256::from_ratio(1000u64, 1u64),
+                env.block.time.seconds(),
+                env.block.time.seconds(),
+            ),
+        ),
+        (
+            &(batom_collat_token.clone(), "uusd".to_string()),
+            &(
+                Decimal256::from_ratio(2000u64, 1u64),
+                env.block.time.seconds(),
+                env.block.time.seconds(),
+            ),
+        ),
+    ]);
+
+    // borrow_limit = 1000 * 1000000 * 0.6 + 2000 * 10000000 * 0.6
+    // = 12,600,000,000 uusd
+    deps.querier
+        .with_loan_amount(&[(&"addr0000".to_string(), &Uint256::from(12600000000u64))]);
+
+    // Now we change the oracle price for liquidation !
+    deps.querier.with_oracle_price(&[
+        (
+            &(bluna_collat_token.clone(), "uusd".to_string()),
+            &(
+                Decimal256::from_ratio(10u64, 1u64),
+                env.block.time.seconds(),
+                env.block.time.seconds(),
+            ),
+        ),
+        (
+            &(batom_collat_token.clone(), "uusd".to_string()),
+            &(
+                Decimal256::from_ratio(20u64, 1u64),
+                env.block.time.seconds(),
+                env.block.time.seconds(),
+            ),
+        ),
+    ]);
+
+    let msg = ExecuteMsg::LiquidateCollateral {
+        borrower: "addr0000".to_string(),
+    };
+    let info = mock_info("addr0001", &[]);
+    let res = execute(deps.as_mut(), env, info, msg).unwrap();
+
+    // Here there is no batom message where there should be some !
+    // Because there is not enough bids on the batom collateral
+    assert_eq!(
+        res.messages,
+        vec![
+            SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
+                contract_addr: "custody_bluna".to_string(),
+                funds: vec![],
+                msg: to_binary(&CustodyExecuteMsg::LiquidateCollateral {
+                    liquidator: "addr0001".to_string(),
+                    borrower: "addr0000".to_string(),
+                    amount: Uint256::from(10000u64),
+                })
+                .unwrap(),
+            })),
+            SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
+                contract_addr: "market".to_string(),
+                funds: vec![],
+                msg: to_binary(&MarketExecuteMsg::RepayStableFromLiquidation {
+                    borrower: "addr0000".to_string(),
+                    prev_balance: Uint256::zero(),
+                })
+                .unwrap(),
+            }))
+        ]
+    );
+}

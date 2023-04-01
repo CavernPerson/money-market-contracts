@@ -65,6 +65,7 @@ pub struct WasmMockQuerier {
     oracle_price_querier: OraclePriceQuerier,
     loan_amount_querier: LoanAmountQuerier,
     liquidation_percent_querier: LiquidationPercentQuerier,
+    liquidation_bids_querier: LiquidationBidsQuerier,
 }
 
 #[derive(Clone, Default)]
@@ -182,6 +183,36 @@ pub(crate) fn liquidation_percent_to_map(
     liquidation_percent_map
 }
 
+#[derive(Clone, Default)]
+pub struct LiquidationBidsQuerier {
+    // this lets us iterate over all pairs that match the first string
+    liquidation_bids: HashMap<String, HashMap<String, Uint128>>,
+}
+
+impl LiquidationBidsQuerier {
+    pub fn new(liquidation_bids: &[(&String, &[(&String, &Uint128)])]) -> Self {
+        LiquidationBidsQuerier {
+            liquidation_bids: liquidation_bids_to_map(liquidation_bids),
+        }
+    }
+}
+
+pub(crate) fn liquidation_bids_to_map(
+    liquidation_bids: &[(&String, &[(&String, &Uint128)])],
+) -> HashMap<String, HashMap<String, Uint128>> {
+    let mut liquidation_bids_map: HashMap<String, HashMap<String, Uint128>> = HashMap::new();
+    for (liquidation_contract, bids_struct) in liquidation_bids.iter() {
+        let mut bids_map: HashMap<String, Uint128> = HashMap::new();
+        for (token, bids) in bids_struct.iter() {
+            bids_map.insert(token.to_string(), **bids);
+        }
+
+        liquidation_bids_map.insert(liquidation_contract.to_string(), bids_map);
+    }
+
+    liquidation_bids_map
+}
+
 impl WasmMockQuerier {
     pub fn handle_query(&self, request: &QueryRequest<Empty>) -> QuerierResult {
         match &request {
@@ -279,7 +310,22 @@ impl WasmMockQuerier {
                                         &LiquidationAmountResponse {
                                             collaterals: collaterals
                                                 .iter()
-                                                .map(|x| (x.0.clone(), x.1 * *v))
+                                                .map(|x| {
+                                                    let mut bids = Uint128::MAX;
+                                                    if let Some(c) = self
+                                                        .liquidation_bids_querier
+                                                        .liquidation_bids
+                                                        .get(contract_addr)
+                                                    {
+                                                        if let Some(value) = c.get(&x.0) {
+                                                            bids = *value;
+                                                        }
+                                                    }
+                                                    (
+                                                        x.0.clone(),
+                                                        (x.1 * *v).min(Uint256::from(bids)),
+                                                    )
+                                                })
                                                 .collect::<TokensHuman>()
                                                 .to_vec(),
                                         },
@@ -313,6 +359,7 @@ impl WasmMockQuerier {
             oracle_price_querier: OraclePriceQuerier::default(),
             loan_amount_querier: LoanAmountQuerier::default(),
             liquidation_percent_querier: LiquidationPercentQuerier::default(),
+            liquidation_bids_querier: LiquidationBidsQuerier::default(),
         }
     }
 
@@ -340,5 +387,9 @@ impl WasmMockQuerier {
 
     pub fn with_liquidation_percent(&mut self, liquidation_percent: &[(&String, &Decimal256)]) {
         self.liquidation_percent_querier = LiquidationPercentQuerier::new(liquidation_percent);
+    }
+
+    pub fn with_available_bids(&mut self, liquidation_bids: &[(&String, &[(&String, &Uint128)])]) {
+        self.liquidation_bids_querier = LiquidationBidsQuerier::new(liquidation_bids);
     }
 }
