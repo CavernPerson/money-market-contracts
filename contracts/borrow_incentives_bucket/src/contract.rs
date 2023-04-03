@@ -2,9 +2,9 @@ use crate::error::ContractError;
 use crate::state::{read_config, store_config, Config};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::Coin;
 use cosmwasm_std::CosmosMsg;
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{Coin, Empty};
 use cosmwasm_std::{Uint128, WasmMsg};
 use moneymarket::bucket::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use moneymarket::overseer::ExecuteMsg as OverseerExecuteMsg;
@@ -113,4 +113,9 @@ fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
     };
 
     Ok(resp)
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: Empty) -> StdResult<Response> {
+    Ok(Response::default())
 }

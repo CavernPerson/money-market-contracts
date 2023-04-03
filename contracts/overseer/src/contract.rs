@@ -105,6 +105,8 @@ pub fn instantiate(
 
     Ok(Response::default())
 }
+
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response> {
     // Ensure we migrate the config variable to the newest version
     let config = read_old_config(deps.storage)?;

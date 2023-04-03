@@ -5,6 +5,7 @@ use crate::state::{
 };
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
+use cosmwasm_std::Empty;
 use cosmwasm_std::{
     attr, to_binary, Binary, Decimal256, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
@@ -220,4 +221,8 @@ fn query_prices(
 ) -> StdResult<PricesResponse> {
     let prices: Vec<PricesResponseElem> = read_prices(deps.storage, start_after, limit)?;
     Ok(PricesResponse { prices })
+}
+
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: Empty) -> StdResult<Response> {
+    Ok(Response::default())
 }
