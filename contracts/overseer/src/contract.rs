@@ -1,4 +1,3 @@
-use crate::state::read_old_config;
 use crate::state::PlatformFee;
 use crate::state::DEFAULT_LIMIT;
 use crate::state::MAX_LIMIT;
@@ -107,29 +106,7 @@ pub fn instantiate(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response> {
-    // Ensure we migrate the config variable to the newest version
-    let config = read_old_config(deps.storage)?;
-
-    let new_config: Config = Config {
-        owner_addr: config.owner_addr,
-        oracle_contract: config.oracle_contract,
-        market_contract: config.market_contract,
-        liquidation_contract: config.liquidation_contract,
-        borrow_reserves_bucket_contract: config.borrow_reserves_bucket_contract,
-        stable_denom: config.stable_denom,
-        epoch_period: config.epoch_period,
-        threshold_deposit_rate: config.threshold_deposit_rate,
-        target_deposit_rate: config.target_deposit_rate,
-        buffer_distribution_factor: config.buffer_distribution_factor,
-        price_timeframe: config.price_timeframe,
-        platform_fee: PlatformFee {
-            rate: msg.platform_fee.rate,
-            receiver: deps.api.addr_validate(&msg.platform_fee.receiver)?,
-        },
-    };
-
-    store_config(deps.storage, &new_config)?;
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
     Ok(Response::default())
 }
 
@@ -535,7 +512,9 @@ pub fn execute_epoch_operations(deps: DepsMut, env: Env) -> Result<Response, Con
         config.stable_denom.to_string(),
     )?;
 
-    let mut accrued_buffer = interest_buffer - state.prev_interest_buffer;
+    let mut accrued_buffer = interest_buffer
+        .checked_sub(state.prev_interest_buffer)
+        .unwrap_or(Uint256::zero());
     // We start by taking a fee on accrued buffer so that the protocol operates (1% at the beginning)
     // This might become variable in the future for more automatism on the platform
     let platform_fees: Uint256 = accrued_buffer * config.platform_fee.rate;
@@ -550,6 +529,7 @@ pub fn execute_epoch_operations(deps: DepsMut, env: Env) -> Result<Response, Con
     }
 
     accrued_buffer -= platform_fees;
+    interest_buffer -= platform_fees;
 
     // Remove accrued_buffer * config.borrow_incentives_factor from the reserves (partial redistribution of the staking yield to the borrowers)
     // We compute this value now, and make the borrowers pay less interest in the market contract
