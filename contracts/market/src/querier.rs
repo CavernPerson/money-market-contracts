@@ -45,7 +45,7 @@ pub fn query_next_borrower_incentives(
         return Err(StdError::generic_err("Can't query borrow rate in the past"));
     }
     let passed_blocks = Decimal256::from_ratio(block_height - state.last_interest_updated, 1u128);
-    let available_borrower_incentives = query_balance(
+    let mut available_borrower_incentives = query_balance(
         deps,
         deps.api
             .addr_humanize(&config.borrow_reserves_bucket_contract)?,
@@ -66,6 +66,14 @@ pub fn query_next_borrower_incentives(
         state.total_reserves,
     )?;
 
+    let overseer_config =
+        query_overseer_config(deps, deps.api.addr_humanize(&config.overseer_contract)?)?;
+
+    // We limit the maximum borrow incentives to a percentage of the total balance available to spread the reserves over more blocks
+    // This makes the borrow distribution APY more stable over time and is best for users
+    available_borrower_incentives =
+        available_borrower_incentives * overseer_config.buffer_distribution_factor;
+        
     get_actual_interest_factor(
         deps.api,
         &config,
@@ -75,17 +83,11 @@ pub fn query_next_borrower_incentives(
         passed_blocks,
     )?;
 
-    if state.total_liabilities.is_zero() {
-        Ok(BorrowRateResponse {
-            rate: Decimal256::zero(),
-        })
-    } else {
-        Ok(BorrowRateResponse {
-            rate: Decimal256::from_ratio(state.prev_borrower_incentives, 1u128)
-                / state.total_liabilities
-                / passed_blocks,
-        })
-    }
+    Ok(BorrowRateResponse {
+        rate: Decimal256::from_ratio(state.prev_borrower_incentives, 1u128)
+            / state.total_liabilities
+            / passed_blocks,
+    })
 }
 
 pub fn query_borrow_limit(
