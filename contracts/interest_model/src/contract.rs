@@ -1,15 +1,15 @@
 use crate::error::ContractError;
-use crate::state::{read_config, store_config, Config};
+use crate::state::{read_config, store_config, Config, read_old_config};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 
 use cosmwasm_std::{
     to_binary, Addr, Binary, Decimal256, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
-    Uint256,
+    Uint256, StdError,
 };
 use moneymarket::common::optional_addr_validate;
 use moneymarket::interest_model::{
-    BorrowRateResponse, ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg,
+    BorrowRateResponse, ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, MigrateMsg,
 };
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -24,7 +24,9 @@ pub fn instantiate(
         &Config {
             owner: deps.api.addr_canonicalize(&msg.owner)?,
             base_rate: msg.base_rate,
-            interest_multiplier: msg.interest_multiplier,
+            first_interest_multiplier: msg.first_interest_multiplier,
+            second_interest_multiplier: msg.second_interest_multiplier,
+            target_utilization_rate: msg.target_utilization_rate
         },
     )?;
 
@@ -42,7 +44,9 @@ pub fn execute(
         ExecuteMsg::UpdateConfig {
             owner,
             base_rate,
-            interest_multiplier,
+            first_interest_multiplier,
+            target_utilization_rate,
+            second_interest_multiplier
         } => {
             let api = deps.api;
             update_config(
@@ -50,7 +54,9 @@ pub fn execute(
                 info,
                 optional_addr_validate(api, owner)?,
                 base_rate,
-                interest_multiplier,
+                first_interest_multiplier,
+                target_utilization_rate,
+                second_interest_multiplier
             )
         }
     }
@@ -61,7 +67,9 @@ pub fn update_config(
     info: MessageInfo,
     owner: Option<Addr>,
     base_rate: Option<Decimal256>,
-    interest_multiplier: Option<Decimal256>,
+    first_interest_multiplier: Option<Decimal256>,
+    target_utilization_rate: Option<Decimal256>,
+    second_interest_multiplier: Option<Decimal256>,
 ) -> Result<Response, ContractError> {
     let mut config: Config = read_config(deps.storage)?;
     if deps.api.addr_canonicalize(info.sender.as_str())? != config.owner {
@@ -76,8 +84,16 @@ pub fn update_config(
         config.base_rate = base_rate;
     }
 
-    if let Some(interest_multiplier) = interest_multiplier {
-        config.interest_multiplier = interest_multiplier;
+    if let Some(first_interest_multiplier) = first_interest_multiplier {
+        config.first_interest_multiplier = first_interest_multiplier;
+    }
+
+    if let Some(second_interest_multiplier) = second_interest_multiplier {
+        config.second_interest_multiplier = second_interest_multiplier;
+    }
+
+    if let Some(target_utilization_rate) = target_utilization_rate {
+        config.target_utilization_rate = target_utilization_rate;
     }
 
     store_config(deps.storage, &config)?;
@@ -106,10 +122,35 @@ fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
     let resp = ConfigResponse {
         owner: deps.api.addr_humanize(&state.owner)?.to_string(),
         base_rate: state.base_rate,
-        interest_multiplier: state.interest_multiplier,
+        first_interest_multiplier: state.first_interest_multiplier,
+        target_utilization_rate: state.target_utilization_rate,
+        second_interest_multiplier: state.second_interest_multiplier,
     };
 
     Ok(resp)
+}
+
+fn first_interest_rate(
+    config: &Config,
+    utilization_ratio: Decimal256
+) -> StdResult<Decimal256>{
+    if utilization_ratio > config.target_utilization_rate{
+        Err(StdError::generic_err("This function only receives values under target UR"))
+    }else{
+        Ok(utilization_ratio * config.first_interest_multiplier + config.base_rate)
+    }
+}
+
+fn second_interest_rate(
+    config: &Config,
+    utilization_ratio: Decimal256
+) -> StdResult<Decimal256>{
+    if utilization_ratio <= config.target_utilization_rate{
+        Err(StdError::generic_err("This function only receives values under over UR"))
+    }else{
+        let target_ir = first_interest_rate(config, config.target_utilization_rate)?;
+        Ok(target_ir + (utilization_ratio - config.target_utilization_rate)* config.second_interest_multiplier)
+    }
 }
 
 fn query_borrow_rate(
@@ -130,7 +171,32 @@ fn query_borrow_rate(
         total_liabilities / total_value_in_market
     };
 
+    // We want 2 slopes
+    let rate = if utilization_ratio <= config.target_utilization_rate{
+        first_interest_rate(&config, utilization_ratio)
+    }else{
+        second_interest_rate(&config, utilization_ratio)
+    }?;
+
     Ok(BorrowRateResponse {
-        rate: utilization_ratio * config.interest_multiplier + config.base_rate,
+        rate,
     })
+}
+
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response> {
+
+    let old_config = read_old_config(deps.storage)?;
+
+    let new_config = Config{ 
+        owner: old_config.owner,
+        base_rate: msg.base_rate,
+        first_interest_multiplier: msg.first_interest_multiplier,
+        target_utilization_rate: msg.target_utilization_rate,
+        second_interest_multiplier: msg.second_interest_multiplier 
+    };
+
+    store_config(deps.storage, &new_config)?;
+    Ok(Response::default())
 }

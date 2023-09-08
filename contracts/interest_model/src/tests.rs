@@ -13,7 +13,9 @@ fn proper_initialization() {
     let msg = InstantiateMsg {
         owner: "owner0000".to_string(),
         base_rate: Decimal256::percent(10),
-        interest_multiplier: Decimal256::percent(10),
+        first_interest_multiplier: Decimal256::percent(10),
+        target_utilization_rate: Decimal256::percent(70),
+        second_interest_multiplier: Decimal256::percent(20),
     };
 
     let info = mock_info("addr0000", &[]);
@@ -27,7 +29,9 @@ fn proper_initialization() {
     let value: ConfigResponse = from_binary(&res).unwrap();
     assert_eq!("owner0000", value.owner.as_str());
     assert_eq!("0.1", &value.base_rate.to_string());
-    assert_eq!("0.1", &value.interest_multiplier.to_string());
+    assert_eq!("0.1", &value.first_interest_multiplier.to_string());
+    assert_eq!("0.7", &value.target_utilization_rate.to_string());
+    assert_eq!("0.2", &value.second_interest_multiplier.to_string());
 
     let query_msg = QueryMsg::BorrowRate {
         market_balance: Uint256::from(1000000u128),
@@ -57,7 +61,9 @@ fn update_config() {
     let msg = InstantiateMsg {
         owner: "owner0000".to_string(),
         base_rate: Decimal256::percent(10),
-        interest_multiplier: Decimal256::percent(10),
+        first_interest_multiplier: Decimal256::percent(10),
+        target_utilization_rate: Decimal256::percent(70),
+        second_interest_multiplier: Decimal256::percent(20),
     };
 
     let info = mock_info("addr0000", &[]);
@@ -68,7 +74,9 @@ fn update_config() {
     let msg = ExecuteMsg::UpdateConfig {
         owner: Some("owner0001".to_string()),
         base_rate: None,
-        interest_multiplier: None,
+        first_interest_multiplier:None,
+        target_utilization_rate: None,
+        second_interest_multiplier: None,
     };
 
     let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
@@ -79,14 +87,16 @@ fn update_config() {
     let value: ConfigResponse = from_binary(&res).unwrap();
     assert_eq!("owner0001", value.owner.as_str());
     assert_eq!("0.1", &value.base_rate.to_string());
-    assert_eq!("0.1", &value.interest_multiplier.to_string());
+    assert_eq!("0.1", &value.first_interest_multiplier.to_string());
 
     // Unauthorized err
     let info = mock_info("owner0000", &[]);
     let msg = ExecuteMsg::UpdateConfig {
         owner: None,
         base_rate: Some(Decimal256::percent(1)),
-        interest_multiplier: Some(Decimal256::percent(1)),
+        first_interest_multiplier: Some(Decimal256::percent(1)),
+        target_utilization_rate: None,
+        second_interest_multiplier: None,
     };
 
     let res = execute(deps.as_mut(), mock_env(), info, msg);
