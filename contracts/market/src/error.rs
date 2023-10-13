@@ -1,4 +1,4 @@
-use cosmwasm_std::{ConversionOverflowError, OverflowError, StdError, Uint128, WasmMsg};
+use cosmwasm_std::{ConversionOverflowError, OverflowError, StdError, Uint128};
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
@@ -38,7 +38,4 @@ pub enum ContractError {
 
     #[error("Repay amount must be greater than 0 {0}")]
     ZeroRepay(String),
-
-    #[error("Debug error {0:?}")]
-    StringError(WasmMsg),
 }

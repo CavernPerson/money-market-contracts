@@ -271,6 +271,7 @@ pub fn register_aterra(deps: DepsMut, token_addr: Addr) -> Result<Response, Cont
     Ok(Response::new().add_attributes(vec![attr("aterra", token_addr)]))
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn register_contracts(
     deps: DepsMut,
     info: MessageInfo,
@@ -306,6 +307,7 @@ pub fn register_contracts(
     Ok(Response::default())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn update_config(
     deps: DepsMut,
     env: Env,
