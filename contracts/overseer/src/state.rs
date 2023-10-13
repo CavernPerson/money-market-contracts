@@ -1,12 +1,10 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Addr;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{CanonicalAddr, Decimal256, Deps, Order, StdError, StdResult, Storage, Uint256};
 use cosmwasm_storage::{Bucket, ReadonlyBucket, ReadonlySingleton, Singleton};
 
-use moneymarket::overseer::{CollateralsResponse, WhitelistResponseElem};
+use moneymarket::overseer::{CollateralsResponse, DynrateState, EpochState, WhitelistResponseElem};
 use moneymarket::tokens::Tokens;
 
 const KEY_CONFIG: &[u8] = b"config";
@@ -17,7 +15,7 @@ const KEY_DYNRATE_STATE: &[u8] = b"dynrate_state";
 const PREFIX_WHITELIST: &[u8] = b"whitelist";
 const PREFIX_COLLATERALS: &[u8] = b"collateral";
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct OldConfig {
     pub owner_addr: CanonicalAddr,
     pub oracle_contract: CanonicalAddr,
@@ -55,7 +53,7 @@ pub struct Config {
     pub platform_fee: PlatformFee,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct DynrateConfig {
     pub dyn_rate_epoch: u64,
     pub dyn_rate_maxchange: Decimal256,
@@ -65,22 +63,7 @@ pub struct DynrateConfig {
     pub dyn_rate_max: Decimal256,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct EpochState {
-    pub deposit_rate: Decimal256,
-    pub prev_aterra_supply: Uint256,
-    pub prev_exchange_rate: Decimal256,
-    pub prev_interest_buffer: Uint256,
-    pub last_executed_height: u64,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct DynrateState {
-    pub last_executed_height: u64,
-    pub prev_yield_reserve: Decimal256,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct WhitelistElem {
     pub name: String,
     pub symbol: String,

@@ -1,8 +1,7 @@
 use crate::custody::Asset;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 use std::convert::TryInto;
 
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
     to_binary, Addr, AllBalanceResponse, BalanceResponse, BankQuery, Coin, Deps, QueryRequest,
     StdError, StdResult, Uint128, Uint256, WasmQuery,
@@ -103,7 +102,7 @@ pub fn query_supply(deps: Deps, contract_addr: Addr) -> StdResult<Uint256> {
     Ok(Uint256::from(token_info.total_supply))
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct TimeConstraints {
     pub block_time: u64,
     pub valid_timeframe: u64,

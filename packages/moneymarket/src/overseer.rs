@@ -1,6 +1,4 @@
-use cosmwasm_schema::cw_serde;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use cosmwasm_schema::{cw_serde, QueryResponses};
 
 use crate::tokens::TokensHuman;
 use cosmwasm_std::{Decimal256, Uint256};
@@ -11,8 +9,7 @@ pub struct PlatformFeeInstantiateMsg {
     pub receiver: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct InstantiateMsg {
     /// Initial owner address
     pub owner_addr: String,
@@ -54,12 +51,11 @@ pub struct InstantiateMsg {
     pub platform_fee: PlatformFeeInstantiateMsg,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct MigrateMsg {}
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
 #[allow(clippy::large_enum_variant)]
 pub enum ExecuteMsg {
     ////////////////////
@@ -136,24 +132,30 @@ pub struct PlatformFeeMsg {
     pub receiver: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[derive(QueryResponses)]
+#[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))]
 pub enum QueryMsg {
+    #[returns(ConfigResponse)]
     Config {},
+    #[returns(EpochState)]
     EpochState {},
+    #[returns(DynrateState)]
     DynrateState {},
+    #[returns(WhitelistResponse)]
     Whitelist {
         collateral_token: Option<String>,
         start_after: Option<String>,
         limit: Option<u32>,
     },
-    Collaterals {
-        borrower: String,
-    },
+    #[returns(CollateralsResponse)]
+    Collaterals { borrower: String },
+    #[returns(AllCollateralsResponse)]
     AllCollaterals {
         start_after: Option<String>,
         limit: Option<u32>,
     },
+    #[returns(BorrowLimitResponse)]
     BorrowLimit {
         borrower: String,
         block_time: Option<u64>,
@@ -161,7 +163,7 @@ pub enum QueryMsg {
 }
 
 // We define a custom struct for each query response
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct ConfigResponse {
     pub owner_addr: String,
     pub oracle_contract: String,
@@ -182,8 +184,23 @@ pub struct ConfigResponse {
     pub dyn_rate_max: Decimal256,
 }
 
+#[cw_serde]
+pub struct EpochState {
+    pub deposit_rate: Decimal256,
+    pub prev_aterra_supply: Uint256,
+    pub prev_exchange_rate: Decimal256,
+    pub prev_interest_buffer: Uint256,
+    pub last_executed_height: u64,
+}
+
+#[cw_serde]
+pub struct DynrateState {
+    pub last_executed_height: u64,
+    pub prev_yield_reserve: Decimal256,
+}
+
 // We define a custom struct for each query response
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct WhitelistResponseElem {
     pub name: String,
     pub symbol: String,
@@ -193,25 +210,25 @@ pub struct WhitelistResponseElem {
 }
 
 // We define a custom struct for each query response
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct WhitelistResponse {
     pub elems: Vec<WhitelistResponseElem>,
 }
 
 // We define a custom struct for each query response
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct CollateralsResponse {
     pub borrower: String,
     pub collaterals: TokensHuman, // <(Collateral Token, Amount)>
 }
 
 // We define a custom struct for each query response
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct AllCollateralsResponse {
     pub all_collaterals: Vec<CollateralsResponse>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct BorrowLimitResponse {
     pub borrower: String,
     pub borrow_limit: Uint256,

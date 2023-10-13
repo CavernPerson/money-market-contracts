@@ -1,9 +1,8 @@
 use cosmwasm_std::Empty;
 use moneymarket::overseer::{WhitelistResponse, WhitelistResponseElem};
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
     from_binary, from_slice, to_binary, Coin, ContractResult, Decimal, Decimal256, OwnedDeps,
@@ -13,8 +12,7 @@ use std::collections::HashMap;
 
 use moneymarket::oracle::PriceResponse;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum QueryMsg {
     /// Query oracle price to oracle contract
     Price { base: String, quote: String },

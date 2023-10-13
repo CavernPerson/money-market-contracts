@@ -42,7 +42,7 @@ pub fn execute(
     match msg {
         ExecuteMsg::UpdateConfig { owner } => update_config(deps, info, owner),
         ExecuteMsg::RegisterFeeder { asset, feeder } => register_feeder(deps, info, asset, feeder),
-        ExecuteMsg::UpdateFeeder { asset, feeder } => register_feeder(deps, info, asset, feeder),
+        ExecuteMsg::UpdateFeeder { asset, feeder } => update_feeder(deps, info, asset, feeder),
         ExecuteMsg::FeedPrice { prices } => feed_prices(deps, env, info, prices),
     }
 }
@@ -223,6 +223,7 @@ fn query_prices(
     Ok(PricesResponse { prices })
 }
 
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, _msg: Empty) -> StdResult<Response> {
     Ok(Response::default())
 }

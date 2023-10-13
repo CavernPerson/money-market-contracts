@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/*", "contracts/*"]
+members = ["packages/*", "contracts/*", "interface"]
 
 [profile.release.package.moneymarket]
 opt-level = 3

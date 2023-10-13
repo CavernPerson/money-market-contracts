@@ -74,7 +74,7 @@ fn update_config() {
     let msg = ExecuteMsg::UpdateConfig {
         owner: Some("owner0001".to_string()),
         base_rate: None,
-        first_interest_multiplier:None,
+        first_interest_multiplier: None,
         target_utilization_rate: None,
         second_interest_multiplier: None,
     };

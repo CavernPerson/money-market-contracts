@@ -73,7 +73,7 @@ pub fn query_next_borrower_incentives(
     // This makes the borrow distribution APY more stable over time and is best for users
     available_borrower_incentives =
         available_borrower_incentives * overseer_config.buffer_distribution_factor;
-        
+
     get_actual_interest_factor(
         deps.api,
         &config,
