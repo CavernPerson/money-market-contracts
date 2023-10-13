@@ -1,9 +1,8 @@
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
     CanonicalAddr, Decimal256, Order, StdError, StdResult, Storage, Uint128, Uint256,
 };
 use cosmwasm_storage::{singleton, singleton_read, Bucket, ReadonlyBucket};
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 use std::convert::TryInto;
 
 static KEY_CONFIG: &[u8] = b"config";
@@ -19,7 +18,7 @@ static PREFIX_EPOCH_SCALE_SUM: &[u8] = b"epoch_scale_sum";
 const MAX_LIMIT: u8 = 31;
 const DEFAULT_LIMIT: u8 = 10;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct Config {
     pub owner: CanonicalAddr,
     pub oracle_contract: CanonicalAddr,
@@ -108,7 +107,7 @@ pub fn read_epoch_scale_sum(
     epoch_scale_sum.load(&scale.u128().to_be_bytes())
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct CollateralInfo {
     pub collateral_token: CanonicalAddr,
     pub bid_threshold: Uint256,
@@ -145,7 +144,7 @@ pub fn remove_collateral_info(storage: &mut dyn Storage, collateral_token: &Cano
     collateral_info_bucket.remove(collateral_token.as_slice())
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct BidPool {
     pub sum_snapshot: Decimal256,
     pub product_snapshot: Decimal256,
@@ -249,7 +248,7 @@ pub fn read_bid_pools(
         .collect()
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct Bid {
     pub idx: Uint128,
     pub collateral_token: CanonicalAddr,

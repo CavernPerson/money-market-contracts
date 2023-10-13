@@ -1,0 +1,18 @@
+[package]
+name = "interface"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cw-orch = "0.16.4"
+moneymarket = { version = "0.3.1", path = "../packages/moneymarket", features=["interface"] }
+moneymarket-borrow-incentives-bucket = { version = "0.0.0", path = "../contracts/borrow_incentives_bucket" }
+moneymarket-custody-lsd = { version = "0.0.0", path = "../contracts/custody_lsd" }
+moneymarket-distribution-model = { version = "0.0.0", path = "../contracts/distribution_model" }
+moneymarket-interest-model = { version = "0.0.0", path = "../contracts/interest_model" }
+moneymarket-liquidation-queue = { version = "0.0.0", path = "../contracts/liquidation_queue" }
+moneymarket-market = { version = "0.0.0", path = "../contracts/market" }
+moneymarket-oracle = { version = "0.0.0", path = "../contracts/oracle" }
+moneymarket-overseer = { version = "0.0.0", path = "../contracts/overseer" }

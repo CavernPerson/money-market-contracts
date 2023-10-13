@@ -1,3 +1,4 @@
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Empty;
 use moneymarket::distribution_model::BorrowerIncentivesRateResponse;
 use schemars::JsonSchema;
@@ -18,8 +19,7 @@ use cw20::TokenInfoResponse;
 use moneymarket::interest_model::BorrowRateResponse;
 use moneymarket::overseer::{BorrowLimitResponse, ConfigResponse};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum QueryMsg {
     /// Query borrow rate to interest model contract
     BorrowRate {

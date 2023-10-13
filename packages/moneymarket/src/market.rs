@@ -1,11 +1,11 @@
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use cosmwasm_schema::{cw_serde, QueryResponses};
 
 use cosmwasm_std::{Decimal256, Uint256};
 use cw20::Cw20ReceiveMsg;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+use crate::interest_model::BorrowRateResponse;
+
+#[cw_serde]
 pub struct InstantiateMsg {
     /// Owner address for config update
     pub owner_addr: String,
@@ -25,8 +25,8 @@ pub struct InstantiateMsg {
     pub initial_borrower_incentives: Decimal256,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
 pub enum ExecuteMsg {
     Receive(Cw20ReceiveMsg),
 
@@ -94,32 +94,35 @@ pub enum ExecuteMsg {
     RepayStable {},
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+
 pub enum Cw20HookMsg {
     /// Return stable coins to a user
     /// according to exchange rate
     RedeemStable {},
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[derive(QueryResponses)]
+#[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))]
 pub enum QueryMsg {
+    #[returns(ConfigResponse)]
     Config {},
-    State {
-        block_height: Option<u64>,
-    },
-    BorrowerIncentives {
-        block_height: Option<u64>,
-    },
+    #[returns(StateResponse)]
+    State { block_height: Option<u64> },
+    #[returns(BorrowRateResponse)]
+    BorrowerIncentives { block_height: Option<u64> },
+    #[returns(EpochStateResponse)]
     EpochState {
         block_height: Option<u64>,
         distributed_interest: Option<Uint256>,
     },
+    #[returns(BorrowerInfoResponse)]
     BorrowerInfo {
         borrower: String,
         block_height: Option<u64>,
     },
+    #[returns(BorrowerInfosResponse)]
     BorrowerInfos {
         start_after: Option<String>,
         limit: Option<u32>,
@@ -127,7 +130,7 @@ pub enum QueryMsg {
 }
 
 // We define a custom struct for each query response
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct ConfigResponse {
     pub owner_addr: String,
     pub aterra_contract: String,
@@ -143,7 +146,7 @@ pub struct ConfigResponse {
 }
 
 // We define a custom struct for each query response
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct StateResponse {
     pub total_liabilities: Decimal256,
     pub total_reserves: Decimal256,
@@ -158,7 +161,7 @@ pub struct StateResponse {
 }
 
 // We define a custom struct for each query response
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct EpochStateResponse {
     pub exchange_rate: Decimal256,
     pub aterra_supply: Uint256,
@@ -168,7 +171,7 @@ pub struct EpochStateResponse {
 }
 
 // We define a custom struct for each query response
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct BorrowerInfoResponse {
     pub borrower: String,
     pub interest_index: Decimal256,
@@ -178,11 +181,11 @@ pub struct BorrowerInfoResponse {
 }
 
 // We define a custom struct for each query response
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct BorrowerInfosResponse {
     pub borrower_infos: Vec<BorrowerInfoResponse>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+
 pub struct MigrateMsg {}

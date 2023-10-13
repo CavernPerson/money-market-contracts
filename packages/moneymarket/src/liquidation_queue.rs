@@ -1,12 +1,11 @@
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use cosmwasm_schema::{cw_serde, QueryResponses};
 
 use cosmwasm_std::{Decimal256, Uint128, Uint256};
 use cw20::Cw20ReceiveMsg;
 
 use crate::tokens::TokensHuman;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct InstantiateMsg {
     pub owner: String,
     pub oracle_contract: String,
@@ -31,8 +30,8 @@ pub struct InstantiateMsg {
     pub overseer: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
 pub enum ExecuteMsg {
     Receive(Cw20ReceiveMsg),
     UpdateConfig {
@@ -83,8 +82,8 @@ pub enum ExecuteMsg {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+
 pub enum Cw20HookMsg {
     /// Custody interface to liquidate the sent collateral
     ExecuteBid {
@@ -94,32 +93,36 @@ pub enum Cw20HookMsg {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[derive(QueryResponses)]
+#[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))]
 pub enum QueryMsg {
+    #[returns(ConfigResponse)]
     Config {},
+    #[returns(LiquidationAmountResponse)]
     LiquidationAmount {
         borrow_amount: Uint256,
         borrow_limit: Uint256,
         collaterals: TokensHuman,
         collateral_prices: Vec<Decimal256>,
     },
-    CollateralInfo {
-        collateral_token: String,
-    },
-    Bid {
-        bid_idx: Uint128,
-    },
+    #[returns(CollateralInfoResponse)]
+    CollateralInfo { collateral_token: String },
+    #[returns(BidResponse)]
+    Bid { bid_idx: Uint128 },
+    #[returns(BidsResponse)]
     BidsByUser {
         collateral_token: String,
         bidder: String,
         start_after: Option<Uint128>,
         limit: Option<u8>,
     },
+    #[returns(BidPoolResponse)]
     BidPool {
         collateral_token: String,
         bid_slot: u8,
     },
+    #[returns(BidPoolsResponse)]
     BidPoolsByCollateral {
         collateral_token: String,
         start_after: Option<u8>,
@@ -127,11 +130,11 @@ pub enum QueryMsg {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+
 pub struct MigrateMsg {}
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct ConfigResponse {
     pub owner: String,
     pub oracle_contract: String,
@@ -145,12 +148,12 @@ pub struct ConfigResponse {
     pub overseer: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct LiquidationAmountResponse {
     pub collaterals: TokensHuman,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct BidResponse {
     pub idx: Uint128,
     pub collateral_token: String,
@@ -165,12 +168,12 @@ pub struct BidResponse {
     pub scale_snapshot: Uint128,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct BidsResponse {
     pub bids: Vec<BidResponse>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct BidPoolResponse {
     pub sum_snapshot: Decimal256,
     pub product_snapshot: Decimal256,
@@ -180,7 +183,7 @@ pub struct BidPoolResponse {
     pub current_scale: Uint128,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct CollateralInfoResponse {
     pub collateral_token: String,
     pub bid_threshold: Uint256,
@@ -188,7 +191,7 @@ pub struct CollateralInfoResponse {
     pub premium_rate_per_slot: Decimal256,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct BidPoolsResponse {
     pub bid_pools: Vec<BidPoolResponse>,
 }

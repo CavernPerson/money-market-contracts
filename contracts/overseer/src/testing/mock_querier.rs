@@ -1,3 +1,4 @@
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Empty;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -17,8 +18,8 @@ use moneymarket::tokens::TokensHuman;
 
 use std::str::FromStr;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+
 pub enum QueryMsg {
     /// Market state to market contract
     State { block_height: Option<u64> },

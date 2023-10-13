@@ -4,10 +4,9 @@ use std::fs::create_dir_all;
 use cosmwasm_schema::{export_schema, remove_schemas, schema_for};
 
 use moneymarket::overseer::{
-    AllCollateralsResponse, BorrowLimitResponse, CollateralsResponse, ConfigResponse, ExecuteMsg,
-    InstantiateMsg, QueryMsg, WhitelistResponse,
+    AllCollateralsResponse, BorrowLimitResponse, CollateralsResponse, ConfigResponse, EpochState,
+    ExecuteMsg, InstantiateMsg, QueryMsg, WhitelistResponse,
 };
-use moneymarket_overseer::state::EpochState;
 
 fn main() {
     let mut out_dir = current_dir().unwrap();

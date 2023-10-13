@@ -15,10 +15,10 @@ documentation = "https://docs.terra.money"
 # for quicker tests, cargo test --lib
 # for more explicit tests, cargo test --features=backtraces
 backtraces = ["cosmwasm-std/backtraces"]
+interface = ["dep:cw-orch"]
 
 [dependencies]
 cw20 = "0.15.1"
-cosmwasm-storage = "1.1.0"
 cosmwasm-std = "1.1.0"
 cosmwasm-schema = "1.1.0"
 schemars = "0.8.1"
@@ -26,6 +26,7 @@ serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 
 strum = "0.24.1"
 strum_macros = "0.24.1"
+cw-orch = { version = "0.16.4", optional = true }
 
 
 [dev-dependencies]

@@ -1,13 +1,12 @@
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Addr;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{StdResult, Storage};
 use cosmwasm_storage::{singleton, singleton_read};
 
 static KEY_CONFIG: &[u8] = b"config";
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct Config {
     pub owner: Addr,
     pub sender_contract: Addr,

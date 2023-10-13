@@ -1,6 +1,4 @@
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{CanonicalAddr, Decimal256, Deps, Order, StdResult, Storage, Uint256};
 use cosmwasm_storage::{bucket, bucket_read, ReadonlyBucket, ReadonlySingleton, Singleton};
 
@@ -11,7 +9,7 @@ pub const KEY_STATE: &[u8] = b"state";
 
 const PREFIX_LIABILITY: &[u8] = b"liability";
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct Config {
     pub contract_addr: CanonicalAddr,
     pub owner_addr: CanonicalAddr,
@@ -27,7 +25,7 @@ pub struct Config {
     pub max_borrow_subsidy_rate: Decimal256,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct State {
     pub total_liabilities: Decimal256,
     pub total_reserves: Decimal256,
@@ -42,7 +40,7 @@ pub struct State {
     pub prev_borrower_incentives: Uint256,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct BorrowerInfo {
     pub interest_index: Decimal256,
     pub reward_index: Decimal256,

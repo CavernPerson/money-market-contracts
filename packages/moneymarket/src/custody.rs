@@ -2,18 +2,15 @@ use cosmwasm_std::StdResult;
 use cosmwasm_std::{to_binary, WasmMsg};
 
 use crate::astroport_router::AssetInfo;
-use cosmwasm_schema::cw_serde;
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Uint128;
 use cosmwasm_std::{Addr, BankMsg};
 use cosmwasm_std::{Coin, CosmosMsg};
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::Uint256;
 use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct InstantiateMsg {
     /// owner address
     pub owner: String,
@@ -38,8 +35,7 @@ pub struct InstantiateMsg {
     pub terraswap_addr: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct LSDInstantiateMsg {
     /// owner address
     pub owner: String,
@@ -105,8 +101,8 @@ impl Asset {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
 pub enum ExecuteMsg {
     /// CW20 token receiver
     Receive(Cw20ReceiveMsg),
@@ -146,24 +142,25 @@ pub enum ExecuteMsg {
     WithdrawCollateral { amount: Option<Uint256> },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum Cw20HookMsg {
     /// Deposit collateral token
     DepositCollateral {},
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+
 pub struct MigrateMsg {}
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[derive(QueryResponses)]
+#[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))]
 pub enum QueryMsg {
+    #[returns(ConfigResponse)]
     Config {},
-    Borrower {
-        address: String,
-    },
+    #[returns(BorrowerResponse)]
+    Borrower { address: String },
+    #[returns(BorrowersResponse)]
     Borrowers {
         start_after: Option<String>,
         limit: Option<u32>,
@@ -171,7 +168,7 @@ pub enum QueryMsg {
 }
 
 // We define a custom struct for each query response
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct ConfigResponse {
     pub owner: String,
     pub collateral_token: String,
@@ -184,7 +181,7 @@ pub struct ConfigResponse {
 }
 
 // We define a custom struct for each query response
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct LSDConfigResponse {
     pub owner: String,
     pub collateral_token: String,
@@ -199,7 +196,7 @@ pub struct LSDConfigResponse {
 }
 
 // We define a custom struct for each query response
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct BorrowerResponse {
     pub borrower: String,
     pub balance: Uint256,
@@ -207,12 +204,12 @@ pub struct BorrowerResponse {
 }
 
 // We define a custom struct for each query response
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct BorrowersResponse {
     pub borrowers: Vec<BorrowerResponse>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct BAssetInfo {
     pub name: String,
     pub symbol: String,
