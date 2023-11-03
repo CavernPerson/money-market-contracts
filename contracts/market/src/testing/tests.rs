@@ -1498,7 +1498,7 @@ fn repay_stable() {
     env.block.height += 100;
     let _res = execute(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
 
-    let msg = ExecuteMsg::RepayStable {};
+    let msg = ExecuteMsg::RepayStable { borrower: None };
     info.funds = vec![Coin {
         denom: "ukrw".to_string(),
         amount: Uint128::from(100000u128),

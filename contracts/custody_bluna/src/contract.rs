@@ -116,7 +116,7 @@ pub fn receive_cw20(
     let contract_addr = info.sender;
 
     match from_binary(&cw20_msg.msg) {
-        Ok(Cw20HookMsg::DepositCollateral {}) => {
+        Ok(Cw20HookMsg::DepositCollateral { borrower: None }) => {
             // only asset contract can execute this message
             let config: Config = read_config(deps.storage)?;
             if deps.api.addr_canonicalize(contract_addr.as_str())? != config.collateral_token {

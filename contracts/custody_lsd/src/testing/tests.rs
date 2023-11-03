@@ -169,7 +169,7 @@ fn deposit_collateral() {
     let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
-        msg: to_binary(&Cw20HookMsg::DepositCollateral {}).unwrap(),
+        msg: to_binary(&Cw20HookMsg::DepositCollateral { borrower: None }).unwrap(),
     });
 
     // failed; cannot directly execute receive message
@@ -285,7 +285,7 @@ fn withdraw_collateral() {
     let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
-        msg: to_binary(&Cw20HookMsg::DepositCollateral {}).unwrap(),
+        msg: to_binary(&Cw20HookMsg::DepositCollateral { borrower: None }).unwrap(),
     });
 
     let info = mock_info("bluna", &[]);
@@ -429,7 +429,7 @@ fn lock_collateral() {
     let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
-        msg: to_binary(&Cw20HookMsg::DepositCollateral {}).unwrap(),
+        msg: to_binary(&Cw20HookMsg::DepositCollateral { borrower: None }).unwrap(),
     });
 
     let info = mock_info("bluna", &[]);
@@ -933,7 +933,7 @@ fn liquidate_collateral() {
     let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
-        msg: to_binary(&Cw20HookMsg::DepositCollateral {}).unwrap(),
+        msg: to_binary(&Cw20HookMsg::DepositCollateral { borrower: None }).unwrap(),
     });
 
     let info = mock_info("bluna", &[]);

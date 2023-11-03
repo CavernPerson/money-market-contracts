@@ -128,15 +128,16 @@ pub fn receive_cw20(
     let contract_addr = info.sender;
 
     match from_binary(&cw20_msg.msg) {
-        Ok(Cw20HookMsg::DepositCollateral {}) => {
+        Ok(Cw20HookMsg::DepositCollateral { borrower }) => {
             // only asset contract can execute this message
             let config: Config = read_config(deps.storage)?;
             if deps.api.addr_canonicalize(contract_addr.as_str())? != config.collateral_token {
                 return Err(ContractError::Unauthorized {});
             }
 
-            let cw20_sender_addr = deps.api.addr_validate(&cw20_msg.sender)?;
-            deposit_collateral(deps, cw20_sender_addr, cw20_msg.amount.into())
+            let borrower = borrower.unwrap_or(cw20_msg.sender);
+            let borrower_addr = deps.api.addr_validate(&borrower)?;
+            deposit_collateral(deps, borrower_addr, cw20_msg.amount.into())
         }
         _ => Err(ContractError::MissingDepositCollateralHook {}),
     }

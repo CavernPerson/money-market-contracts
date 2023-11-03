@@ -91,7 +91,10 @@ pub enum ExecuteMsg {
     },
 
     /// Repay stable asset to decrease liability
-    RepayStable {},
+    /// You can repay stable on behalf of someone else
+    RepayStable {
+        borrower : Option<String>
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

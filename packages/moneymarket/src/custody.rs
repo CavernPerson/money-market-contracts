@@ -150,7 +150,9 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub enum Cw20HookMsg {
     /// Deposit collateral token
-    DepositCollateral {},
+    DepositCollateral {
+        borrower: Option<String>
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
