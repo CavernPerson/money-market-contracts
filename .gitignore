@@ -14,3 +14,5 @@
 *.iml
 .idea
 
+# ENV
+.env

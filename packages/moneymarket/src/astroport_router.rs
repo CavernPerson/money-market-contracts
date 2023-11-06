@@ -60,7 +60,7 @@ pub enum ExecuteMsg {
         operations: Vec<SwapOperation>,
         minimum_receive: Option<Uint128>,
         to: Option<String>,
-        max_spread: Option<Decimal>,
+        // max_spread: Option<Decimal>,
     },
 
     /// Internal use

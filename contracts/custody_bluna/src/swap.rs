@@ -118,7 +118,7 @@ pub fn create_swap_message_for(
                 message_type,
             )],
             to: None,
-            max_spread: None,
+            // max_spread: None,
             minimum_receive: None,
         },
         contract_address,
