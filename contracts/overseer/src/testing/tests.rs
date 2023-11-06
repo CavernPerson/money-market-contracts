@@ -2,10 +2,10 @@ use crate::contract::{execute, instantiate, query};
 use crate::error::ContractError;
 use crate::querier::query_epoch_state;
 use crate::state::{
-    read_epoch_state, store_dynrate_state, store_epoch_state, DynrateState, EpochState,
+    read_epoch_state, store_dynrate_state, store_epoch_state,
 };
 use crate::testing::mock_querier::mock_dependencies;
-use moneymarket::overseer::PlatformFeeInstantiateMsg;
+use moneymarket::overseer::{PlatformFeeInstantiateMsg, EpochState, DynrateState};
 
 use cosmwasm_std::testing::{mock_env, mock_info, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{

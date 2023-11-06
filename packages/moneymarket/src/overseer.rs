@@ -61,6 +61,7 @@ pub struct MigrateMsg {}
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 #[allow(clippy::large_enum_variant)]
+#[cfg_attr(feature="interface", cw_orch::ExecuteFns)]
 pub enum ExecuteMsg {
     ////////////////////
     /// Owner operations
@@ -138,22 +139,32 @@ pub struct PlatformFeeMsg {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature="interface", cw_orch::QueryFns)]
+#[derive(cosmwasm_schema::QueryResponses)]
+
 pub enum QueryMsg {
+    #[returns(ConfigResponse)]
     Config {},
+    #[returns(EpochState)]
     EpochState {},
+    #[returns(DynrateState)]
     DynrateState {},
+    #[returns(WhitelistResponse)]
     Whitelist {
         collateral_token: Option<String>,
         start_after: Option<String>,
         limit: Option<u32>,
     },
+    #[returns(CollateralsResponse)]
     Collaterals {
         borrower: String,
     },
+    #[returns(AllCollateralsResponse)]
     AllCollaterals {
         start_after: Option<String>,
         limit: Option<u32>,
     },
+    #[returns(BorrowLimitResponse)]
     BorrowLimit {
         borrower: String,
         block_time: Option<u64>,
@@ -215,4 +226,21 @@ pub struct AllCollateralsResponse {
 pub struct BorrowLimitResponse {
     pub borrower: String,
     pub borrow_limit: Uint256,
+}
+
+
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct EpochState {
+    pub deposit_rate: Decimal256,
+    pub prev_aterra_supply: Uint256,
+    pub prev_exchange_rate: Decimal256,
+    pub prev_interest_buffer: Uint256,
+    pub last_executed_height: u64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct DynrateState {
+    pub last_executed_height: u64,
+    pub prev_yield_reserve: Decimal256,
 }

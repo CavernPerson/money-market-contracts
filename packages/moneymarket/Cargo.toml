@@ -26,6 +26,7 @@ serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 
 strum = "0.24.1"
 strum_macros = "0.24.1"
+cw-orch = { version = "0.18.1", optional = true }
 
 
 [dev-dependencies]

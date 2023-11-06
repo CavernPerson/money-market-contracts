@@ -6,6 +6,8 @@ use cosmwasm_std::{
     MessageInfo, Response, StdResult, Uint128, Uint256, WasmMsg,
 };
 use cosmwasm_std::{entry_point, StdError};
+use moneymarket::overseer::DynrateState;
+use moneymarket::overseer::EpochState;
 use moneymarket::overseer::PlatformFeeMsg;
 use std::cmp::{max, min};
 use std::convert::TryInto;
@@ -20,7 +22,7 @@ use crate::querier::query_epoch_state;
 use crate::state::{
     read_config, read_dynrate_config, read_dynrate_state, read_epoch_state, read_whitelist,
     read_whitelist_elem, store_config, store_dynrate_config, store_dynrate_state,
-    store_epoch_state, store_whitelist_elem, Config, DynrateConfig, DynrateState, EpochState,
+    store_epoch_state, store_whitelist_elem, Config, DynrateConfig,
     WhitelistElem,
 };
 
