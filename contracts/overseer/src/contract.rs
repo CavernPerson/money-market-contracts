@@ -22,8 +22,7 @@ use crate::querier::query_epoch_state;
 use crate::state::{
     read_config, read_dynrate_config, read_dynrate_state, read_epoch_state, read_whitelist,
     read_whitelist_elem, store_config, store_dynrate_config, store_dynrate_state,
-    store_epoch_state, store_whitelist_elem, Config, DynrateConfig,
-    WhitelistElem,
+    store_epoch_state, store_whitelist_elem, Config, DynrateConfig, WhitelistElem,
 };
 
 use moneymarket::common::optional_addr_validate;

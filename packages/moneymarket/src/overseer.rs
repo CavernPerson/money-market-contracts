@@ -61,7 +61,7 @@ pub struct MigrateMsg {}
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 #[allow(clippy::large_enum_variant)]
-#[cfg_attr(feature="interface", cw_orch::ExecuteFns)]
+#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
 pub enum ExecuteMsg {
     ////////////////////
     /// Owner operations
@@ -139,7 +139,7 @@ pub struct PlatformFeeMsg {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-#[cfg_attr(feature="interface", cw_orch::QueryFns)]
+#[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))]
 #[derive(cosmwasm_schema::QueryResponses)]
 
 pub enum QueryMsg {
@@ -156,9 +156,7 @@ pub enum QueryMsg {
         limit: Option<u32>,
     },
     #[returns(CollateralsResponse)]
-    Collaterals {
-        borrower: String,
-    },
+    Collaterals { borrower: String },
     #[returns(AllCollateralsResponse)]
     AllCollaterals {
         start_after: Option<String>,
@@ -227,8 +225,6 @@ pub struct BorrowLimitResponse {
     pub borrower: String,
     pub borrow_limit: Uint256,
 }
-
-
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct EpochState {

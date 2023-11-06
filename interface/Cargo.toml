@@ -10,4 +10,5 @@ edition = "2021"
 [dependencies]
 cw-orch = {workspace = true}
 moneymarket = { version = "0.3.1", path = "../packages/moneymarket" }
+moneymarket-custody-lsd = { version = "0.0.0", path = "../contracts/custody_lsd" }
 moneymarket-overseer = { version = "0.0.0", path = "../contracts/overseer" }

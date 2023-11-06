@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use cosmwasm_std::{CanonicalAddr, Decimal256, Deps, Order, StdError, StdResult, Storage, Uint256};
 use cosmwasm_storage::{Bucket, ReadonlyBucket, ReadonlySingleton, Singleton};
 
-use moneymarket::overseer::{CollateralsResponse, WhitelistResponseElem, EpochState, DynrateState};
+use moneymarket::overseer::{CollateralsResponse, DynrateState, EpochState, WhitelistResponseElem};
 use moneymarket::tokens::Tokens;
 
 const KEY_CONFIG: &[u8] = b"config";
@@ -64,7 +64,6 @@ pub struct DynrateConfig {
     pub dyn_rate_min: Decimal256,
     pub dyn_rate_max: Decimal256,
 }
-
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct WhitelistElem {

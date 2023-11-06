@@ -910,7 +910,7 @@ dependencies = [
 [[package]]
 name = "cw-multi-test"
 version = "0.16.5"
-source = "git+https://github.com/AbstractSDK/cw-multi-test?branch=adapt_for_local_execution#4ced77b15a7422605e4fead7c7429354e7180f6c"
+source = "git+https://github.com/AbstractSDK/cw-multi-test?branch=adapt_for_local_execution#1649e6a96d9400af6201a62a6f24ceecd61ad29c"
 dependencies = [
  "anyhow",
  "base64 0.21.5",
@@ -1146,10 +1146,11 @@ dependencies = [
 [[package]]
 name = "cw-orch-fork-mock"
 version = "0.16.3"
-source = "git+https://github.com/AbstractSDK/cw-orch-interchain?rev=9c9be2ef1d73c6d6034bb7fe5282f9ee263eedcd#9c9be2ef1d73c6d6034bb7fe5282f9ee263eedcd"
+source = "git+https://github.com/AbstractSDK/cw-orch-interchain?rev=4f5025dfcded1d6520bf4be8f4ff9be64cfe2c51#4f5025dfcded1d6520bf4be8f4ff9be64cfe2c51"
 dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
+ "cw-orch",
  "cw-orch-core 0.18.0",
  "cw-utils 1.0.2",
  "ibc-chain-registry",
@@ -2498,6 +2499,7 @@ version = "0.1.0"
 dependencies = [
  "cw-orch",
  "moneymarket",
+ "moneymarket-custody-lsd",
  "moneymarket-overseer",
 ]
 
@@ -2727,6 +2729,7 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
+ "cw-orch",
  "cw20 0.15.1",
  "schemars",
  "serde",
@@ -2780,6 +2783,23 @@ dependencies = [
 
 [[package]]
 name = "moneymarket-custody-lsd"
+version = "0.0.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-storage-plus 0.15.1",
+ "cw20 0.15.1",
+ "moneymarket",
+ "schemars",
+ "serde",
+ "strum",
+ "strum_macros",
+ "thiserror",
+]
+
+[[package]]
+name = "moneymarket-custody-lsd-simple"
 version = "0.0.0"
 dependencies = [
  "cosmwasm-schema",
@@ -3774,6 +3794,7 @@ dependencies = [
  "cw-orch",
  "cw-orch-fork-mock",
  "interface",
+ "moneymarket",
  "pretty_env_logger",
 ]
 

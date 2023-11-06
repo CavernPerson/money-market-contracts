@@ -115,7 +115,12 @@ pub fn repay_stable_from_liquidation(
     repay_stable(deps, env, info, None)
 }
 
-pub fn repay_stable(deps: DepsMut, env: Env, info: MessageInfo, borrower: Option<String>) -> Result<Response, ContractError> {
+pub fn repay_stable(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    borrower: Option<String>,
+) -> Result<Response, ContractError> {
     let config: Config = read_config(deps.storage)?;
 
     // Check stable denom deposit
@@ -133,7 +138,10 @@ pub fn repay_stable(deps: DepsMut, env: Env, info: MessageInfo, borrower: Option
 
     let mut state: State = read_state(deps.storage)?;
 
-    let borrower = borrower.map(|b| deps.api.addr_validate(&b)).transpose()?.unwrap_or(info.sender);
+    let borrower = borrower
+        .map(|b| deps.api.addr_validate(&b))
+        .transpose()?
+        .unwrap_or(info.sender);
     let borrower_raw = deps.api.addr_canonicalize(borrower.as_str())?;
     let mut liability: BorrowerInfo = read_borrower_info(deps.storage, &borrower_raw);
 

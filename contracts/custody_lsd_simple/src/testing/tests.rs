@@ -6,9 +6,7 @@ use cosmwasm_std::{
 use moneymarket::astroport_router::AssetInfo;
 use moneymarket::custody::Asset;
 
-use crate::contract::{
-    execute, instantiate, query, reply
-};
+use crate::contract::{execute, instantiate, query, reply};
 use crate::error::ContractError;
 use crate::external::handle::RewardContractExecuteMsg;
 use crate::state::{read_borrower_info, BLunaAccruedRewardsResponse};
@@ -1084,13 +1082,10 @@ fn proper_distribute_rewards_with_no_rewards() {
     assert_eq!(res.attributes, empty_vector);
     assert_eq!(
         res.messages,
-        vec![SubMsg::new(
-            CosmosMsg::Wasm(WasmMsg::Execute {
-                contract_addr: "reward".to_string(),
-                funds: vec![],
-                msg: to_binary(&RewardContractExecuteMsg::ClaimRewards { recipient: None })
-                    .unwrap(),
-            })
-        ),]
+        vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: "reward".to_string(),
+            funds: vec![],
+            msg: to_binary(&RewardContractExecuteMsg::ClaimRewards { recipient: None }).unwrap(),
+        })),]
     );
 }

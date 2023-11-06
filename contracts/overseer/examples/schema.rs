@@ -4,8 +4,8 @@ use std::fs::create_dir_all;
 use cosmwasm_schema::{export_schema, remove_schemas, schema_for};
 
 use moneymarket::overseer::{
-    AllCollateralsResponse, BorrowLimitResponse, CollateralsResponse, ConfigResponse, ExecuteMsg,
-    InstantiateMsg, QueryMsg, WhitelistResponse, EpochState,
+    AllCollateralsResponse, BorrowLimitResponse, CollateralsResponse, ConfigResponse, EpochState,
+    ExecuteMsg, InstantiateMsg, QueryMsg, WhitelistResponse,
 };
 
 fn main() {

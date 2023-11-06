@@ -1,3 +1,4 @@
+pub mod custody;
 pub mod overseer;
 
 // pub const WASM_SUFFIX: &str = "";
