@@ -6,7 +6,7 @@ use crate::state::{
     store_bid_pool, store_epoch_scale_sum, store_total_bids, Bid, BidPool, CollateralInfo, Config,
 };
 use cosmwasm_std::{
-    attr, to_binary, BankMsg, CanonicalAddr, Coin, CosmosMsg, Decimal256, DepsMut, Env,
+    attr, to_json_binary, BankMsg, CanonicalAddr, Coin, CosmosMsg, Decimal256, DepsMut, Env,
     MessageInfo, Response, StdError, StdResult, Storage, Uint128, Uint256, WasmMsg,
 };
 use cw20::Cw20ExecuteMsg;
@@ -516,7 +516,7 @@ pub fn claim_liquidations(
         messages.push(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: collateral_token.clone(),
             funds: vec![],
-            msg: to_binary(&Cw20ExecuteMsg::Transfer {
+            msg: to_json_binary(&Cw20ExecuteMsg::Transfer {
                 recipient: info.sender.to_string(),
                 amount: claim_amount.try_into()?,
             })?,

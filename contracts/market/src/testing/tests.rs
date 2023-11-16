@@ -8,7 +8,7 @@ use moneymarket::bucket::ExecuteMsg as BucketExecuteMsg;
 
 use cosmwasm_std::testing::{mock_env, mock_info, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
-    attr, from_binary, to_binary, Addr, BankMsg, Coin, CosmosMsg, Decimal, Decimal256, Reply,
+    attr, from_json, to_json_binary, Addr, BankMsg, Coin, CosmosMsg, Decimal, Decimal256, Reply,
     SubMsg, SubMsgResponse, Uint128, Uint256, WasmMsg,
 };
 use cw20::{Cw20Coin, Cw20ExecuteMsg, Cw20ReceiveMsg, MinterResponse};
@@ -56,7 +56,7 @@ fn proper_initialization() {
                 code_id: 123u64,
                 funds: vec![],
                 label: "aTerra".to_string(),
-                msg: to_binary(&TokenInstantiateMsg {
+                msg: to_json_binary(&TokenInstantiateMsg {
                     name: "Anchor Terra axlUSD".to_string(),
                     symbol: "aaxlUSDT".to_string(),
                     decimals: 6u8,
@@ -124,7 +124,7 @@ fn proper_initialization() {
     let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap_err();
 
     let query_res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let config_res: ConfigResponse = from_binary(&query_res).unwrap();
+    let config_res: ConfigResponse = from_json(&query_res).unwrap();
     assert_eq!("owner".to_string(), config_res.owner_addr);
     assert_eq!("at-uusd".to_string(), config_res.aterra_contract);
     assert_eq!("interest".to_string(), config_res.interest_model);
@@ -141,7 +141,7 @@ fn proper_initialization() {
         QueryMsg::State { block_height: None },
     )
     .unwrap();
-    let state: StateResponse = from_binary(&query_res).unwrap();
+    let state: StateResponse = from_json(&query_res).unwrap();
     assert_eq!(Decimal256::zero(), state.total_liabilities);
     assert_eq!(Decimal256::zero(), state.total_reserves);
     assert_eq!(mock_env().block.height, state.last_interest_updated);
@@ -221,7 +221,7 @@ fn update_config() {
 
     // it worked, let's query the state
     let res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let config_res: ConfigResponse = from_binary(&res).unwrap();
+    let config_res: ConfigResponse = from_json(&res).unwrap();
     assert_eq!("owner1".to_string(), config_res.owner_addr);
 
     // update left items
@@ -239,7 +239,7 @@ fn update_config() {
 
     // it worked, let's query the state
     let res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let config_res: ConfigResponse = from_binary(&res).unwrap();
+    let config_res: ConfigResponse = from_json(&res).unwrap();
     assert_eq!("owner1".to_string(), config_res.owner_addr);
     assert_eq!("interest2".to_string(), config_res.interest_model);
     //assert_eq!("distribution2".to_string(), config_res.distribution_model);
@@ -373,7 +373,7 @@ fn deposit_stable_huge_amount() {
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "at-uusd".to_string(),
             funds: vec![],
-            msg: to_binary(&Cw20ExecuteMsg::Mint {
+            msg: to_json_binary(&Cw20ExecuteMsg::Mint {
                 recipient: "addr0000".to_string(),
                 amount: Uint128::from(55_555_555_000_000u128),
             })
@@ -413,7 +413,7 @@ fn deposit_stable_huge_amount() {
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "at-uusd".to_string(),
             funds: vec![],
-            msg: to_binary(&Cw20ExecuteMsg::Mint {
+            msg: to_json_binary(&Cw20ExecuteMsg::Mint {
                 recipient: "addr0000".to_string(),
                 amount: Uint128::from(55_555_555_000_000u128),
             })
@@ -568,7 +568,7 @@ fn deposit_stable() {
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "at-uusd".to_string(),
             funds: vec![],
-            msg: to_binary(&Cw20ExecuteMsg::Mint {
+            msg: to_json_binary(&Cw20ExecuteMsg::Mint {
                 recipient: "addr0000".to_string(),
                 amount: Uint128::from(1000000u128),
             })
@@ -610,7 +610,7 @@ fn deposit_stable() {
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "at-uusd".to_string(),
             funds: vec![],
-            msg: to_binary(&Cw20ExecuteMsg::Mint {
+            msg: to_json_binary(&Cw20ExecuteMsg::Mint {
                 recipient: "addr0000".to_string(),
                 amount: Uint128::from(2000000u128),
             })
@@ -797,7 +797,7 @@ fn deposit_stablewith_incentives() {
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "at-uusd".to_string(),
             funds: vec![],
-            msg: to_binary(&Cw20ExecuteMsg::Mint {
+            msg: to_json_binary(&Cw20ExecuteMsg::Mint {
                 recipient: "addr0000".to_string(),
                 amount: Uint128::from(2000000u128),
             })
@@ -841,7 +841,7 @@ fn deposit_stablewith_incentives() {
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "at-uusd".to_string(),
                 funds: vec![],
-                msg: to_binary(&Cw20ExecuteMsg::Mint {
+                msg: to_json_binary(&Cw20ExecuteMsg::Mint {
                     recipient: "addr0000".to_string(),
                     amount: Uint128::from(1845290u128),
                 })
@@ -850,7 +850,7 @@ fn deposit_stablewith_incentives() {
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "bucket".to_string(),
                 funds: vec![],
-                msg: to_binary(&BucketExecuteMsg::Send {
+                msg: to_json_binary(&BucketExecuteMsg::Send {
                     denom: "uusd".to_string(),
                     amount: 8080u128.into()
                 })
@@ -948,7 +948,7 @@ fn redeem_stable() {
     let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(1000000u128),
-        msg: to_binary(&Cw20HookMsg::RedeemStable {}).unwrap(),
+        msg: to_json_binary(&Cw20HookMsg::RedeemStable {}).unwrap(),
     });
     let info = mock_info("addr0000", &[]);
     let res = execute(deps.as_mut(), mock_env(), info, msg.clone());
@@ -965,7 +965,7 @@ fn redeem_stable() {
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "at-uusd".to_string(),
                 funds: vec![],
-                msg: to_binary(&Cw20ExecuteMsg::Burn {
+                msg: to_json_binary(&Cw20ExecuteMsg::Burn {
                     amount: Uint128::from(1000000u128),
                 })
                 .unwrap()
@@ -1028,7 +1028,7 @@ fn redeem_stable() {
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "at-uusd".to_string(),
                 funds: vec![],
-                msg: to_binary(&Cw20ExecuteMsg::Burn {
+                msg: to_json_binary(&Cw20ExecuteMsg::Burn {
                     amount: Uint128::from(1000000u128),
                 })
                 .unwrap()
@@ -1163,7 +1163,7 @@ fn borrow_stable() {
     );
 
     assert_eq!(
-        from_binary::<State>(
+        from_json::<State>(
             &query(
                 deps.as_ref(),
                 env.clone(),
@@ -1188,7 +1188,7 @@ fn borrow_stable() {
 
     // after 1 block state
     assert_eq!(
-        from_binary::<State>(
+        from_json::<State>(
             &query(
                 deps.as_ref(),
                 mock_env(),
@@ -1223,7 +1223,7 @@ fn borrow_stable() {
     )
     .unwrap();
 
-    let liability: BorrowerInfoResponse = from_binary(&res).unwrap();
+    let liability: BorrowerInfoResponse = from_json(&res).unwrap();
     assert_eq!(
         liability,
         BorrowerInfoResponse {
@@ -1245,7 +1245,7 @@ fn borrow_stable() {
     )
     .unwrap();
 
-    let borrower_info: BorrowerInfoResponse = from_binary(&res).unwrap();
+    let borrower_info: BorrowerInfoResponse = from_json(&res).unwrap();
     assert_eq!(
         borrower_info,
         BorrowerInfoResponse {
@@ -1269,7 +1269,7 @@ fn borrow_stable() {
     )
     .unwrap();
 
-    let borrower_info: BorrowerInfoResponse = from_binary(&res).unwrap();
+    let borrower_info: BorrowerInfoResponse = from_json(&res).unwrap();
     assert_eq!(
         borrower_info,
         BorrowerInfoResponse {
@@ -1868,7 +1868,7 @@ fn claim_rewards() {
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "distributor".to_string(),
             funds: vec![],
-            msg: to_binary(&FaucetExecuteMsg::Spend {
+            msg: to_json_binary(&FaucetExecuteMsg::Spend {
                 recipient: "addr0001".to_string(),
                 amount: Uint128::from(33u128),
             })
@@ -1876,7 +1876,7 @@ fn claim_rewards() {
         }))]
     );
 
-    let res: BorrowerInfoResponse = from_binary(
+    let res: BorrowerInfoResponse = from_json(
         &query(
             deps.as_ref(),
             mock_env(),

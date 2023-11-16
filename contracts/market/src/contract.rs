@@ -17,7 +17,7 @@ use crate::response::MsgInstantiateContractResponse;
 use crate::state::{read_config, read_state, store_config, store_state, Config, State};
 
 use cosmwasm_std::{
-    attr, from_binary, to_binary, Addr, BankMsg, Binary, CanonicalAddr, Coin, CosmosMsg,
+    attr, from_json, to_json_binary, Addr, BankMsg, Binary, CanonicalAddr, Coin, CosmosMsg,
     Decimal256, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdError, StdResult, SubMsg,
     Uint128, Uint256, WasmMsg,
 };
@@ -97,7 +97,7 @@ pub fn instantiate(
                 code_id: msg.aterra_code_id,
                 funds: vec![],
                 label: "aTerra".to_string(),
-                msg: to_binary(&TokenInstantiateMsg {
+                msg: to_json_binary(&TokenInstantiateMsg {
                     name: "Anchor Terra axlUSD".to_string(),
                     symbol: "aaxlUSDT".to_string(),
                     decimals: 6u8,
@@ -244,7 +244,7 @@ pub fn receive_cw20(
     cw20_msg: Cw20ReceiveMsg,
 ) -> Result<Response, ContractError> {
     let contract_addr = info.sender;
-    match from_binary(&cw20_msg.msg) {
+    match from_json(&cw20_msg.msg) {
         Ok(Cw20HookMsg::RedeemStable {}) => {
             // only asset contract can execute this message
             let config: Config = read_config(deps.storage)?;
@@ -454,22 +454,22 @@ pub fn execute_epoch_operations(
     ]))
 }
 
-pub fn _to_binary<T: Serialize>(r: &T) -> Result<Binary, ContractError> {
-    Ok(to_binary(r)?)
+pub fn _to_json_binary<T: Serialize>(r: &T) -> Result<Binary, ContractError> {
+    Ok(to_json_binary(r)?)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
     match msg {
-        QueryMsg::Config {} => _to_binary(&query_config(deps)?),
-        QueryMsg::State { block_height } => _to_binary(&query_state(deps, env, block_height)?),
+        QueryMsg::Config {} => _to_json_binary(&query_config(deps)?),
+        QueryMsg::State { block_height } => _to_json_binary(&query_state(deps, env, block_height)?),
         QueryMsg::BorrowerIncentives { block_height } => {
-            _to_binary(&query_next_borrower_incentives(deps, env, block_height)?)
+            _to_json_binary(&query_next_borrower_incentives(deps, env, block_height)?)
         }
         QueryMsg::EpochState {
             block_height,
             distributed_interest,
-        } => _to_binary(&query_epoch_state(
+        } => _to_json_binary(&query_epoch_state(
             deps,
             block_height,
             distributed_interest,
@@ -477,13 +477,13 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, ContractErro
         QueryMsg::BorrowerInfo {
             borrower,
             block_height,
-        } => _to_binary(&query_borrower_info(
+        } => _to_json_binary(&query_borrower_info(
             deps,
             env,
             deps.api.addr_validate(&borrower)?,
             block_height,
         )?),
-        QueryMsg::BorrowerInfos { start_after, limit } => _to_binary(&query_borrower_infos(
+        QueryMsg::BorrowerInfos { start_after, limit } => _to_json_binary(&query_borrower_infos(
             deps,
             optional_addr_validate(deps.api, start_after)?,
             limit,

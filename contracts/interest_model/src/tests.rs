@@ -1,7 +1,7 @@
 use crate::contract::{execute, instantiate, query};
 use crate::error::ContractError;
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-use cosmwasm_std::{from_binary, Decimal256, Uint256};
+use cosmwasm_std::{from_json, Decimal256, Uint256};
 use moneymarket::interest_model::{
     BorrowRateResponse, ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg,
 };
@@ -24,7 +24,7 @@ fn proper_initialization() {
 
     // it worked, let's query the state
     let res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let value: ConfigResponse = from_binary(&res).unwrap();
+    let value: ConfigResponse = from_json(&res).unwrap();
     assert_eq!("owner0000", value.owner.as_str());
     assert_eq!("0.1", &value.base_rate.to_string());
     assert_eq!("0.1", &value.interest_multiplier.to_string());
@@ -35,7 +35,7 @@ fn proper_initialization() {
         total_reserves: Decimal256::from_ratio(100000u128, 1u128),
     };
     let res = query(deps.as_ref(), mock_env(), query_msg).unwrap();
-    let value: BorrowRateResponse = from_binary(&res).unwrap();
+    let value: BorrowRateResponse = from_json(&res).unwrap();
     // utilization_ratio = 0.35714285714285714
     // borrow_rate = 0.035714285 + 0.1
     assert_eq!("0.135714285714285714", &value.rate.to_string());
@@ -46,7 +46,7 @@ fn proper_initialization() {
         total_reserves: Decimal256::zero(),
     };
     let res = query(deps.as_ref(), mock_env(), query_msg).unwrap();
-    let value: BorrowRateResponse = from_binary(&res).unwrap();
+    let value: BorrowRateResponse = from_json(&res).unwrap();
     assert_eq!("0.1", &value.rate.to_string());
 }
 
@@ -76,7 +76,7 @@ fn update_config() {
 
     // it worked, let's query the state
     let res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let value: ConfigResponse = from_binary(&res).unwrap();
+    let value: ConfigResponse = from_json(&res).unwrap();
     assert_eq!("owner0001", value.owner.as_str());
     assert_eq!("0.1", &value.base_rate.to_string());
     assert_eq!("0.1", &value.interest_multiplier.to_string());

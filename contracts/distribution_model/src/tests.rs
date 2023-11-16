@@ -1,7 +1,7 @@
 use crate::contract::{execute, instantiate, query};
 use crate::error::ContractError;
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-use cosmwasm_std::{from_binary, Decimal256};
+use cosmwasm_std::{from_json, Decimal256};
 use moneymarket::distribution_model::{
     BorrowerIncentivesRateResponse, ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg,
 };
@@ -27,7 +27,7 @@ fn proper_initialization() {
 
     // it worked, let's query the state
     let res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let value: ConfigResponse = from_binary(&res).unwrap();
+    let value: ConfigResponse = from_json(&res).unwrap();
     assert_eq!("owner0000", value.owner.as_str());
     assert_eq!("100", &value.distribution_cap.to_string());
     assert_eq!("10", &value.distribution_floor.to_string());
@@ -65,7 +65,7 @@ fn update_config() {
 
     // it worked, let's query the state
     let res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let value: ConfigResponse = from_binary(&res).unwrap();
+    let value: ConfigResponse = from_json(&res).unwrap();
     assert_eq!("owner0001", value.owner.as_str());
     assert_eq!("100", &value.distribution_cap.to_string());
     assert_eq!("10", &value.distribution_floor.to_string());
@@ -114,7 +114,7 @@ fn proper_distribution_rate() {
         current_incentives_rate: Decimal256::from_str("99").unwrap(),
     };
     let res = query(deps.as_ref(), mock_env(), query_msg).unwrap();
-    let value: BorrowerIncentivesRateResponse = from_binary(&res).unwrap();
+    let value: BorrowerIncentivesRateResponse = from_json(&res).unwrap();
     assert_eq!("99", &value.incentives_rate.to_string());
 
     // increment
@@ -125,7 +125,7 @@ fn proper_distribution_rate() {
         current_incentives_rate: Decimal256::from_str("80").unwrap(),
     };
     let res = query(deps.as_ref(), mock_env(), query_msg).unwrap();
-    let value: BorrowerIncentivesRateResponse = from_binary(&res).unwrap();
+    let value: BorrowerIncentivesRateResponse = from_json(&res).unwrap();
     assert_eq!("88", &value.incentives_rate.to_string());
 
     // cap
@@ -136,7 +136,7 @@ fn proper_distribution_rate() {
         current_incentives_rate: Decimal256::from_str("99").unwrap(),
     };
     let res = query(deps.as_ref(), mock_env(), query_msg).unwrap();
-    let value: BorrowerIncentivesRateResponse = from_binary(&res).unwrap();
+    let value: BorrowerIncentivesRateResponse = from_json(&res).unwrap();
     assert_eq!("100", &value.incentives_rate.to_string());
 
     // decrement
@@ -147,7 +147,7 @@ fn proper_distribution_rate() {
         current_incentives_rate: Decimal256::from_str("99").unwrap(),
     };
     let res = query(deps.as_ref(), mock_env(), query_msg).unwrap();
-    let value: BorrowerIncentivesRateResponse = from_binary(&res).unwrap();
+    let value: BorrowerIncentivesRateResponse = from_json(&res).unwrap();
     assert_eq!("89.1", &value.incentives_rate.to_string());
 
     // floor
@@ -158,6 +158,6 @@ fn proper_distribution_rate() {
         current_incentives_rate: Decimal256::from_str("11").unwrap(),
     };
     let res = query(deps.as_ref(), mock_env(), query_msg).unwrap();
-    let value: BorrowerIncentivesRateResponse = from_binary(&res).unwrap();
+    let value: BorrowerIncentivesRateResponse = from_json(&res).unwrap();
     assert_eq!("10", &value.incentives_rate.to_string());
 }

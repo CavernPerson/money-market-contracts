@@ -1,5 +1,5 @@
 use cosmwasm_std::StdResult;
-use cosmwasm_std::{to_binary, WasmMsg};
+use cosmwasm_std::{to_json_binary, WasmMsg};
 
 use crate::astroport_router::AssetInfo;
 use cosmwasm_schema::cw_serde;
@@ -95,7 +95,7 @@ impl Asset {
             AssetInfo::Token { contract_addr } => CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: contract_addr.to_string(),
                 funds: vec![],
-                msg: to_binary(&Cw20ExecuteMsg::Transfer {
+                msg: to_json_binary(&Cw20ExecuteMsg::Transfer {
                     recipient: to.to_string(),
                     amount: self.amount,
                 })?,

@@ -1,6 +1,8 @@
+use std::str::FromStr;
+
 use crate::state::SWAP_CONFIG;
 use cosmwasm_std::{
-    to_binary, Coin, CosmosMsg, Deps, Env, QueryRequest, StdResult, Uint128, WasmMsg, WasmQuery,
+    to_json_binary, Coin, CosmosMsg, Deps, Env, QueryRequest, StdResult, Uint128, WasmMsg, WasmQuery, Decimal,
 };
 use moneymarket::astroport_router::{
     AssetInfo, ExecuteMsg as AstroportExecuteMsg, QueryMsg as AstroportQueryMsg,
@@ -14,7 +16,7 @@ pub fn into_cosmos_msg<M: Serialize, T: Into<String>>(
     contract_addr: T,
     funds: Vec<Coin>,
 ) -> StdResult<CosmosMsg> {
-    let msg = to_binary(&message)?;
+    let msg = to_json_binary(&message)?;
     let execute = WasmMsg::Execute {
         contract_addr: contract_addr.into(),
         msg,
@@ -118,7 +120,7 @@ pub fn create_swap_message_for(
                 message_type,
             )],
             to: None,
-            // max_spread: None,
+            max_spread: Some(Decimal::from_str("0.01")?),
             minimum_receive: None,
         },
         contract_address,
@@ -137,7 +139,7 @@ pub fn get_swap_result_for(
     let swap_operation_response: SimulateSwapOperationsResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: contract_address,
-            msg: to_binary(&AstroportQueryMsg::SimulateSwapOperations {
+            msg: to_json_binary(&AstroportQueryMsg::SimulateSwapOperations {
                 offer_amount: c.amount,
                 operations: vec![get_astroport_swap_operation(
                     c.denom,

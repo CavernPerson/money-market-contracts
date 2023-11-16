@@ -1,6 +1,6 @@
 use cosmwasm_std::StdError;
 use cosmwasm_std::{
-    attr, to_binary, Addr, CosmosMsg, Decimal256, Deps, DepsMut, Env, MessageInfo, Response,
+    attr, to_json_binary, Addr, CosmosMsg, Decimal256, Deps, DepsMut, Env, MessageInfo, Response,
     StdResult, SubMsg, Uint256, WasmMsg,
 };
 use std::convert::TryInto;
@@ -42,7 +42,7 @@ pub fn lock_collateral(
                 .addr_humanize(&whitelist_elem.custody_contract)?
                 .to_string(),
             funds: vec![],
-            msg: to_binary(&CustodyExecuteMsg::LockCollateral {
+            msg: to_json_binary(&CustodyExecuteMsg::LockCollateral {
                 borrower: info.sender.to_string(),
                 amount: collateral.1,
             })?,
@@ -104,7 +104,7 @@ pub fn unlock_collateral(
                 .addr_humanize(&whitelist_elem.custody_contract)?
                 .to_string(),
             funds: vec![],
-            msg: to_binary(&CustodyExecuteMsg::UnlockCollateral {
+            msg: to_json_binary(&CustodyExecuteMsg::UnlockCollateral {
                 borrower: borrower.to_string(),
                 amount: collateral.1,
             })?,
@@ -190,7 +190,7 @@ pub fn liquidate_collateral(
                     .addr_humanize(&whitelist_elem.custody_contract)?
                     .to_string(),
                 funds: vec![],
-                msg: to_binary(&CustodyExecuteMsg::LiquidateCollateral {
+                msg: to_json_binary(&CustodyExecuteMsg::LiquidateCollateral {
                     liquidator: info.sender.to_string(),
                     borrower: borrower.to_string(),
                     amount: collateral.1,
@@ -205,7 +205,7 @@ pub fn liquidate_collateral(
         .add_message(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: market_contract.to_string(),
             funds: vec![],
-            msg: to_binary(&MarketExecuteMsg::RepayStableFromLiquidation {
+            msg: to_json_binary(&MarketExecuteMsg::RepayStableFromLiquidation {
                 borrower: borrower.to_string(),
                 prev_balance,
             })?,

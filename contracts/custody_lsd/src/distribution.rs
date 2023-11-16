@@ -7,7 +7,7 @@ use cosmwasm_std::QueryRequest;
 use cosmwasm_std::Uint128;
 use cosmwasm_std::WasmQuery;
 use cosmwasm_std::{
-    attr, to_binary, Coin, CosmosMsg, DepsMut, Env, MessageInfo, ReplyOn, Response, StdResult,
+    attr, to_json_binary, Coin, CosmosMsg, DepsMut, Env, MessageInfo, ReplyOn, Response, StdResult,
     SubMsg, Uint256, WasmMsg,
 };
 use moneymarket::astroport_router::AssetInfo;
@@ -56,7 +56,7 @@ pub fn distribute_rewards(
             CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: reward_contract.to_string(),
                 funds: vec![],
-                msg: to_binary(&RewardContractExecuteMsg::ClaimRewards { recipient: None })?,
+                msg: to_json_binary(&RewardContractExecuteMsg::ClaimRewards { recipient: None })?,
             }),
             CLAIM_REWARDS_OPERATION,
         )]),
@@ -170,7 +170,7 @@ pub(crate) fn get_accrued_rewards(
     let rewards: BLunaAccruedRewardsResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: reward_contract_addr.to_string(),
-            msg: to_binary(&RewardContractQueryMsg::AccruedRewards {
+            msg: to_json_binary(&RewardContractQueryMsg::AccruedRewards {
                 address: contract_addr.to_string(),
             })?,
         }))?;

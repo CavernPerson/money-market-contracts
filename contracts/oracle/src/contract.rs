@@ -7,7 +7,7 @@ use crate::state::{
 use cosmwasm_std::entry_point;
 use cosmwasm_std::Empty;
 use cosmwasm_std::{
-    attr, to_binary, Binary, Decimal256, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+    attr, to_json_binary, Binary, Decimal256, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 use moneymarket::oracle::{
     ConfigResponse, ExecuteMsg, FeederResponse, InstantiateMsg, PriceResponse, PricesResponse,
@@ -158,11 +158,11 @@ pub fn feed_prices(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Config {} => to_binary(&query_config(deps)?),
-        QueryMsg::Feeder { asset } => to_binary(&query_feeder(deps, asset)?),
-        QueryMsg::Price { base, quote } => to_binary(&query_price(deps, base, quote)?),
+        QueryMsg::Config {} => to_json_binary(&query_config(deps)?),
+        QueryMsg::Feeder { asset } => to_json_binary(&query_feeder(deps, asset)?),
+        QueryMsg::Price { base, quote } => to_json_binary(&query_price(deps, base, quote)?),
         QueryMsg::Prices { start_after, limit } => {
-            to_binary(&query_prices(deps, start_after, limit)?)
+            to_json_binary(&query_prices(deps, start_after, limit)?)
         }
     }
 }

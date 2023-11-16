@@ -3,7 +3,7 @@ use crate::state::{read_config, store_config, Config};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::CosmosMsg;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cosmwasm_std::{Coin, Empty};
 use cosmwasm_std::{Uint128, WasmMsg};
 use moneymarket::bucket::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -48,7 +48,7 @@ pub fn execute(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Config {} => to_binary(&query_config(deps)?),
+        QueryMsg::Config {} => to_json_binary(&query_config(deps)?),
     }
 }
 
@@ -69,7 +69,7 @@ pub fn execute_send(
         .add_message(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: config.overseer_contract.to_string(),
             funds: vec![Coin { denom, amount }],
-            msg: to_binary(&OverseerExecuteMsg::FundReserve {})?,
+            msg: to_json_binary(&OverseerExecuteMsg::FundReserve {})?,
         })))
 }
 

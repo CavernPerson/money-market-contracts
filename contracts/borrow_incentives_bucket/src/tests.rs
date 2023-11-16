@@ -1,6 +1,6 @@
 use crate::contract::{execute, instantiate, query};
 use crate::error::ContractError;
-use cosmwasm_std::from_binary;
+use cosmwasm_std::from_json;
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 use cosmwasm_std::Uint128;
 use moneymarket::bucket::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -21,7 +21,7 @@ fn proper_initialization() {
 
     // it worked, let's query the state
     let res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let value: ConfigResponse = from_binary(&res).unwrap();
+    let value: ConfigResponse = from_json(&res).unwrap();
     assert_eq!("owner0000", value.owner.as_str());
 }
 
@@ -49,7 +49,7 @@ fn update_config() {
 
     // it worked, let's query the state
     let res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let value: ConfigResponse = from_binary(&res).unwrap();
+    let value: ConfigResponse = from_json(&res).unwrap();
     assert_eq!("owner0001", value.owner.as_str());
     assert_eq!("sender2", value.sender_contract.as_str());
     assert_eq!("recipient2", value.overseer_contract.as_str());

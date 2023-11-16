@@ -7,7 +7,7 @@ use cosmwasm_std::QueryRequest;
 use cosmwasm_std::Uint128;
 use cosmwasm_std::WasmQuery;
 use cosmwasm_std::{
-    attr, to_binary, Coin, CosmosMsg, DepsMut, Env, MessageInfo, ReplyOn, Response, StdResult,
+    attr, to_json_binary, Coin, CosmosMsg, DepsMut, Env, MessageInfo, ReplyOn, Response, StdResult,
     SubMsg, Uint256, WasmMsg,
 };
 use moneymarket::astroport_router::AssetInfo;

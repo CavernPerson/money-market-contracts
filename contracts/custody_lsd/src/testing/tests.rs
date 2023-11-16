@@ -1,6 +1,6 @@
 use cosmwasm_std::SubMsgResult;
 use cosmwasm_std::{
-    attr, from_binary, to_binary, Api, Attribute, BankMsg, Coin, CosmosMsg, Decimal, Reply, SubMsg,
+    attr, from_json, to_json_binary, Api, Attribute, BankMsg, Coin, CosmosMsg, Decimal, Reply, SubMsg,
     SubMsgResponse, Uint128, Uint256, WasmMsg,
 };
 use moneymarket::astroport_router::AssetInfo;
@@ -55,7 +55,7 @@ fn proper_initialization() {
     let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     let query_res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let config_res: LSDConfigResponse = from_binary(&query_res).unwrap();
+    let config_res: LSDConfigResponse = from_json(&query_res).unwrap();
     assert_eq!("owner".to_string(), config_res.owner);
     assert_eq!("bluna".to_string(), config_res.collateral_token);
     assert_eq!("overseer".to_string(), config_res.overseer_contract);
@@ -110,7 +110,7 @@ fn update_config() {
     execute(deps.as_mut(), mock_env(), info, msg.clone()).unwrap();
 
     let query_res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let config_res: LSDConfigResponse = from_binary(&query_res).unwrap();
+    let config_res: LSDConfigResponse = from_json(&query_res).unwrap();
     assert_eq!("owner2".to_string(), config_res.owner);
     assert_eq!("bluna".to_string(), config_res.collateral_token);
     assert_eq!("overseer".to_string(), config_res.overseer_contract);
@@ -169,7 +169,7 @@ fn deposit_collateral() {
     let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
-        msg: to_binary(&Cw20HookMsg::DepositCollateral { borrower: None }).unwrap(),
+        msg: to_json_binary(&Cw20HookMsg::DepositCollateral { borrower: None }).unwrap(),
     });
 
     // failed; cannot directly execute receive message
@@ -184,7 +184,7 @@ fn deposit_collateral() {
     let msg2 = ExecuteMsg::Receive(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
-        msg: to_binary("invalid").unwrap(),
+        msg: to_json_binary("invalid").unwrap(),
     });
     let res2 = execute(deps.as_mut(), mock_env(), info, msg2);
     match res2 {
@@ -212,7 +212,7 @@ fn deposit_collateral() {
     )
     .unwrap();
 
-    let borrower_res: BorrowerResponse = from_binary(&query_res).unwrap();
+    let borrower_res: BorrowerResponse = from_json(&query_res).unwrap();
     assert_eq!(
         borrower_res,
         BorrowerResponse {
@@ -242,7 +242,7 @@ fn deposit_collateral() {
         },
     )
     .unwrap();
-    let borrower_res: BorrowerResponse = from_binary(&query_res).unwrap();
+    let borrower_res: BorrowerResponse = from_json(&query_res).unwrap();
     assert_eq!(
         borrower_res,
         BorrowerResponse {
@@ -285,7 +285,7 @@ fn withdraw_collateral() {
     let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
-        msg: to_binary(&Cw20HookMsg::DepositCollateral { borrower: None }).unwrap(),
+        msg: to_json_binary(&Cw20HookMsg::DepositCollateral { borrower: None }).unwrap(),
     });
 
     let info = mock_info("bluna", &[]);
@@ -327,7 +327,7 @@ fn withdraw_collateral() {
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "bluna".to_string(),
             funds: vec![],
-            msg: to_binary(&Cw20ExecuteMsg::Transfer {
+            msg: to_json_binary(&Cw20ExecuteMsg::Transfer {
                 recipient: "addr0000".to_string(),
                 amount: Uint128::from(50u128),
             })
@@ -343,7 +343,7 @@ fn withdraw_collateral() {
         },
     )
     .unwrap();
-    let borrower_res: BorrowerResponse = from_binary(&query_res).unwrap();
+    let borrower_res: BorrowerResponse = from_json(&query_res).unwrap();
     assert_eq!(
         borrower_res,
         BorrowerResponse {
@@ -365,7 +365,7 @@ fn withdraw_collateral() {
         },
     )
     .unwrap();
-    let borrower_res: BorrowerResponse = from_binary(&query_res).unwrap();
+    let borrower_res: BorrowerResponse = from_json(&query_res).unwrap();
     assert_eq!(
         borrower_res,
         BorrowerResponse {
@@ -386,7 +386,7 @@ fn withdraw_collateral() {
         },
     )
     .unwrap();
-    let borrower_res: BorrowerResponse = from_binary(&query_res).unwrap();
+    let borrower_res: BorrowerResponse = from_json(&query_res).unwrap();
     assert_eq!(
         borrower_res,
         BorrowerResponse {
@@ -429,7 +429,7 @@ fn lock_collateral() {
     let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
-        msg: to_binary(&Cw20HookMsg::DepositCollateral { borrower: None }).unwrap(),
+        msg: to_json_binary(&Cw20HookMsg::DepositCollateral { borrower: None }).unwrap(),
     });
 
     let info = mock_info("bluna", &[]);
@@ -517,7 +517,7 @@ fn lock_collateral() {
         },
     )
     .unwrap();
-    let borrower_res: BorrowerResponse = from_binary(&query_res).unwrap();
+    let borrower_res: BorrowerResponse = from_json(&query_res).unwrap();
     assert_eq!(
         borrower_res,
         BorrowerResponse {
@@ -595,7 +595,7 @@ fn lock_collateral() {
         },
     )
     .unwrap();
-    let borrower_res: BorrowerResponse = from_binary(&query_res).unwrap();
+    let borrower_res: BorrowerResponse = from_json(&query_res).unwrap();
     assert_eq!(
         borrower_res,
         BorrowerResponse {
@@ -933,7 +933,7 @@ fn liquidate_collateral() {
     let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
-        msg: to_binary(&Cw20HookMsg::DepositCollateral { borrower: None }).unwrap(),
+        msg: to_json_binary(&Cw20HookMsg::DepositCollateral { borrower: None }).unwrap(),
     });
 
     let info = mock_info("bluna", &[]);
@@ -1001,10 +1001,10 @@ fn liquidate_collateral() {
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "bluna".to_string(),
             funds: vec![],
-            msg: to_binary(&Cw20ExecuteMsg::Send {
+            msg: to_json_binary(&Cw20ExecuteMsg::Send {
                 contract: "liquidation".to_string(),
                 amount: Uint128::from(10u128),
-                msg: to_binary(&LiquidationCw20HookMsg::ExecuteBid {
+                msg: to_json_binary(&LiquidationCw20HookMsg::ExecuteBid {
                     liquidator: "liquidator".to_string(),
                     fee_address: Some("overseer".to_string()),
                     repay_address: Some("market".to_string()),
@@ -1089,7 +1089,7 @@ fn proper_distribute_rewards_with_no_rewards() {
             CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "reward".to_string(),
                 funds: vec![],
-                msg: to_binary(&RewardContractExecuteMsg::ClaimRewards { recipient: None })
+                msg: to_json_binary(&RewardContractExecuteMsg::ClaimRewards { recipient: None })
                     .unwrap(),
             }),
             CLAIM_REWARDS_OPERATION

@@ -1,7 +1,7 @@
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::Empty;
 use cosmwasm_std::{
-    from_binary, from_slice, to_binary, Coin, ContractResult, Decimal256, OwnedDeps, Querier,
+    from_json,  to_json_binary, Coin, ContractResult, Decimal256, OwnedDeps, Querier,
     QuerierResult, QueryRequest, SystemError, SystemResult, WasmQuery,
 };
 use std::collections::HashMap;
@@ -60,7 +60,7 @@ pub(crate) fn oracle_price_to_map(
 impl Querier for WasmMockQuerier {
     fn raw_query(&self, bin_request: &[u8]) -> QuerierResult {
         // MockQuerier doesn't support Custom, so we ignore it completely here
-        let request: QueryRequest<Empty> = match from_slice(bin_request) {
+        let request: QueryRequest<Empty> = match from_json(bin_request) {
             Ok(v) => v,
             Err(e) => {
                 return SystemResult::Err(SystemError::InvalidRequest {
@@ -79,11 +79,11 @@ impl WasmMockQuerier {
             QueryRequest::Wasm(WasmQuery::Smart {
                 contract_addr: _,
                 msg,
-            }) => match from_binary(msg).unwrap() {
+            }) => match from_json(msg).unwrap() {
                 OracleQueryMsg::Price { base, quote } => {
                     match self.oracle_price_querier.oracle_price.get(&(base, quote)) {
                         Some(v) => {
-                            SystemResult::Ok(ContractResult::from(to_binary(&PriceResponse {
+                            SystemResult::Ok(ContractResult::from(to_json_binary(&PriceResponse {
                                 rate: v.0,
                                 last_updated_base: v.1,
                                 last_updated_quote: v.2,

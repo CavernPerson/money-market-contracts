@@ -1,5 +1,5 @@
 use cosmwasm_std::{
-    attr, to_binary, Addr, Api, BankMsg, Coin, CosmosMsg, Decimal256, Deps, DepsMut, Env,
+    attr, to_json_binary, Addr, Api, BankMsg, Coin, CosmosMsg, Decimal256, Deps, DepsMut, Env,
     MessageInfo, Response, StdResult, Uint256, WasmMsg,
 };
 use moneymarket::interest_model::BorrowRateResponse;
@@ -283,7 +283,7 @@ pub fn get_actual_interest_factor(
                 .addr_humanize(&config.borrow_reserves_bucket_contract)?
                 .to_string(),
             funds: vec![],
-            msg: to_binary(&BucketExecuteMsg::Send {
+            msg: to_json_binary(&BucketExecuteMsg::Send {
                 denom: config.stable_denom.clone(),
                 amount: actual_incentives.try_into()?,
             })?,

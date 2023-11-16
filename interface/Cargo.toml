@@ -1,5 +1,5 @@
 [package]
-name = "interface"
+name = "cavern-moneymarket-interface"
 version = "0.1.0"
 edition = "2021"
 

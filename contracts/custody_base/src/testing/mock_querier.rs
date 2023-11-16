@@ -1,7 +1,7 @@
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
-use cosmwasm_std::Empty;
+use cosmwasm_std::{Empty, from_json};
 use cosmwasm_std::{
-    from_slice, to_binary, Addr, Api, BalanceResponse, BankQuery, CanonicalAddr, Coin,
+     to_json_binary, Addr, Api, BalanceResponse, BankQuery, CanonicalAddr, Coin,
     ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult,
     Uint128, WasmQuery,
 };
@@ -42,7 +42,7 @@ pub struct TokenQuerier {
 impl Querier for WasmMockQuerier {
     fn raw_query(&self, bin_request: &[u8]) -> QuerierResult {
         // MockQuerier doesn't support Custom, so we ignore it completely here
-        let request: QueryRequest<Empty> = match from_slice(bin_request) {
+        let request: QueryRequest<Empty> = match from_json(bin_request) {
             Ok(v) => v,
             Err(e) => {
                 return SystemResult::Err(SystemError::InvalidRequest {
@@ -85,8 +85,8 @@ impl WasmMockQuerier {
                         total_supply += *balance.1;
                     }
 
-                    SystemResult::Ok(ContractResult::from(to_binary(
-                        &to_binary(&TokenInfoResponse {
+                    SystemResult::Ok(ContractResult::from(to_json_binary(
+                        &to_json_binary(&TokenInfoResponse {
                             name: "mAPPL".to_string(),
                             symbol: "mAPPL".to_string(),
                             decimals: 6,
@@ -116,8 +116,8 @@ impl WasmMockQuerier {
                             })
                         }
                     };
-                    SystemResult::Ok(ContractResult::from(to_binary(
-                        &to_binary(&balance).unwrap(),
+                    SystemResult::Ok(ContractResult::from(to_json_binary(
+                        &to_json_binary(&balance).unwrap(),
                     )))
                 } else {
                     panic!("DO NOT ENTER HERE")
@@ -131,7 +131,7 @@ impl WasmMockQuerier {
                             denom: denom.to_string(),
                         },
                     };
-                    SystemResult::Ok(ContractResult::from(to_binary(&bank_res)))
+                    SystemResult::Ok(ContractResult::from(to_json_binary(&bank_res)))
                 } else {
                     let bank_res = BalanceResponse {
                         amount: Coin {
@@ -139,7 +139,7 @@ impl WasmMockQuerier {
                             denom: denom.to_string(),
                         },
                     };
-                    SystemResult::Ok(ContractResult::from(to_binary(&bank_res)))
+                    SystemResult::Ok(ContractResult::from(to_json_binary(&bank_res)))
                 }
             }
             _ => self.base.handle_query(request),

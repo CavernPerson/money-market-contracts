@@ -3,7 +3,7 @@ use crate::state::{read_config, store_config, Config};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Decimal256, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+    to_json_binary, Addr, Binary, Decimal256, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 
 use moneymarket::common::optional_addr_validate;
@@ -102,13 +102,13 @@ pub fn update_config(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Config {} => to_binary(&query_config(deps)?),
+        QueryMsg::Config {} => to_json_binary(&query_config(deps)?),
         QueryMsg::BorrowerIncentivesRate {
             deposit_rate,
             target_deposit_rate,
             threshold_deposit_rate,
             current_incentives_rate,
-        } => to_binary(&query_borrower_incentives_rate(
+        } => to_json_binary(&query_borrower_incentives_rate(
             deps,
             deposit_rate,
             target_deposit_rate,

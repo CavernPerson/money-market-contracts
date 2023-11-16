@@ -7,7 +7,7 @@ use std::str::FromStr;
 
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
-    from_binary, from_slice, to_binary, Addr, Api, CanonicalAddr, Coin, ContractResult, Decimal,
+    from_json,  to_json_binary, Addr, Api, CanonicalAddr, Coin, ContractResult, Decimal,
     Decimal256, OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult,
     Uint128, Uint256, WasmQuery,
 };
@@ -148,7 +148,7 @@ pub(crate) fn borrow_limit_to_map(
 impl Querier for WasmMockQuerier {
     fn raw_query(&self, bin_request: &[u8]) -> QuerierResult {
         // MockQuerier doesn't support Custom, so we ignore it completely here
-        let request: QueryRequest<Empty> = match from_slice(bin_request) {
+        let request: QueryRequest<Empty> = match from_json(bin_request) {
             Ok(v) => v,
             Err(e) => {
                 return SystemResult::Err(SystemError::InvalidRequest {
@@ -165,14 +165,14 @@ impl WasmMockQuerier {
     pub fn handle_query(&self, request: &QueryRequest<Empty>) -> QuerierResult {
         match &request {
             QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }) => {
-                match from_binary(msg).unwrap() {
+                match from_json(msg).unwrap() {
                     QueryMsg::BorrowRate {
                         market_balance: _,
                         total_liabilities: _,
                         total_reserves: _,
                     } => {
                         match self.borrow_rate_querier.borrower_rate.get(contract_addr) {
-                            Some(v) => SystemResult::Ok(ContractResult::from(to_binary(
+                            Some(v) => SystemResult::Ok(ContractResult::from(to_json_binary(
                                 &BorrowRateResponse { rate: *v },
                             ))),
                             None => SystemResult::Err(SystemError::InvalidRequest {
@@ -185,7 +185,7 @@ impl WasmMockQuerier {
                         borrower,
                         block_time: _,
                     } => match self.borrow_limit_querier.borrow_limit.get(&borrower) {
-                        Some(v) => SystemResult::Ok(ContractResult::from(to_binary(
+                        Some(v) => SystemResult::Ok(ContractResult::from(to_json_binary(
                             &BorrowLimitResponse {
                                 borrower,
                                 borrow_limit: *v,
@@ -202,14 +202,14 @@ impl WasmMockQuerier {
                         target_deposit_rate: _,
                         threshold_deposit_rate: _,
                         current_incentives_rate: _,
-                    } => SystemResult::Ok(ContractResult::from(to_binary(
+                    } => SystemResult::Ok(ContractResult::from(to_json_binary(
                         &BorrowerIncentivesRateResponse {
                             incentives_rate: Decimal256::from_str("0.1").unwrap(),
                         },
                     ))),
 
                     QueryMsg::Config {} => {
-                        SystemResult::Ok(ContractResult::from(to_binary(&ConfigResponse {
+                        SystemResult::Ok(ContractResult::from(to_json_binary(&ConfigResponse {
                             owner_addr: "".to_string(),
                             oracle_contract: "".to_string(),
                             market_contract: "".to_string(),
@@ -251,7 +251,7 @@ impl WasmMockQuerier {
                             total_supply += balance.1;
                         }
 
-                        SystemResult::Ok(ContractResult::from(to_binary(&TokenInfoResponse {
+                        SystemResult::Ok(ContractResult::from(to_json_binary(&TokenInfoResponse {
                             name: "mAPPL".to_string(),
                             symbol: "mAPPL".to_string(),
                             decimals: 6,
@@ -293,7 +293,7 @@ impl WasmMockQuerier {
                             })
                         }
                     };
-                    SystemResult::Ok(ContractResult::from(to_binary(&balance)))
+                    SystemResult::Ok(ContractResult::from(to_json_binary(&balance)))
                 } else {
                     panic!("DO NOT ENTER HERE")
                 }

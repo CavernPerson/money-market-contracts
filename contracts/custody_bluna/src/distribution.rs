@@ -1,6 +1,6 @@
 use crate::swap::create_swap_msg;
 use cosmwasm_std::{
-    attr, to_binary, Addr, BankMsg, Coin, CosmosMsg, Deps, DepsMut, Env, MessageInfo, QueryRequest,
+    attr, to_json_binary, Addr, BankMsg, Coin, CosmosMsg, Deps, DepsMut, Env, MessageInfo, QueryRequest,
     ReplyOn, Response, StdResult, SubMsg, Uint128, Uint256, WasmMsg, WasmQuery,
 };
 use std::convert::TryInto;
@@ -45,7 +45,7 @@ pub fn distribute_rewards(
             CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: reward_contract.to_string(),
                 funds: vec![],
-                msg: to_binary(&RewardContractExecuteMsg::ClaimRewards { recipient: None })?,
+                msg: to_json_binary(&RewardContractExecuteMsg::ClaimRewards { recipient: None })?,
             }),
             CLAIM_REWARDS_OPERATION,
         )]),
@@ -126,7 +126,7 @@ pub(crate) fn get_accrued_rewards(
     let rewards: BLunaAccruedRewardsResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: reward_contract_addr.to_string(),
-            msg: to_binary(&RewardContractQueryMsg::AccruedRewards {
+            msg: to_json_binary(&RewardContractQueryMsg::AccruedRewards {
                 address: contract_addr.to_string(),
             })?,
         }))?;

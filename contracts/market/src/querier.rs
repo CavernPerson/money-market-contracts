@@ -1,6 +1,6 @@
 use crate::borrow::get_actual_interest_factor;
 use cosmwasm_std::{
-    to_binary, Addr, Decimal256, Deps, QueryRequest, StdResult, Uint256, WasmQuery,
+    to_json_binary, Addr, Decimal256, Deps, QueryRequest, StdResult, Uint256, WasmQuery,
 };
 use cosmwasm_std::{Env, StdError};
 use moneymarket::querier::query_balance;
@@ -23,7 +23,7 @@ pub fn query_borrow_rate(
     let borrow_rate: BorrowRateResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: interest_addr.to_string(),
-            msg: to_binary(&InterestQueryMsg::BorrowRate {
+            msg: to_json_binary(&InterestQueryMsg::BorrowRate {
                 market_balance,
                 total_liabilities,
                 total_reserves,
@@ -99,7 +99,7 @@ pub fn query_borrow_limit(
     let borrow_limit: BorrowLimitResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: overseer_addr.to_string(),
-            msg: to_binary(&OverseerQueryMsg::BorrowLimit {
+            msg: to_json_binary(&OverseerQueryMsg::BorrowLimit {
                 borrower: borrower.to_string(),
                 block_time,
             })?,
@@ -119,7 +119,7 @@ pub fn query_borrow_reserves_incentives_rate(
     let incentives_rate: BorrowerIncentivesRateResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: distribution_model.to_string(),
-            msg: to_binary(&DistributionQueryMsg::BorrowerIncentivesRate {
+            msg: to_json_binary(&DistributionQueryMsg::BorrowerIncentivesRate {
                 deposit_rate,
                 target_deposit_rate,
                 threshold_deposit_rate,
@@ -139,6 +139,6 @@ pub fn query_target_deposit_rate(deps: Deps, overseer_contract: Addr) -> StdResu
 pub fn query_overseer_config(deps: Deps, overseer_contract: Addr) -> StdResult<ConfigResponse> {
     deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
         contract_addr: overseer_contract.to_string(),
-        msg: to_binary(&OverseerQueryMsg::Config {})?,
+        msg: to_json_binary(&OverseerQueryMsg::Config {})?,
     }))
 }

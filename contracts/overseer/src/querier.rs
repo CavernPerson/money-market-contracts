@@ -1,5 +1,5 @@
 use cosmwasm_std::{
-    to_binary, Addr, Decimal256, Deps, QueryRequest, StdResult, Uint256, WasmQuery,
+    to_json_binary, Addr, Decimal256, Deps, QueryRequest, StdResult, Uint256, WasmQuery,
 };
 
 use moneymarket::liquidation_queue::{LiquidationAmountResponse, QueryMsg as LiquidationQueryMsg};
@@ -15,7 +15,7 @@ pub fn query_market_state(
 ) -> StdResult<StateResponse> {
     let epoch_state: StateResponse = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
         contract_addr: market_addr.to_string(),
-        msg: to_binary(&MarketQueryMsg::State {
+        msg: to_json_binary(&MarketQueryMsg::State {
             block_height: Some(block_height),
         })?,
     }))?;
@@ -32,7 +32,7 @@ pub fn query_epoch_state(
     let epoch_state: EpochStateResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: market_addr.to_string(),
-            msg: to_binary(&MarketQueryMsg::EpochState {
+            msg: to_json_binary(&MarketQueryMsg::EpochState {
                 block_height: Some(block_height),
                 distributed_interest,
             })?,
@@ -51,7 +51,7 @@ pub fn query_borrower_info(
     let borrower_amount: BorrowerInfoResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: market_addr.to_string(),
-            msg: to_binary(&MarketQueryMsg::BorrowerInfo {
+            msg: to_json_binary(&MarketQueryMsg::BorrowerInfo {
                 borrower: borrower.to_string(),
                 block_height: Some(block_height),
             })?,
@@ -72,7 +72,7 @@ pub fn query_liquidation_amount(
     let liquidation_amount_res: LiquidationAmountResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: liquidation_contract.to_string(),
-            msg: to_binary(&LiquidationQueryMsg::LiquidationAmount {
+            msg: to_json_binary(&LiquidationQueryMsg::LiquidationAmount {
                 borrow_amount,
                 borrow_limit,
                 collaterals: collaterals.clone(),

@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, QuerierWrapper, QueryRequest, StdResult, WasmQuery};
+use cosmwasm_std::{to_json_binary, QuerierWrapper, QueryRequest, StdResult, WasmQuery};
 use moneymarket::overseer::{
     QueryMsg as OverseerQueryMsg, WhitelistResponse, WhitelistResponseElem,
 };
@@ -11,7 +11,7 @@ pub fn query_collateral_whitelist_info(
     let whitelist_res: WhitelistResponse =
         querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: overseer,
-            msg: to_binary(&OverseerQueryMsg::Whitelist {
+            msg: to_json_binary(&OverseerQueryMsg::Whitelist {
                 collateral_token: Some(collateral_token),
                 start_after: None,
                 limit: None,

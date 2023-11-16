@@ -7,7 +7,7 @@ use moneymarket::overseer::{DynrateState, EpochState, PlatformFeeInstantiateMsg}
 
 use cosmwasm_std::testing::{mock_env, mock_info, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
-    attr, from_binary, to_binary, Addr, Api, BankMsg, CanonicalAddr, Coin, CosmosMsg, Decimal,
+    attr, from_json, to_json_binary, Addr, Api, BankMsg, CanonicalAddr, Coin, CosmosMsg, Decimal,
     Decimal256, DepsMut, SubMsg, Uint128, Uint256, WasmMsg,
 };
 use moneymarket::custody::ExecuteMsg as CustodyExecuteMsg;
@@ -53,7 +53,7 @@ fn proper_initialization() {
     let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     let query_res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let config_res: ConfigResponse = from_binary(&query_res).unwrap();
+    let config_res: ConfigResponse = from_json(&query_res).unwrap();
     assert_eq!(
         config_res,
         ConfigResponse {
@@ -78,7 +78,7 @@ fn proper_initialization() {
     );
 
     let query_res = query(deps.as_ref(), mock_env(), QueryMsg::EpochState {}).unwrap();
-    let epoch_state: EpochState = from_binary(&query_res).unwrap();
+    let epoch_state: EpochState = from_json(&query_res).unwrap();
     assert_eq!(
         epoch_state,
         EpochState {
@@ -148,7 +148,7 @@ fn update_config() {
 
     // it worked, let's query the state
     let res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let config_res: ConfigResponse = from_binary(&res).unwrap();
+    let config_res: ConfigResponse = from_json(&res).unwrap();
     assert_eq!("owner1".to_string(), config_res.owner_addr);
 
     // update left items
@@ -182,7 +182,7 @@ fn update_config() {
 
     // it worked, let's query the state
     let res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let config_res: ConfigResponse = from_binary(&res).unwrap();
+    let config_res: ConfigResponse = from_json(&res).unwrap();
     assert_eq!("owner1".to_string(), config_res.owner_addr);
     assert_eq!("oracle1".to_string(), config_res.oracle_contract);
     assert_eq!("liquidation1".to_string(), config_res.liquidation_contract);
@@ -294,7 +294,7 @@ fn whitelist() {
         },
     )
     .unwrap();
-    let whitelist_res: WhitelistResponse = from_binary(&res).unwrap();
+    let whitelist_res: WhitelistResponse = from_json(&res).unwrap();
     assert_eq!(
         whitelist_res,
         WhitelistResponse {
@@ -359,7 +359,7 @@ fn whitelist() {
         },
     )
     .unwrap();
-    let whitelist_res: WhitelistResponse = from_binary(&res).unwrap();
+    let whitelist_res: WhitelistResponse = from_json(&res).unwrap();
     assert_eq!(
         whitelist_res,
         WhitelistResponse {
@@ -488,17 +488,17 @@ fn execute_epoch_operations() {
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "custody_batom".to_string(),
                 funds: vec![],
-                msg: to_binary(&CustodyExecuteMsg::DistributeRewards {}).unwrap(),
+                msg: to_json_binary(&CustodyExecuteMsg::DistributeRewards {}).unwrap(),
             })),
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "custody_bluna".to_string(),
                 funds: vec![],
-                msg: to_binary(&CustodyExecuteMsg::DistributeRewards {}).unwrap(),
+                msg: to_json_binary(&CustodyExecuteMsg::DistributeRewards {}).unwrap(),
             })),
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: MOCK_CONTRACT_ADDR.to_string(),
                 funds: vec![],
-                msg: to_binary(&ExecuteMsg::UpdateEpochState {
+                msg: to_json_binary(&ExecuteMsg::UpdateEpochState {
                     interest_buffer: Uint256::from(10_000_000_000u128),
                     distributed_interest: Uint256::zero(),
                 })
@@ -576,17 +576,17 @@ fn execute_epoch_operations() {
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "custody_batom".to_string(),
                 funds: vec![],
-                msg: to_binary(&CustodyExecuteMsg::DistributeRewards {}).unwrap(),
+                msg: to_json_binary(&CustodyExecuteMsg::DistributeRewards {}).unwrap(),
             })),
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "custody_bluna".to_string(),
                 funds: vec![],
-                msg: to_binary(&CustodyExecuteMsg::DistributeRewards {}).unwrap(),
+                msg: to_json_binary(&CustodyExecuteMsg::DistributeRewards {}).unwrap(),
             })),
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: MOCK_CONTRACT_ADDR.to_string(),
                 funds: vec![],
-                msg: to_binary(&ExecuteMsg::UpdateEpochState {
+                msg: to_json_binary(&ExecuteMsg::UpdateEpochState {
                     interest_buffer: Uint256::from(9999946320u128),
                     distributed_interest: Uint256::from(53680u128), // No tax fee
                 })
@@ -695,7 +695,7 @@ fn update_epoch_state() {
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "market".to_string(),
             funds: vec![],
-            msg: to_binary(&MarketExecuteMsg::ExecuteEpochOperations {
+            msg: to_json_binary(&MarketExecuteMsg::ExecuteEpochOperations {
                 deposit_rate: Decimal256::from_str("0.000002314814814814").unwrap(),
                 target_deposit_rate: Decimal256::permille(5),
                 threshold_deposit_rate: Decimal256::from_ratio(1u64, 1000000u64),
@@ -732,7 +732,7 @@ fn update_epoch_state() {
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "market".to_string(),
             funds: vec![],
-            msg: to_binary(&MarketExecuteMsg::ExecuteEpochOperations {
+            msg: to_json_binary(&MarketExecuteMsg::ExecuteEpochOperations {
                 deposit_rate: Decimal256::from_str("0.000000482253086419").unwrap(),
                 target_deposit_rate: Decimal256::from_str("0.000001005707762557").unwrap(),
                 threshold_deposit_rate: Decimal256::from_str("0.000001005707762557").unwrap(),
@@ -859,7 +859,7 @@ fn lock_collateral() {
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "custody_bluna".to_string(),
                 funds: vec![],
-                msg: to_binary(&CustodyExecuteMsg::LockCollateral {
+                msg: to_json_binary(&CustodyExecuteMsg::LockCollateral {
                     borrower: "addr0000".to_string(),
                     amount: Uint256::from(1000000u64),
                 })
@@ -868,7 +868,7 @@ fn lock_collateral() {
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "custody_batom".to_string(),
                 funds: vec![],
-                msg: to_binary(&CustodyExecuteMsg::LockCollateral {
+                msg: to_json_binary(&CustodyExecuteMsg::LockCollateral {
                     borrower: "addr0000".to_string(),
                     amount: Uint256::from(10000000u64),
                 })
@@ -900,7 +900,7 @@ fn lock_collateral() {
         },
     )
     .unwrap();
-    let collaterals_res: CollateralsResponse = from_binary(&res).unwrap();
+    let collaterals_res: CollateralsResponse = from_json(&res).unwrap();
     assert_eq!(
         collaterals_res,
         CollateralsResponse {
@@ -921,7 +921,7 @@ fn lock_collateral() {
         },
     )
     .unwrap();
-    let all_collaterals_res: AllCollateralsResponse = from_binary(&res).unwrap();
+    let all_collaterals_res: AllCollateralsResponse = from_json(&res).unwrap();
     assert_eq!(
         all_collaterals_res,
         AllCollateralsResponse {
@@ -1069,7 +1069,7 @@ fn unlock_collateral() {
         },
     )
     .unwrap();
-    let borrow_limit_res: BorrowLimitResponse = from_binary(&res).unwrap();
+    let borrow_limit_res: BorrowLimitResponse = from_json(&res).unwrap();
     assert_eq!(borrow_limit_res.borrow_limit, Uint256::from(12600000000u64),);
 
     // Cannot unlock 2bluna
@@ -1092,7 +1092,7 @@ fn unlock_collateral() {
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "custody_bluna".to_string(),
             funds: vec![],
-            msg: to_binary(&CustodyExecuteMsg::UnlockCollateral {
+            msg: to_json_binary(&CustodyExecuteMsg::UnlockCollateral {
                 borrower: "addr0000".to_string(),
                 amount: Uint256::one(),
             })
@@ -1126,7 +1126,7 @@ fn unlock_collateral() {
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "custody_bluna".to_string(),
                 funds: vec![],
-                msg: to_binary(&CustodyExecuteMsg::UnlockCollateral {
+                msg: to_json_binary(&CustodyExecuteMsg::UnlockCollateral {
                     borrower: "addr0000".to_string(),
                     amount: Uint256::from(1u128),
                 })
@@ -1135,7 +1135,7 @@ fn unlock_collateral() {
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "custody_batom".to_string(),
                 funds: vec![],
-                msg: to_binary(&CustodyExecuteMsg::UnlockCollateral {
+                msg: to_json_binary(&CustodyExecuteMsg::UnlockCollateral {
                     borrower: "addr0000".to_string(),
                     amount: Uint256::from(1u128),
                 })
@@ -1279,7 +1279,7 @@ fn liquidate_collateral() {
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "custody_batom".to_string(),
                 funds: vec![],
-                msg: to_binary(&CustodyExecuteMsg::LiquidateCollateral {
+                msg: to_json_binary(&CustodyExecuteMsg::LiquidateCollateral {
                     liquidator: "addr0001".to_string(),
                     borrower: "addr0000".to_string(),
                     amount: Uint256::from(100000u64),
@@ -1289,7 +1289,7 @@ fn liquidate_collateral() {
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "custody_bluna".to_string(),
                 funds: vec![],
-                msg: to_binary(&CustodyExecuteMsg::LiquidateCollateral {
+                msg: to_json_binary(&CustodyExecuteMsg::LiquidateCollateral {
                     liquidator: "addr0001".to_string(),
                     borrower: "addr0000".to_string(),
                     amount: Uint256::from(10000u64),
@@ -1299,7 +1299,7 @@ fn liquidate_collateral() {
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "market".to_string(),
                 funds: vec![],
-                msg: to_binary(&MarketExecuteMsg::RepayStableFromLiquidation {
+                msg: to_json_binary(&MarketExecuteMsg::RepayStableFromLiquidation {
                     borrower: "addr0000".to_string(),
                     prev_balance: Uint256::zero(),
                 })
@@ -1316,7 +1316,7 @@ fn liquidate_collateral() {
         },
     )
     .unwrap();
-    let collaterals_res: CollateralsResponse = from_binary(&res).unwrap();
+    let collaterals_res: CollateralsResponse = from_json(&res).unwrap();
     assert_eq!(
         collaterals_res,
         CollateralsResponse {
@@ -1416,7 +1416,7 @@ fn dynamic_rate_model() {
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "market".to_string(),
             funds: vec![],
-            msg: to_binary(&MarketExecuteMsg::ExecuteEpochOperations {
+            msg: to_json_binary(&MarketExecuteMsg::ExecuteEpochOperations {
                 deposit_rate: Decimal256::from_str("0.000002314814814814").unwrap(),
                 target_deposit_rate: Decimal256::permille(5),
                 threshold_deposit_rate: Decimal256::from_ratio(1u64, 1000000u64),
@@ -1454,7 +1454,7 @@ fn dynamic_rate_model() {
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "market".to_string(),
             funds: vec![],
-            msg: to_binary(&MarketExecuteMsg::ExecuteEpochOperations {
+            msg: to_json_binary(&MarketExecuteMsg::ExecuteEpochOperations {
                 deposit_rate: Decimal256::from_str("0.000000482253086419").unwrap(),
                 target_deposit_rate: Decimal256::from_str("0.000001000951293759").unwrap(),
                 threshold_deposit_rate: Decimal256::from_str("0.000001000951293759").unwrap(),
@@ -1583,7 +1583,7 @@ fn dynamic_rate_model() {
 
 fn validate_deposit_rates(deps: DepsMut, rate: Decimal256) {
     let query_res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
-    let config_res: ConfigResponse = from_binary(&query_res).unwrap();
+    let config_res: ConfigResponse = from_json(&query_res).unwrap();
     assert_eq!(
         config_res,
         ConfigResponse {
@@ -1757,7 +1757,7 @@ fn partial_liquidate_collateral() {
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "custody_bluna".to_string(),
                 funds: vec![],
-                msg: to_binary(&CustodyExecuteMsg::LiquidateCollateral {
+                msg: to_json_binary(&CustodyExecuteMsg::LiquidateCollateral {
                     liquidator: "addr0001".to_string(),
                     borrower: "addr0000".to_string(),
                     amount: Uint256::from(10000u64),
@@ -1767,7 +1767,7 @@ fn partial_liquidate_collateral() {
             SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
                 contract_addr: "market".to_string(),
                 funds: vec![],
-                msg: to_binary(&MarketExecuteMsg::RepayStableFromLiquidation {
+                msg: to_json_binary(&MarketExecuteMsg::RepayStableFromLiquidation {
                     borrower: "addr0000".to_string(),
                     prev_balance: Uint256::zero(),
                 })
