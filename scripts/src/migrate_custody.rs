@@ -32,11 +32,11 @@ pub fn migrate_custody<Chain: CwEnv>(
     let custody_contract = LsdCustody::new("custody", app.clone());
 
     // Then we migrate (this is permissioned)
-    custody_contract.set_address(&Addr::unchecked(BONE_WHALE_CUSTODY));
-    custody_contract.migrate(&MigrateMsg {}, code_id)?;
+    // custody_contract.set_address(&Addr::unchecked(BONE_WHALE_CUSTODY));
+    // custody_contract.migrate(&MigrateMsg {}, code_id)?;
 
-    custody_contract.set_address(&Addr::unchecked(AMP_WHALE_CUSTODY));
-    custody_contract.migrate(&MigrateMsg {}, code_id)?;
+    // custody_contract.set_address(&Addr::unchecked(AMP_WHALE_CUSTODY));
+    // custody_contract.migrate(&MigrateMsg {}, code_id)?;
 
 
     app.set_sender(multisig);
