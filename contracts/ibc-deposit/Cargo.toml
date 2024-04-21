@@ -1,0 +1,22 @@
+[package]
+name = "ibc-deposit"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+
+[features]
+library = []
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cosmwasm-schema = "1.5.0"
+cosmwasm-std = "1.5.0"
+cw-orch.workspace = true
+cw-storage-plus = "1.2.0"
+cw-utils = "1.0.3"
+cw20 = "1.1.2"
+cw20-base = "1.1.2"
+moneymarket = { version = "0.3.1", path = "../../packages/moneymarket" }
+terra-proto-rs = "5.2.0"

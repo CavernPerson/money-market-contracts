@@ -54,6 +54,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "abstract-cw-multi-test"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d88a78a95e5f29406b9cd35685a7023548689af8726bcb1ee8c0031ba73c8574"
+dependencies = [
+ "anyhow",
+ "bech32",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus 1.2.0",
+ "cw-utils 1.0.3",
+ "cw20-ics20",
+ "derivative",
+ "hex",
+ "itertools 0.12.1",
+ "log",
+ "prost 0.12.3",
+ "schemars",
+ "serde",
+ "serde_json",
+ "sha2 0.10.8",
+ "thiserror",
+]
+
+[[package]]
 name = "abstract-cw-plus-interface"
 version = "1.3.0"
 source = "git+https://github.com/abstractsdk/cw-plus#690b4ea7721c619e500c3d2c7f5d3b56aa2cf315"
@@ -673,9 +698,9 @@ dependencies = [
 
 [[package]]
 name = "bnum"
-version = "0.10.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56953345e39537a3e18bdaeba4cb0c58a78c1f61f361dc0fa7c5c7340ae87c5f"
+checksum = "ab9008b6bb9fc80b5277f2fe481c09e828743d9151203e804583eb4c9e15b31d"
 
 [[package]]
 name = "bs58"
@@ -796,7 +821,7 @@ dependencies = [
 name = "cavern-moneymarket-interface"
 version = "0.1.0"
 dependencies = [
- "cw-orch 0.20.1",
+ "cw-orch 0.21.2",
  "moneymarket",
  "moneymarket-custody-lsd",
  "moneymarket-market",
@@ -915,9 +940,9 @@ dependencies = [
 
 [[package]]
 name = "cosmwasm-crypto"
-version = "1.5.3"
+version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9934c79e58d9676edfd592557dee765d2a6ef54c09d5aa2edb06156b00148966"
+checksum = "8ed6aa9f904de106fa16443ad14ec2abe75e94ba003bb61c681c0e43d4c58d2a"
 dependencies = [
  "digest 0.10.7",
  "ecdsa",
@@ -962,9 +987,9 @@ dependencies = [
 
 [[package]]
 name = "cosmwasm-std"
-version = "1.5.3"
+version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef8666e572a3a2519010dde88c04d16e9339ae751b56b2bb35081fe3f7d6be74"
+checksum = "ad011ae7447188e26e4a7dbca2fcd0fc186aa21ae5c86df0503ea44c78f9e469"
 dependencies = [
  "base64 0.21.7",
  "bech32",
@@ -994,9 +1019,9 @@ dependencies = [
 
 [[package]]
 name = "cosmwasm-vm"
-version = "1.5.3"
+version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "011bc44b0d617f440ea509b38e543437511a196c6e2a0ebd3425edd912902fb2"
+checksum = "90ebdf59ae3b9fe66d1eb845cf69aa537c77107d816452595c5796c332af061f"
 dependencies = [
  "bitflags 1.3.2",
  "bytecheck",
@@ -1360,6 +1385,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw-orch"
+version = "0.21.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1d7a301fa9eb856c384ec8df1ca52ffa845e5045d81f663eba0a66da71a63342"
+dependencies = [
+ "anyhow",
+ "cosmrs",
+ "cosmwasm-std",
+ "cw-orch-contract-derive 0.20.0",
+ "cw-orch-core 0.21.1",
+ "cw-orch-daemon 0.21.0",
+ "cw-orch-fns-derive 0.18.0",
+ "cw-orch-mock 0.21.1",
+ "cw-orch-networks 0.20.1",
+ "cw-orch-traits 0.21.0",
+ "cw-utils 1.0.3",
+ "hex",
+ "log",
+ "schemars",
+ "serde",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "cw-orch-clone-testing"
 version = "0.19.1"
 source = "git+https://github.com/AbstractSDK/cw-orch-interchain#5f4512878f938f39dfd4e093f6af669538e9de11"
@@ -1439,6 +1489,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "734eb7991db40a46c476b1dd18e6066166ef7663bbb95a0c57c53f964d8eb95e"
 dependencies = [
  "abstract-cw-multi-test 0.20.2",
+ "anyhow",
+ "cosmos-sdk-proto",
+ "cosmwasm-std",
+ "cw-utils 1.0.3",
+ "dirs",
+ "log",
+ "serde",
+ "serde_json",
+ "sha2 0.10.8",
+ "thiserror",
+]
+
+[[package]]
+name = "cw-orch-core"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75efacab678d8cdf3c22d28a2753ded502b07157a6bc27987fcbda33b16ea648"
+dependencies = [
+ "abstract-cw-multi-test 0.21.0",
  "anyhow",
  "cosmos-sdk-proto",
  "cosmwasm-std",
@@ -1534,6 +1603,47 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw-orch-daemon"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "66645a721e03a5aab123bfc7b521dd5cf7d5a6106d2d316f10eba6f7632b33a5"
+dependencies = [
+ "anyhow",
+ "async-recursion",
+ "base16",
+ "base64 0.21.7",
+ "bitcoin",
+ "chrono",
+ "cosmrs",
+ "cosmwasm-std",
+ "cw-orch-core 0.21.1",
+ "cw-orch-networks 0.20.1",
+ "cw-orch-traits 0.21.0",
+ "dirs",
+ "ed25519-dalek",
+ "eyre",
+ "flate2",
+ "hex",
+ "hkd32",
+ "ibc-chain-registry",
+ "lazy_static",
+ "log",
+ "prost 0.12.3",
+ "prost-types 0.12.3",
+ "rand_core 0.6.4",
+ "reqwest",
+ "ring 0.17.8",
+ "ripemd",
+ "schemars",
+ "serde",
+ "serde_json",
+ "sha2 0.10.8",
+ "thiserror",
+ "tokio",
+ "tonic 0.10.2",
+]
+
+[[package]]
 name = "cw-orch-fns-derive"
 version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1579,6 +1689,21 @@ dependencies = [
  "abstract-cw-multi-test 0.20.2",
  "cosmwasm-std",
  "cw-orch-core 0.20.3",
+ "cw-utils 1.0.3",
+ "log",
+ "serde",
+ "sha2 0.10.8",
+]
+
+[[package]]
+name = "cw-orch-mock"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d441cc8add8f72f0ef88a9bce1a8af1e356fcaceb8414e64d22b5e4feb0a3fc"
+dependencies = [
+ "abstract-cw-multi-test 0.21.0",
+ "cosmwasm-std",
+ "cw-orch-core 0.21.1",
  "cw-utils 1.0.3",
  "log",
  "serde",
@@ -1646,6 +1771,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0d1b08824488cbb0858107b22a236d3009e2f00578987d343bc032e82b47a086"
 dependencies = [
  "cw-orch-core 0.20.3",
+ "prost 0.12.3",
+ "prost-types 0.12.3",
+]
+
+[[package]]
+name = "cw-orch-traits"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df86f12047e79cd7215643d80468faa11208925ae74cb2e63af90fd046051cf9"
+dependencies = [
+ "cw-orch-core 0.21.1",
  "prost 0.12.3",
  "prost-types 0.12.3",
 ]
@@ -1768,6 +1904,23 @@ dependencies = [
  "cw-utils 0.15.1",
  "cw2 0.15.1",
  "cw20 0.15.1",
+ "schemars",
+ "semver",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "cw20-base"
+version = "1.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "17ad79e86ea3707229bf78df94e08732e8f713207b4a77b2699755596725e7d9"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus 1.2.0",
+ "cw2 1.1.2",
+ "cw20 1.1.2",
  "schemars",
  "semver",
  "serde",
@@ -2692,6 +2845,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "ibc-deposit"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-orch 0.21.2",
+ "cw-storage-plus 1.2.0",
+ "cw-utils 1.0.3",
+ "cw20 1.1.2",
+ "cw20-base 1.1.2",
+ "moneymarket",
+ "terra-proto-rs",
+]
+
+[[package]]
 name = "ibc-proto"
 version = "0.32.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2891,9 +3059,9 @@ dependencies = [
 
 [[package]]
 name = "k256"
-version = "0.13.1"
+version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cadb76004ed8e97623117f3df85b17aaa6626ab0b0831e6573f104df16cd1bcc"
+checksum = "956ff9b67e26e1a6a866cb758f12c6f8746208489e3e4a4b5580802f2f0a587b"
 dependencies = [
  "cfg-if",
  "ecdsa",
@@ -3044,7 +3212,7 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
- "cw-orch 0.20.1",
+ "cw-orch 0.21.2",
  "cw20 0.15.1",
  "schemars",
  "serde",
@@ -3178,7 +3346,7 @@ dependencies = [
  "cosmwasm-std",
  "cosmwasm-storage",
  "cw20 0.15.1",
- "cw20-base",
+ "cw20-base 0.15.1",
  "moneymarket",
  "protobuf",
  "schemars",
@@ -4158,7 +4326,7 @@ dependencies = [
  "cavern-moneymarket-interface",
  "cosmrs",
  "cosmwasm-std",
- "cw-orch 0.20.1",
+ "cw-orch 0.21.2",
  "cw-orch-clone-testing",
  "dotenv",
  "interface",
@@ -4729,6 +4897,24 @@ dependencies = [
 
 [[package]]
 name = "tendermint-proto"
+version = "0.30.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e553ed65874c3f35a71eb60d255edfea956274b5af37a0297d54bba039fe45e3"
+dependencies = [
+ "bytes",
+ "flex-error",
+ "num-derive",
+ "num-traits",
+ "prost 0.11.9",
+ "prost-types 0.11.9",
+ "serde",
+ "serde_bytes",
+ "subtle-encoding",
+ "time",
+]
+
+[[package]]
+name = "tendermint-proto"
 version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0cec054567d16d85e8c3f6a3139963d1a66d9d3051ed545d31562550e9bcc3d"
@@ -4839,6 +5025,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06794f8f6c5c898b3275aebefa6b8a1cb24cd2c6c79397ab15774837a0bc5755"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "terra-proto-rs"
+version = "5.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef6ad02a4d914bebccb033f600557f6ebdab321c9f1ee20e32092ce6b7604af8"
+dependencies = [
+ "cosmwasm-std",
+ "getrandom",
+ "prost 0.11.9",
+ "prost-types 0.11.9",
+ "tendermint-proto 0.30.0",
+ "tonic 0.8.3",
 ]
 
 [[package]]
@@ -5024,6 +5224,38 @@ dependencies = [
 
 [[package]]
 name = "tonic"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f219fad3b929bef19b1f86fbc0358d35daed8f2cac972037ac0dc10bbb8d5fb"
+dependencies = [
+ "async-stream",
+ "async-trait",
+ "axum",
+ "base64 0.13.1",
+ "bytes",
+ "futures-core",
+ "futures-util",
+ "h2",
+ "http",
+ "http-body",
+ "hyper",
+ "hyper-timeout",
+ "percent-encoding",
+ "pin-project",
+ "prost 0.11.9",
+ "prost-derive 0.11.9",
+ "tokio",
+ "tokio-stream",
+ "tokio-util",
+ "tower",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+ "tracing-futures",
+]
+
+[[package]]
+name = "tonic"
 version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3082666a3a6433f7f511c7192923fa1fe07c69332d3c6a2e6bb040b569199d5a"
@@ -5142,6 +5374,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c06d3da6113f116aaee68e4d601191614c9053067f9ab7f6edbcb161237daa54"
 dependencies = [
  "once_cell",
+]
+
+[[package]]
+name = "tracing-futures"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97d095ae15e245a057c8e8451bab9b3ee1e1f68e9ba2b4fbc18d0ac5237835f2"
+dependencies = [
+ "pin-project",
+ "tracing",
 ]
 
 [[package]]
