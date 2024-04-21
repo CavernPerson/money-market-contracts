@@ -14,4 +14,4 @@ lto = true
 overflow-checks = true
 
 [workspace.dependencies]
-cw-orch = { version = "0.18.0" }
+cw-orch = { version = "0.20.1" }

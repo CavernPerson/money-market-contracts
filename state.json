@@ -1,0 +1,11 @@
+{
+    "terra2": {
+        "phoenix-1": {
+            "default": {
+                "market": "terra1zqlcp3aty4p4rjv96h6qdascdn953v6crhwedu5vddxjnp349upscluex6",
+                "overseer": "terra1l6rq7905263uqmayurtulzc09sfcgxdedsfen7m0y6wf28s49tvqdkwau9",
+                "a_terra": "terra1gwdxyqtu75es0x5l6cd9flqhh87zjtj7qdankayyr0vtt7s9w4ssm7ds8m"
+            }
+        }
+    }
+}

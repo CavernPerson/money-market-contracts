@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use cosmwasm_std::{Decimal256, Uint256};
 use cw20::Cw20ReceiveMsg;
 
+use crate::interest_model::BorrowRateResponse;
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct InstantiateMsg {
@@ -27,6 +29,7 @@ pub struct InstantiateMsg {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
 pub enum ExecuteMsg {
     Receive(Cw20ReceiveMsg),
 
@@ -82,6 +85,7 @@ pub enum ExecuteMsg {
     /// User operations
     ////////////////////
     /// Deposit stable asset to get interest
+    #[cfg_attr(feature = "interface", payable)]
     DepositStable {},
 
     /// Borrow stable asset with collaterals in overseer contract
@@ -107,22 +111,26 @@ pub enum Cw20HookMsg {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))]
+#[derive(cosmwasm_schema::QueryResponses)]
 pub enum QueryMsg {
+    #[returns(ConfigResponse)]
     Config {},
-    State {
-        block_height: Option<u64>,
-    },
-    BorrowerIncentives {
-        block_height: Option<u64>,
-    },
+    #[returns(StateResponse)]
+    State { block_height: Option<u64> },
+    #[returns(BorrowRateResponse)]
+    BorrowerIncentives { block_height: Option<u64> },
+    #[returns(EpochStateResponse)]
     EpochState {
         block_height: Option<u64>,
         distributed_interest: Option<Uint256>,
     },
+    #[returns(BorrowerInfoResponse)]
     BorrowerInfo {
         borrower: String,
         block_height: Option<u64>,
     },
+    #[returns(BorrowerInfosResponse)]
     BorrowerInfos {
         start_after: Option<String>,
         limit: Option<u32>,
