@@ -1,10 +1,20 @@
 {
+    "osmosis": {
+        "osmosis-1": {
+            "code_ids": {},
+            "default": {}
+        }
+    },
     "terra2": {
         "phoenix-1": {
+            "code_ids": {
+                "ibc-deposit": 2810
+            },
             "default": {
+                "a_terra": "terra1gwdxyqtu75es0x5l6cd9flqhh87zjtj7qdankayyr0vtt7s9w4ssm7ds8m",
+                "ibc-deposit": "terra1cdlxuptclg4rudp92ek5ejwm6xgfum0zu5gu0ewedvf7ddejl9csmf3s32",
                 "market": "terra1zqlcp3aty4p4rjv96h6qdascdn953v6crhwedu5vddxjnp349upscluex6",
-                "overseer": "terra1l6rq7905263uqmayurtulzc09sfcgxdedsfen7m0y6wf28s49tvqdkwau9",
-                "a_terra": "terra1gwdxyqtu75es0x5l6cd9flqhh87zjtj7qdankayyr0vtt7s9w4ssm7ds8m"
+                "overseer": "terra1l6rq7905263uqmayurtulzc09sfcgxdedsfen7m0y6wf28s49tvqdkwau9"
             }
         }
     }

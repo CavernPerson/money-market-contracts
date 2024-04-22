@@ -6,12 +6,14 @@ pub struct InstantiateMsg {
     pub transfer_timeout: u64,
 }
 
+#[cosmwasm_schema::cw_serde]
+#[derive(cw_orch::ExecuteFns)]
 pub enum ExecuteMsg {
+    #[payable]
     Deposit {
         target_channel: String,
         target_addr: String,
     },
-    Withdraw {
-        following_actions: CosmosMsg,
-    },
+    #[payable]
+    Withdraw { following_actions: CosmosMsg },
 }

@@ -4,9 +4,21 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
+crate-type = ["cdylib", "rlib"]
 
 [features]
 library = []
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+panic = 'abort'
+incremental = false
+overflow-checks = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -17,6 +29,6 @@ cw-orch.workspace = true
 cw-storage-plus = "1.2.0"
 cw-utils = "1.0.3"
 cw20 = "1.1.2"
-cw20-base = "1.1.2"
+cw20-base = { version = "1.1.2", features = ["library"] }
 moneymarket = { version = "0.3.1", path = "../../packages/moneymarket" }
-terra-proto-rs = "5.2.0"
+terra-proto-rs = { version = "5.2.0", default-features = false }

@@ -3,6 +3,7 @@ use std::error::Error;
 use cosmwasm_std::StdError;
 
 pub mod contract;
+pub mod interface;
 pub mod msg;
 pub mod query;
 pub mod state;

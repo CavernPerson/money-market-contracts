@@ -1,6 +1,6 @@
 use cosmwasm_std::{
-    ensure_eq, entry_point, to_json_binary, wasm_execute, Binary, Coin, CosmosMsg, DepsMut, Env,
-    IbcMsg, IbcTimeout, MessageInfo, Reply, Response, StdError, StdResult, SubMsg,
+    ensure_eq, entry_point, to_json_binary, wasm_execute, Binary, Coin, CosmosMsg, Deps, DepsMut,
+    Empty, Env, IbcMsg, IbcTimeout, MessageInfo, Reply, Response, StdError, StdResult, SubMsg,
 };
 use terra_proto_rs::cosmos::base;
 use terra_proto_rs::osmosis::tokenfactory::v1beta1::{MsgBurn, MsgCreateDenom};
@@ -44,6 +44,7 @@ pub fn instantiate(
         ),
     }))
 }
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> StdResult<Response> {
     match msg {
@@ -128,6 +129,11 @@ pub fn withdraw(
             value: burn_msg.encode_to_vec().into(),
         })
         .add_message(actions))
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn query(deps: Deps, env: Env, msg: Empty) -> StdResult<Binary> {
+    unimplemented!()
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
