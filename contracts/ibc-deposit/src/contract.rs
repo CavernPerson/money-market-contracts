@@ -4,12 +4,13 @@ use cosmwasm_std::{
 };
 use terra_proto_rs::cosmos::base;
 use terra_proto_rs::osmosis::tokenfactory::v1beta1::{MsgBurn, MsgCreateDenom};
-use terra_proto_rs::traits::Message;
+use terra_proto_rs::traits::{Message, MessageExt};
 use terra_proto_rs::{osmosis::tokenfactory::v1beta1::MsgMint, traits::TypeUrl};
 
 use crate::msg::InstantiateMsg;
 use crate::query::{a_terra_addr, a_terra_balance};
 use crate::state::{Config, CurrentTransfer, TEMP_CURRENT_TRANSFER};
+use crate::std_error;
 use crate::{msg::ExecuteMsg, state::CONFIG};
 
 pub const AFTER_DEPOSIT_REPLY: u64 = 456;
@@ -33,16 +34,14 @@ pub fn instantiate(
         },
     )?;
 
-    Ok(Response::new().add_message(CosmosMsg::Stargate {
-        type_url: MsgCreateDenom::TYPE_URL.to_string(),
-        value: Binary::from(
-            MsgCreateDenom {
-                sender: env.contract.address.to_string(),
-                subdenom: SUBDENOM.to_string(),
-            }
-            .encode_to_vec(),
-        ),
-    }))
+    Ok(Response::new().add_message(
+        MsgCreateDenom {
+            sender: env.contract.address.to_string(),
+            subdenom: SUBDENOM.to_string(),
+        }
+        .to_stargate_msg()
+        .map_err(std_error)?,
+    ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -124,10 +123,7 @@ pub fn withdraw(
 
     Ok(Response::new()
         .add_message(withdraw_msg)
-        .add_message(CosmosMsg::Stargate {
-            type_url: MsgBurn::TYPE_URL.to_string(),
-            value: burn_msg.encode_to_vec().into(),
-        })
+        .add_message(burn_msg.to_stargate_msg().map_err(std_error)?)
         .add_message(actions))
 }
 
@@ -151,20 +147,18 @@ pub fn reply(deps: DepsMut, env: Env, msg: Reply) -> StdResult<Response> {
             // We mint new tokens for this user
             // We send them via IBC on the transfer channel
             Ok(Response::new()
-                .add_message(CosmosMsg::Stargate {
-                    type_url: MsgMint::TYPE_URL.to_string(),
-                    value: Binary::from(
-                        MsgMint {
-                            sender: env.contract.address.to_string(),
-                            amount: Some(base::v1beta1::Coin {
-                                denom: config.denom.clone(),
-                                amount: new_balance.to_string(),
-                            }),
-                            mint_to_address: env.contract.address.to_string(),
-                        }
-                        .encode_to_vec(),
-                    ),
-                })
+                .add_message(
+                    MsgMint {
+                        sender: env.contract.address.to_string(),
+                        amount: Some(base::v1beta1::Coin {
+                            denom: config.denom.clone(),
+                            amount: new_balance.to_string(),
+                        }),
+                        mint_to_address: env.contract.address.to_string(),
+                    }
+                    .to_stargate_msg()
+                    .map_err(std_error)?,
+                )
                 .add_message(CosmosMsg::Ibc(IbcMsg::Transfer {
                     channel_id: current_transfer.channel_id,
                     to_address: current_transfer.addr,
