@@ -9,14 +9,17 @@ edition = "2021"
 
 [dependencies]
 # cavern-lsd-wrapper-interface = { version = "0.1.0", package = "interface", git = "https://github.com/cavernperson/cavern-lsd-wrapper" }
-# cavern-lsd-wrapper-interface = { version = "0.1.0", path = "../../cavern-lsd-wrapper/interface" }
+cavern-lsd-wrapper-interface = { version = "0.1.0", path = "../../cavern-lsd-wrapper/interface" }
 cavern-moneymarket-interface = { version = "0.1.0", path = "../interface" }
 
 anyhow = { version = "1.0.75", features = ["backtrace"] }
 # cw-orch = { package = "cw-orch-interchain", git = "https://github.com/AbstractSDK/cw-orch-interchain", features = [
 #     "daemon",
 # ] }
-# cw-orch-clone-testing = { git = "https://github.com/AbstractSDK/cw-orch-interchain" }
+cw-orch = { package = "cw-orch-interchain", path = "../../../abstract/cw-orch-interchain/cw-orch", features = [
+    "daemon",
+] }
+cw-orch-clone-testing = { git = "https://github.com/AbstractSDK/cw-orch-interchain" }
 cw-plus-interface = { package = "abstract-cw-plus-interface", git = "https://github.com/abstractsdk/cw-plus" }
 cw20-base = { package = "abstract-cw20-base", git = "https://github.com/abstractsdk/cw-plus" }
 pretty_env_logger = "0.5.0"
@@ -28,3 +31,7 @@ cosmwasm-std = "1.5.0"
 log = "0.4.20"
 cosmrs = "0.15.0"
 ibc-deposit = { version = "0.1.0", path = "../contracts/ibc-deposit" }
+terra-proto-rs = "5.2.0"
+serde_json = "1.0.116"
+serde = "1.0.198"
+cosmwasm-schema = "1.5.0"

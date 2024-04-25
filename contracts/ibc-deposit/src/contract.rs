@@ -3,9 +3,9 @@ use cosmwasm_std::{
     Empty, Env, IbcMsg, IbcTimeout, MessageInfo, Reply, Response, StdError, StdResult, SubMsg,
 };
 use terra_proto_rs::cosmos::base;
+use terra_proto_rs::osmosis::tokenfactory::v1beta1::MsgMint;
 use terra_proto_rs::osmosis::tokenfactory::v1beta1::{MsgBurn, MsgCreateDenom};
-use terra_proto_rs::traits::{Message, MessageExt};
-use terra_proto_rs::{osmosis::tokenfactory::v1beta1::MsgMint, traits::TypeUrl};
+use terra_proto_rs::traits::MessageExt;
 
 use crate::msg::InstantiateMsg;
 use crate::query::{a_terra_addr, a_terra_balance};
@@ -29,7 +29,7 @@ pub fn instantiate(
         &Config {
             market_addr: deps.api.addr_validate(&msg.market_addr)?,
             transfer_timeout: msg.transfer_timeout,
-            denom: format!("factory/{}/{} ", env.contract.address, SUBDENOM),
+            denom: format!("factory/{}/{}", env.contract.address, SUBDENOM),
             admin: info.sender,
         },
     )?;
@@ -103,9 +103,9 @@ pub fn withdraw(
     );
 
     let withdraw_msg = wasm_execute(
-        config.market_addr,
+        a_terra_addr(deps.as_ref())?,
         &cw20_base::msg::ExecuteMsg::Send {
-            contract: a_terra_addr(deps.as_ref())?,
+            contract: config.market_addr.to_string(),
             amount: deposit.amount,
             msg: to_json_binary(&moneymarket::market::Cw20HookMsg::RedeemStable {})?,
         },
@@ -175,4 +175,14 @@ pub fn reply(deps: DepsMut, env: Env, msg: Reply) -> StdResult<Response> {
             "Wrong reply on the ibc-deposit contract",
         )),
     }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, _msg: Empty) -> StdResult<Response> {
+    let mut config = CONFIG.load(deps.storage)?;
+    config.denom =
+        "factory/terra1cdlxuptclg4rudp92ek5ejwm6xgfum0zu5gu0ewedvf7ddejl9csmf3s32/ibc.receipt"
+            .to_string();
+    CONFIG.save(deps.storage, &config)?;
+    Ok(Response::default())
 }
