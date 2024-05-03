@@ -1,9 +1,9 @@
-use cw_orch::daemon::{ChainInfo, ChainKind, NetworkInfo};
+use cw_orch::environment::{ChainInfo, ChainKind, NetworkInfo};
 
 pub mod migrate_custody;
 
 pub const MIGALOO: NetworkInfo = NetworkInfo {
-    id: "migaloo",
+    chain_name: "migaloo",
     pub_address_prefix: "migaloo",
     coin_type: 118,
 };
@@ -20,7 +20,7 @@ pub const MIGALOO_1: ChainInfo = ChainInfo {
 };
 
 pub const AXELAR: NetworkInfo = NetworkInfo {
-    id: "axelar",
+    chain_name: "axelar",
     pub_address_prefix: "axelar",
     coin_type: 118,
 };

@@ -9,6 +9,7 @@ use ibc_deposit::interface::IbcDeposit;
 use ibc_deposit::msg::InstantiateMsg;
 
 pub const PACKET_TIMEOUT: u64 = 60 * 60 * 24 * 7; // 1 week
+pub const AXELAR_GMP: &str = "axelar1dv4u5k73pzqrxlzujxg3qp8kvc3pje7jtdvu72npnt5zhq05ejcsn5qme5";
 
 fn main() -> anyhow::Result<()> {
     dotenv::dotenv()?;
@@ -29,6 +30,7 @@ fn main() -> anyhow::Result<()> {
         &InstantiateMsg {
             market_addr: market.address()?.to_string(),
             transfer_timeout: PACKET_TIMEOUT,
+            gmp_receiver: AXELAR_GMP.to_string(),
         },
         Some(&chain.sender()),
         Some(&coins(10_000_000, "uluna")), // For denom creation

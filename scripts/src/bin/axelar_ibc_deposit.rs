@@ -14,7 +14,8 @@ use terra_proto_rs::ibc::applications::transfer::v1::MsgTransfer;
 use terra_proto_rs::traits::Message;
 use terra_proto_rs::traits::TypeUrl;
 
-pub const AXELAR_GMP: &str = "axelar1dv4u5k73pzqrxlzujxg3qp8kvc3pje7jtdvu72npnt5zhq05ejcsn5qme5s";
+pub const AXELAR_GMP: &str = "axelar1dv4u5k73pzqrxlzujxg3qp8kvc3pje7jtdvu72npnt5zhq05ejcsn5qme5";
+pub const AXELAR_FEE_RECIPIENT: &str = "axelar1aythygn6z5thymj6tmzfwekzh05ewg3l7d6y89";
 
 pub const PACKET_TIMEOUT: u64 = 60 * 60 * 24 * 7; // 1 week
 
@@ -73,11 +74,14 @@ fn main() -> anyhow::Result<()> {
     message_payload.extend(utf8_vec);
 
     let gmp_msg = GmpMessage {
-        destination_chain: "phoenix-1".to_string(),
+        destination_chain: "terra-2".to_string(),
         destination_address: contract.address()?.to_string(),
         payload: message_payload.to_vec(),
-        type_: 1,
-        fee: None,
+        type_: 2,
+        fee: Some(Fee {
+            amount: 400_000u128.to_string(),
+            recipient: AXELAR_FEE_RECIPIENT.to_string(),
+        }),
     };
 
     let response = osmosis.commit_any::<bool>(
@@ -87,7 +91,7 @@ fn main() -> anyhow::Result<()> {
                 source_port: "transfer".to_string(),
                 source_channel: OSMOSIS_AXELAR_CHANNEL.to_string(),
                 token: Some(base::v1beta1::Coin {
-                    amount: "8".to_string(),
+                    amount: 1_000_000u128.to_string(),
                     denom: OSMOSIS_AXL_USDC.to_string(),
                 }),
                 sender: osmosis.sender().to_string(),
@@ -119,5 +123,11 @@ pub struct GmpMessage {
     pub payload: Vec<u8>,
     #[serde(rename = "type")]
     pub type_: i64,
-    pub fee: Option<Empty>,
+    pub fee: Option<Fee>,
+}
+
+#[cw_serde]
+pub struct Fee {
+    pub amount: String,
+    pub recipient: String,
 }

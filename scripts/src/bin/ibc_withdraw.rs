@@ -1,5 +1,4 @@
 use cosmrs::Any;
-use cosmwasm_std::{coin, coins, CosmosMsg};
 use cw_orch::daemon::networks::{OSMOSIS_1, PHOENIX_1};
 use cw_orch::interchain::ChannelCreationValidator;
 use cw_orch::interchain::DaemonInterchainEnv;
@@ -7,7 +6,7 @@ use cw_orch::prelude::InterchainEnv;
 use cw_orch::prelude::TxHandler;
 use cw_orch::{prelude::*, tokio::runtime::Runtime};
 use ibc_deposit::interface::IbcDeposit;
-use ibc_deposit::msg::ExecuteMsgFns;
+use scripts::AXELAR_1;
 use serde_json::json;
 use terra_proto_rs::cosmos::base;
 use terra_proto_rs::ibc::applications::transfer::v1::MsgTransfer;
@@ -22,6 +21,7 @@ pub const OSMOSIS_CHANNEL: &str = "channel-251";
 
 pub const OSMOSIS_DENOM: &str =
     "ibc/FC430DC0EB7FE8D1C5FFAB61660E92C6E8544F8620CE88C36D261737620FFA6E";
+pub const TERRA_AXELAR_CHANNEL: &str = "channel-6";
 
 fn main() -> anyhow::Result<()> {
     dotenv::dotenv()?;
@@ -39,6 +39,11 @@ fn main() -> anyhow::Result<()> {
         .handle(rt.handle())
         .build()?;
 
+    let axelar = DaemonBuilder::default()
+        .chain(AXELAR_1)
+        .handle(rt.handle())
+        .build()?;
+
     // let balance = osmosis.bank_querier().balance(osmosis.sender(), None)?;
     // panic!("{:?}", balance);
 
@@ -46,10 +51,8 @@ fn main() -> anyhow::Result<()> {
     let current_block = osmosis.block_info()?;
 
     let withdraw_msg = ibc_deposit::msg::ExecuteMsg::Withdraw {
-        following_actions: CosmosMsg::<Empty>::Bank(cosmwasm_std::BankMsg::Send {
-            to_address: terra.sender().to_string(),
-            amount: vec![coin(9, TERRA_USDC)],
-        }),
+        to_axelar_channel: TERRA_AXELAR_CHANNEL.to_string(),
+        axelar_receiver: "".to_string(),
     };
 
     let memo = json!({
@@ -67,7 +70,7 @@ fn main() -> anyhow::Result<()> {
                 source_port: "transfer".to_string(),
                 source_channel: OSMOSIS_CHANNEL.to_string(),
                 token: Some(base::v1beta1::Coin {
-                    amount: "8".to_string(),
+                    amount: "100000".to_string(),
                     denom: OSMOSIS_DENOM.to_string(),
                 }),
                 sender: osmosis.sender().to_string(),
@@ -83,7 +86,7 @@ fn main() -> anyhow::Result<()> {
 
     let interchain = DaemonInterchainEnv::from_daemons(
         &terra.rt_handle,
-        vec![terra.clone(), osmosis],
+        vec![terra.clone(), osmosis, axelar],
         &ChannelCreationValidator,
     );
 

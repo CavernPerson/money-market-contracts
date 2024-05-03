@@ -1,13 +1,9 @@
 use cavern_moneymarket_interface::overseer::Overseer;
 use cw_orch::daemon::networks::PHOENIX_1;
+use cw_orch::prelude::ContractInstance;
 use cw_orch::prelude::*;
-use cw_orch::{
-    daemon::{ChainInfo, ChainKind, NetworkInfo},
-    prelude::ContractInstance,
-};
 use moneymarket::overseer::ExecuteMsgFns as _;
 use scripts::migrate_custody::migrate_custody;
-use scripts::MIGALOO_1;
 
 pub const ADMIN: &str = "terra1ytj0hhw39j88qsx4yapsr6ker83jv3aj354gmj";
 pub const MULTISIG_CONTRACT: &str =

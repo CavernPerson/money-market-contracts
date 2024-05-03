@@ -31,4 +31,5 @@ cw-utils = "1.0.3"
 cw20 = "1.1.2"
 cw20-base = { version = "1.1.2", features = ["library"] }
 moneymarket = { version = "0.3.1", path = "../../packages/moneymarket" }
+serde-json-wasm = "1.0.1"
 terra-proto-rs = { version = "5.2.0", default-features = false }

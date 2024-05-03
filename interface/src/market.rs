@@ -10,7 +10,7 @@ pub struct Market;
 
 impl<Chain: CwEnv> Uploadable for Market<Chain> {
     /// Returns a CosmWasm contract wrapper
-    fn wrapper(&self) -> Box<dyn MockContract<Empty>> {
+    fn wrapper() -> Box<dyn MockContract<Empty>> {
         Box::new(ContractWrapper::new_with_empty(execute, instantiate, query).with_migrate(migrate))
     }
 }

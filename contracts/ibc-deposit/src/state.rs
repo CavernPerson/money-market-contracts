@@ -9,13 +9,15 @@ pub const TEMP_CURRENT_TRANSFER: Item<CurrentTransfer> = Item::new("current_tran
 pub struct Config {
     pub admin: Addr,
     pub market_addr: Addr,
+    pub usd_denom: String,
     pub transfer_timeout: u64,
     pub denom: String,
+    pub gmp_receiver: String,
 }
 
 #[cw_serde]
 pub struct CurrentTransfer {
     pub addr: String,
     pub channel_id: String,
-    pub balance_before: Uint128
+    pub balance_before: Uint128,
 }

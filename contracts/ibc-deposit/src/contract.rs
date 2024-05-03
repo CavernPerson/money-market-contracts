@@ -1,13 +1,15 @@
 use cosmwasm_std::{
     ensure_eq, entry_point, to_json_binary, wasm_execute, Binary, Coin, CosmosMsg, Deps, DepsMut,
     Empty, Env, IbcMsg, IbcTimeout, MessageInfo, Reply, Response, StdError, StdResult, SubMsg,
+    Uint256,
 };
 use terra_proto_rs::cosmos::base;
+use terra_proto_rs::ibc::applications::transfer::v1::MsgTransfer;
 use terra_proto_rs::osmosis::tokenfactory::v1beta1::MsgMint;
 use terra_proto_rs::osmosis::tokenfactory::v1beta1::{MsgBurn, MsgCreateDenom};
 use terra_proto_rs::traits::MessageExt;
 
-use crate::msg::InstantiateMsg;
+use crate::msg::{InstantiateMsg, MigrateMsg};
 use crate::query::{a_terra_addr, a_terra_balance};
 use crate::state::{Config, CurrentTransfer, TEMP_CURRENT_TRANSFER};
 use crate::std_error;
@@ -24,6 +26,9 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
+    let market_config: moneymarket::market::ConfigResponse = deps
+        .querier
+        .query_wasm_smart(&msg.market_addr, &moneymarket::market::QueryMsg::Config {})?;
     CONFIG.save(
         deps.storage,
         &Config {
@@ -31,6 +36,8 @@ pub fn instantiate(
             transfer_timeout: msg.transfer_timeout,
             denom: format!("factory/{}/{}", env.contract.address, SUBDENOM),
             admin: info.sender,
+            gmp_receiver: msg.gmp_receiver,
+            usd_denom: market_config.stable_denom,
         },
     )?;
 
@@ -51,7 +58,10 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
             target_channel,
             target_addr,
         } => deposit(deps, env, info, target_channel, target_addr),
-        ExecuteMsg::Withdraw { following_actions } => withdraw(deps, env, info, following_actions),
+        ExecuteMsg::Withdraw {
+            to_axelar_channel,
+            axelar_receiver,
+        } => withdraw(deps, env, info, to_axelar_channel, axelar_receiver),
     }
 }
 
@@ -90,7 +100,8 @@ pub fn withdraw(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    actions: CosmosMsg,
+    to_axelar_channel: String,
+    axelar_receiver: String,
 ) -> StdResult<Response> {
     let config = CONFIG.load(deps.storage)?;
 
@@ -116,15 +127,38 @@ pub fn withdraw(
         sender: env.contract.address.to_string(),
         amount: Some(base::v1beta1::Coin {
             amount: deposit.amount.to_string(),
-            denom: config.denom,
+            denom: config.denom.clone(),
         }),
         burn_from_address: env.contract.address.to_string(),
     };
 
+    let market_state: moneymarket::market::StateResponse = deps.querier.query_wasm_smart(
+        config.market_addr,
+        &moneymarket::market::QueryMsg::State { block_height: None },
+    )?;
+
+    let send_amount = (market_state.prev_exchange_rate * Uint256::from(deposit.amount)).to_string();
+
+    let send_back_msg = MsgTransfer {
+        source_port: "transfer".to_string(),
+        source_channel: to_axelar_channel,
+        token: Some(base::v1beta1::Coin {
+            amount: send_amount,
+            denom: config.usd_denom,
+        }),
+        sender: env.contract.address.to_string(),
+        receiver: axelar_receiver,
+        timeout_height: None,
+        timeout_timestamp: env.block.time.plus_seconds(config.transfer_timeout).nanos(),
+        memo: "".to_string(),
+    }
+    .to_stargate_msg()
+    .map_err(std_error)?;
+
     Ok(Response::new()
         .add_message(withdraw_msg)
         .add_message(burn_msg.to_stargate_msg().map_err(std_error)?)
-        .add_message(actions))
+        .add_message(send_back_msg))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -178,11 +212,11 @@ pub fn reply(deps: DepsMut, env: Env, msg: Reply) -> StdResult<Response> {
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(deps: DepsMut, _env: Env, _msg: Empty) -> StdResult<Response> {
+pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response> {
     let mut config = CONFIG.load(deps.storage)?;
-    config.denom =
-        "factory/terra1cdlxuptclg4rudp92ek5ejwm6xgfum0zu5gu0ewedvf7ddejl9csmf3s32/ibc.receipt"
-            .to_string();
+    config.usd_denom =
+        "ibc/B3504E092456BA618CC28AC671A71FB08C6CA0FD0BE7C8A5B5A3E2DD933CC9E4".to_string();
+
     CONFIG.save(deps.storage, &config)?;
     Ok(Response::default())
 }

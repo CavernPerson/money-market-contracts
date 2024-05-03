@@ -1,6 +1,6 @@
 use cosmwasm_std::{
-    attr, to_json_binary, Addr, BankMsg, Coin, CosmosMsg, Decimal256, Deps, DepsMut, Env, MessageInfo,
-    Response, StdResult, Uint128, Uint256, WasmMsg,
+    attr, to_json_binary, Addr, BankMsg, Coin, CosmosMsg, Decimal256, Deps, DepsMut, Env,
+    MessageInfo, Response, StdResult, Uint128, Uint256, WasmMsg,
 };
 use std::convert::TryInto;
 

@@ -10,13 +10,13 @@ pub struct Overseer;
 
 impl<Chain: CwEnv> Uploadable for Overseer<Chain> {
     /// Return the path to the wasm file corresponding to the contract
-    fn wasm(&self) -> WasmPath {
+    fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
         artifacts_dir_from_workspace!()
             .find_wasm_path(&format!("moneymarket_overseer{}", WASM_SUFFIX))
             .unwrap()
     }
     /// Returns a CosmWasm contract wrapper
-    fn wrapper(&self) -> Box<dyn MockContract<Empty>> {
+    fn wrapper() -> Box<dyn MockContract<Empty>> {
         Box::new(ContractWrapper::new_with_empty(execute, instantiate, query).with_migrate(migrate))
     }
 }

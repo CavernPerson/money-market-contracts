@@ -14,7 +14,7 @@
   "terra2": {
     "phoenix-1": {
       "code_ids": {
-        "ibc-deposit": 2813
+        "ibc-deposit": 2906
       },
       "default": {
         "a_terra": "terra1gwdxyqtu75es0x5l6cd9flqhh87zjtj7qdankayyr0vtt7s9w4ssm7ds8m",
